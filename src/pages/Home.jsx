@@ -204,6 +204,13 @@ const Home = () => {
     <div className="min-h-screen">
       <HeroCarousel slides={heroSlides} />
 
+      {/* Occasion Banner */}
+      <section className="py-8 sm:py-12 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto">
+          <OccasionBanner />
+        </div>
+      </section>
+
       {/* Key Highlights */}
       <section className="py-12 sm:py-16 bg-gradient-warm">
         <div className="w-full px-4 sm:px-6 lg:px-8">
