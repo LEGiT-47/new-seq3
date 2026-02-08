@@ -66,11 +66,13 @@ Edit `.env.local`:
 
 ```env
 # Backend API URL (local development)
-REACT_APP_API_URL=http://localhost:5000/api
+VITE_API_URL=http://localhost:5000/api
 
 # WhatsApp Configuration
-REACT_APP_WHATSAPP_NUMBER=+919930709557
+VITE_WHATSAPP_NUMBER=+919930709557
 ```
+
+**Note:** Vite uses `VITE_` prefix for environment variables (not `REACT_APP_`)
 
 ### 2.3 Run Frontend Development Server
 
