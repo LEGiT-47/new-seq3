@@ -52,16 +52,17 @@ const ProductDetail = () => {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <p>Loading...</p>
+        <p className="text-muted-foreground">Loading product details...</p>
       </div>
     );
   }
 
-  if (!product) {
+  if (error || !product) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <h1 className="text-2xl font-bold mb-4">Product Not Found</h1>
+          <h1 className="text-2xl font-bold mb-4">{error || 'Product Not Found'}</h1>
+          <p className="text-muted-foreground mb-6">The product you're looking for doesn't exist or couldn't be loaded.</p>
           <Button onClick={() => navigate('/products')}>Back to Products</Button>
         </div>
       </div>
