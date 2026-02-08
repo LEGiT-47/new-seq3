@@ -128,9 +128,15 @@ const Gifting = () => {
 
           {/* Services with Selection Dropdowns */}
           <div className="space-y-4 sm:space-y-6 mb-12">
-            {giftingServices.length > 0 ? (
-              giftingServices.map((service) => (
-                <div key={service.id} className="bg-card border border-border rounded-lg p-4 sm:p-6">
+            {loading ? (
+              <div className="text-center py-12">
+                <p className="text-muted-foreground">Loading gifting services...</p>
+              </div>
+            ) : giftingServices.length > 0 ? (
+              giftingServices.map((service) => {
+                const serviceId = service.id || service._id;
+                return (
+                <div key={serviceId} className="bg-card border border-border rounded-lg p-4 sm:p-6">
                   {/* Service Header */}
                   <h2 className="text-lg sm:text-xl font-bold mb-2">{service.name}</h2>
                   <p className="text-xs sm:text-sm text-muted-foreground mb-6">{service.description}</p>
@@ -144,8 +150,8 @@ const Gifting = () => {
                           {service.name.includes('Festive') ? 'Select Festival' : 'Select Occasion'}
                         </label>
                         <Select
-                          value={serviceSelections[service.id]?.festival || ''}
-                          onValueChange={(value) => handleServiceSelection(service.id, 'festival', value)}
+                          value={serviceSelections[serviceId]?.festival || ''}
+                          onValueChange={(value) => handleServiceSelection(serviceId, 'festival', value)}
                         >
                           <SelectTrigger className="w-full h-9 sm:h-10 text-xs sm:text-sm">
                             <SelectValue placeholder={`Choose a ${service.name.includes('Festive') ? 'festival' : 'occasion'}`} />
@@ -162,15 +168,15 @@ const Gifting = () => {
                     )}
 
                     {/* Other Occasion Input */}
-                    {serviceSelections[service.id]?.festival === 'Other' && (
+                    {serviceSelections[serviceId]?.festival === 'Other' && (
                       <div>
                         <label className="text-xs sm:text-sm font-medium text-muted-foreground block mb-2">
                           Please specify the occasion
                         </label>
                         <input
                           type="text"
-                          value={serviceSelections[service.id]?.otherOccasion || ''}
-                          onChange={(e) => handleServiceSelection(service.id, 'otherOccasion', e.target.value)}
+                          value={serviceSelections[serviceId]?.otherOccasion || ''}
+                          onChange={(e) => handleServiceSelection(serviceId, 'otherOccasion', e.target.value)}
                           placeholder="Enter your occasion"
                           className="w-full h-9 sm:h-10 px-3 rounded-md border border-input bg-background text-xs sm:text-sm"
                         />
@@ -183,8 +189,8 @@ const Gifting = () => {
                         Select Pack
                       </label>
                       <Select
-                        value={serviceSelections[service.id]?.packType || ''}
-                        onValueChange={(value) => handleServiceSelection(service.id, 'packType', value)}
+                        value={serviceSelections[serviceId]?.packType || ''}
+                        onValueChange={(value) => handleServiceSelection(serviceId, 'packType', value)}
                       >
                         <SelectTrigger className="w-full h-9 sm:h-10 text-xs sm:text-sm">
                           <SelectValue placeholder="Choose a pack" />
@@ -207,12 +213,12 @@ const Gifting = () => {
                   </div>
 
                   {/* Display Selected Pack Details */}
-                  {serviceSelections[service.id]?.packType && serviceSelections[service.id]?.packType !== 'all' && (
+                  {serviceSelections[serviceId]?.packType && serviceSelections[serviceId]?.packType !== 'all' && (
                     <div className="mt-6 p-4 bg-muted/50 rounded-lg border border-border">
                       {giftingSolutions
                         .filter(pack => {
                           const packId = pack.id || pack._id;
-                          return packId.toString() === serviceSelections[service.id].packType;
+                          return packId.toString() === serviceSelections[serviceId].packType;
                         })
                         .map((pack) => {
                           const packId = pack.id || pack._id;
@@ -244,13 +250,14 @@ const Gifting = () => {
                     </div>
                   )}
 
-                  {serviceSelections[service.id]?.packType === 'all' && (
+                  {serviceSelections[serviceId]?.packType === 'all' && (
                     <div className="mt-6 p-4 bg-muted/50 rounded-lg border border-border">
                       <p className="text-xs sm:text-sm text-muted-foreground">Select a specific pack to view details and purchase options.</p>
                     </div>
                   )}
                 </div>
-              ))
+              );
+              })
             ) : (
               <div className="text-center py-12 sm:py-16">
                 <Gift className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
