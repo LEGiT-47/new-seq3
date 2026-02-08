@@ -305,112 +305,125 @@ const Home = () => {
             </p>
           </div>
           
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
-                {bestsellerProducts.map((product, index) => {
-                  const hasCoatings = product.coatings && product.coatings.length > 0;
-                  const hasFlavors = product.flavors && product.flavors.length > 0;
+          {loading ? (
+            <div className="text-center py-12">
+              <p className="text-muted-foreground">Loading bestsellers...</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
+              {bestsellerProducts.map((product) => {
+                const productId = product.id || product._id;
+                const hasCoatings = product.coatings && product.coatings.length > 0;
+                const hasFlavors = product.flavors && product.flavors.length > 0;
+                const categoryMap = {
+                  'chocolates': 'Chocolates',
+                  'nuts': 'Flavoured Nuts',
+                  'jaggery': 'Jaggery Coated',
+                  'dryfruits': 'Dry Fruits',
+                  'seeds': 'Seeds',
+                };
 
-                  return (
-                    <Card key={product.id} className="hover-lift bg-card border-border group flex flex-col">
-                      <CardContent className="p-0 flex flex-col h-full">
-                        <div className="relative">
-                          <img
-                            src={product.image}
-                            alt={product.name}
-                            className="w-full h-40 sm:h-48 object-cover rounded-t-lg"
-                          />
-                          <Badge className="absolute top-3 left-3 bg-destructive text-destructive-foreground text-xs sm:text-sm">
-                            Bestseller
+                return (
+                  <Card key={productId} className="hover-lift bg-card border-border group flex flex-col">
+                    <CardContent className="p-0 flex flex-col h-full">
+                      <Link to={`/product/${productId}`} className="relative overflow-hidden rounded-t-lg block">
+                        <img
+                          src={product.image}
+                          alt={product.name}
+                          className="w-full h-40 sm:h-48 object-cover transition-transform duration-300 hover:scale-105"
+                        />
+                        <Badge className="absolute top-3 left-3 bg-destructive text-destructive-foreground text-xs sm:text-sm">
+                          Bestseller
+                        </Badge>
+                      </Link>
+
+                      <div className="p-3 sm:p-4 flex flex-col flex-grow">
+                        <div className="mb-2">
+                          <Badge variant="secondary" className="text-xs">
+                            {categoryMap[product.category] || product.category}
                           </Badge>
                         </div>
+                        <h3 className="font-semibold mb-1 text-xs sm:text-sm md:text-base line-clamp-2">{product.name}</h3>
+                        <p className="text-xs text-muted-foreground mb-2 line-clamp-2">{product.description}</p>
 
-                        <div className="p-3 sm:p-4 flex flex-col flex-grow">
-                          <div className="mb-2">
-                                                      <Badge variant="secondary" className="text-xs">
-                                                        {categories.find(c => c.id === product.category)?.name || product.category}
-                                                      </Badge>
-                                                      </div>
-                          <h3 className="font-semibold mb-1 text-xs sm:text-sm md:text-base line-clamp-2">{product.name}</h3>
-                          <p className="text-xs text-muted-foreground mb-2 line-clamp-2">{product.description}</p>
-                          <p className="text-lg font-bold mb-4 hidden">₹{product.price}</p>
+                        {(hasCoatings || hasFlavors) && (
+                          <div className="mb-3 space-y-2">
+                            {hasCoatings && (
+                              <div>
+                                <label className="text-xs font-medium text-muted-foreground block mb-1">
+                                  Coating
+                                </label>
+                                <Select
+                                  value={selectedOptions[productId]?.coating || ''}
+                                  onValueChange={(value) => handleOptionChange(productId, 'coating', value === '__none__' ? null : value)}
+                                >
+                                  <SelectTrigger className="h-8 text-xs">
+                                    <SelectValue placeholder="Select a coating" />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="__none__">No coating</SelectItem>
+                                    {product.coatings.map((coating) => (
+                                      <SelectItem key={coating} value={coating}>
+                                        {coating}
+                                      </SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                              </div>
+                            )}
 
-                          {(hasCoatings || hasFlavors) && (
-                            <div className="mb-3 space-y-2">
-                              {hasCoatings && (
-                                <div>
-                                  <label className="text-xs font-medium text-muted-foreground block mb-1">
-                                    Coating
-                                  </label>
-                                  <Select
-                                    value={selectedOptions[product.id]?.coating || ''}
-                                    onValueChange={(value) => handleOptionChange(product.id, 'coating', value === '__none__' ? null : value)}
-                                  >
-                                    <SelectTrigger className="h-8 text-xs">
-                                      <SelectValue placeholder="Select a coating" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                      <SelectItem value="__none__">No coating</SelectItem>
-                                      {product.coatings.map((coating) => (
-                                        <SelectItem key={coating} value={coating}>
-                                          {coating}
-                                        </SelectItem>
-                                      ))}
-                                    </SelectContent>
-                                  </Select>
-                                </div>
-                              )}
-
-                              {hasFlavors && (
-                                <div>
-                                  <label className="text-xs font-medium text-muted-foreground block mb-1">
-                                    Flavor
-                                  </label>
-                                  <Select
-                                    value={selectedOptions[product.id]?.flavor || ''}
-                                    onValueChange={(value) => handleOptionChange(product.id, 'flavor', value === '__none__' ? null : value)}
-                                  >
-                                    <SelectTrigger className="h-8 text-xs">
-                                      <SelectValue placeholder="Select a flavor" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                      <SelectItem value="__none__">No flavor</SelectItem>
-                                      {product.flavors.map((flavor) => (
-                                        <SelectItem key={flavor} value={flavor}>
-                                          {flavor}
-                                        </SelectItem>
-                                      ))}
-                                    </SelectContent>
-                                  </Select>
-                                </div>
-                              )}
-                            </div>
-                          )}
-
-                          <div className="flex flex-col gap-2 mt-auto">
-                            <Button
-                              size="sm"
-                              className="w-full bg-[#25D366] hover:bg-[#128C7E] text-white text-xs sm:text-sm h-9 sm:h-10"
-                              onClick={() => handleBuyNow(product)}
-                            >
-                              <MessageCircle className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
-                              Buy Now
-                            </Button>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="w-full text-xs sm:text-sm h-9 sm:h-10"
-                              onClick={() => handleAddToCart(product)}
-                            >
-                              <ShoppingCart className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
-                              Add to Cart
-                            </Button>
+                            {hasFlavors && (
+                              <div>
+                                <label className="text-xs font-medium text-muted-foreground block mb-1">
+                                  Flavor
+                                </label>
+                                <Select
+                                  value={selectedOptions[productId]?.flavor || ''}
+                                  onValueChange={(value) => handleOptionChange(productId, 'flavor', value === '__none__' ? null : value)}
+                                >
+                                  <SelectTrigger className="h-8 text-xs">
+                                    <SelectValue placeholder="Select a flavor" />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="__none__">No flavor</SelectItem>
+                                    {product.flavors.map((flavor) => (
+                                      <SelectItem key={flavor} value={flavor}>
+                                        {flavor}
+                                      </SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                              </div>
+                            )}
                           </div>
+                        )}
+
+                        <div className="flex flex-col gap-2 mt-auto">
+                          <Button
+                            size="sm"
+                            className="w-full bg-[#25D366] hover:bg-[#128C7E] text-white text-xs sm:text-sm h-9 sm:h-10"
+                            onClick={() => handleBuyNow(product)}
+                          >
+                            <MessageCircle className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+                            Buy Now
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="w-full text-xs sm:text-sm h-9 sm:h-10"
+                            onClick={() => handleAddToCart(product)}
+                          >
+                            <ShoppingCart className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+                            Add to Cart
+                          </Button>
                         </div>
-                      </CardContent>
-                    </Card>
-                  );
-                })}
-          </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+          )}
           
           <div className="text-center mt-10">
             <Link to="/products">
