@@ -210,31 +210,37 @@ const Gifting = () => {
                   {serviceSelections[service.id]?.packType && serviceSelections[service.id]?.packType !== 'all' && (
                     <div className="mt-6 p-4 bg-muted/50 rounded-lg border border-border">
                       {giftingSolutions
-                        .filter(pack => pack.id.toString() === serviceSelections[service.id].packType)
-                        .map((pack) => (
-                          <div key={pack.id}>
-                            <h3 className="font-semibold text-sm sm:text-base mb-2">{pack.name}</h3>
-                            <p className="text-xs sm:text-sm text-muted-foreground mb-4">{pack.description}</p>
-                            <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
-                              <Button
-                                size="sm"
-                                className="flex-1 bg-[#25D366] hover:bg-[#128C7E] text-white text-xs sm:text-sm h-9 sm:h-10"
-                                onClick={() => handleBuyNow(pack)}
-                              >
-                                <MessageCircle className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
-                                Buy Now
-                              </Button>
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                className="flex-1 text-xs sm:text-sm h-9 sm:h-10"
-                                onClick={() => handleAddToCart(pack)}
-                              >
-                                Add to Cart
-                              </Button>
+                        .filter(pack => {
+                          const packId = pack.id || pack._id;
+                          return packId.toString() === serviceSelections[service.id].packType;
+                        })
+                        .map((pack) => {
+                          const packId = pack.id || pack._id;
+                          return (
+                            <div key={packId}>
+                              <h3 className="font-semibold text-sm sm:text-base mb-2">{pack.name}</h3>
+                              <p className="text-xs sm:text-sm text-muted-foreground mb-4">{pack.description}</p>
+                              <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
+                                <Button
+                                  size="sm"
+                                  className="flex-1 bg-[#25D366] hover:bg-[#128C7E] text-white text-xs sm:text-sm h-9 sm:h-10"
+                                  onClick={() => handleBuyNow(pack)}
+                                >
+                                  <MessageCircle className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+                                  Buy Now
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  className="flex-1 text-xs sm:text-sm h-9 sm:h-10"
+                                  onClick={() => handleAddToCart(pack)}
+                                >
+                                  Add to Cart
+                                </Button>
+                              </div>
                             </div>
-                          </div>
-                        ))}
+                          );
+                        })}
                     </div>
                   )}
 
