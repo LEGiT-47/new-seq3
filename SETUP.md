@@ -108,7 +108,7 @@ Edit `.env`:
 
 ```env
 # MongoDB Connection
-MONGODB_URI=mongodb+srv://virajprabhu47:V6lleOGZBAdrEToW@cluster0.rskn6q9.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0
+MONGODB_URI=
 
 # JWT Secrets (generate random strings)
 JWT_SECRET=your_random_user_jwt_secret_key_here
