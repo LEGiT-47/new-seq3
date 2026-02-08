@@ -50,7 +50,8 @@ const Home = () => {
   };
 
   const handleAddToCart = (product) => {
-    const options = selectedOptions[product.id] || {};
+    const productId = product.id || product._id;
+    const options = selectedOptions[productId] || {};
     addToCart(product, 1, {
       coating: options.coating || null,
       flavor: options.flavor || null
@@ -58,12 +59,13 @@ const Home = () => {
     toast.success(`${product.name} added to cart!`);
     setSelectedOptions(prev => ({
       ...prev,
-      [product.id]: {}
+      [productId]: {}
     }));
   };
 
   const handleBuyNow = (product) => {
-    const options = selectedOptions[product.id] || {};
+    const productId = product.id || product._id;
+    const options = selectedOptions[productId] || {};
     let message = `Hello! I would like to order ${product.name}`;
 
     if (options.coating || options.flavor) {
