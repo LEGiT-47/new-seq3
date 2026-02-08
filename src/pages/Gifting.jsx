@@ -1,19 +1,42 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '../components/ui/button';
 import { Card, CardContent } from '../components/ui/card';
 import { Badge } from '../components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
 import { useCart } from '../context/CartContext';
-import { getProductsByCategory } from '../data/products';
+import { productAPI } from '../lib/api';
 import { MessageCircle, Gift } from 'lucide-react';
 import { toast } from 'sonner';
 
 const Gifting = () => {
   const [serviceSelections, setServiceSelections] = useState({});
   const { addToCart } = useCart();
+  const [giftingSolutions, setGiftingSolutions] = useState([]);
+  const [giftingServices, setGiftingServices] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const giftingSolutions = getProductsByCategory('gifting');
-  const giftingServices = getProductsByCategory('services');
+  useEffect(() => {
+    const fetchGiftingProducts = async () => {
+      try {
+        setLoading(true);
+        const allProductsResponse = await productAPI.getAll();
+        const allProducts = allProductsResponse.data.data || allProductsResponse.data;
+
+        const solutions = allProducts.filter(p => p.category === 'gifting');
+        const services = allProducts.filter(p => p.category === 'services');
+
+        setGiftingSolutions(solutions);
+        setGiftingServices(services);
+      } catch (error) {
+        console.error('Error fetching gifting products:', error);
+        toast.error('Failed to load gifting products');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchGiftingProducts();
+  }, []);
 
   const festivalOptions = {
     'Corporate Gifting': [
