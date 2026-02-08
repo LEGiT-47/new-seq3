@@ -105,8 +105,8 @@ const ProductDetail = () => {
     window.open(whatsappUrl, '_blank');
   };
 
-  // Sample product details (these will come from database later)
-  const benefits = [
+  // Product details from database or defaults
+  const benefits = product.benefits && product.benefits.length > 0 ? product.benefits : [
     'Rich in antioxidants',
     'High in protein and fiber',
     'Helps improve digestion',
@@ -114,7 +114,7 @@ const ProductDetail = () => {
     'Enhances immune system',
   ];
 
-  const qualityHighlights = [
+  const qualityHighlights = product.qualityHighlights && product.qualityHighlights.length > 0 ? product.qualityHighlights : [
     'Premium quality sourced directly',
     'No artificial additives',
     'Carefully roasted for maximum flavor',
@@ -122,7 +122,7 @@ const ProductDetail = () => {
     'Packed in food-grade materials',
   ];
 
-  const testimonials = [
+  const testimonials = product.testimonials && product.testimonials.length > 0 ? product.testimonials : [
     {
       author: 'Rahul K.',
       text: 'Excellent quality and taste. Best product I have tried. Highly recommended!',
