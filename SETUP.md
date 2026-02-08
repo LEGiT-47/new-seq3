@@ -324,7 +324,7 @@ Detailed deployment guides will be provided when ready.
 
 ### Frontend can't connect to backend
 - Ensure backend is running on port 5000
-- Check `REACT_APP_API_URL` in `.env.local`
+- Check `VITE_API_URL` in `.env.local`
 - Check browser console for CORS errors
 
 ### Products not showing
