@@ -348,6 +348,7 @@ export const products = [
     price: 750,
     weight: '500g',
     bestseller: true,
+    isDeliverable: true,
     coatings: [],
     flavors: []
   },
@@ -360,6 +361,7 @@ export const products = [
     price: 800,
     weight: '500g',
     bestseller: true,
+    isDeliverable: true,
     coatings: [],
     flavors: []
   },
@@ -371,6 +373,7 @@ export const products = [
     image: resin,
     price: 380,
     weight: '500g',
+    isDeliverable: true,
     coatings: [],
     flavors: []
   },
@@ -382,6 +385,7 @@ export const products = [
     image: walnut_1,
     price: 720,
     weight: '500g',
+    isDeliverable: true,
     coatings: [],
     flavors: []
   },
@@ -393,6 +397,7 @@ export const products = [
     image: dates ,
     price: 420,
     weight: '500g',
+    isDeliverable: true,
     coatings: [],
     flavors: []
   },
@@ -404,6 +409,7 @@ export const products = [
     image: dry_fig,
     price: 550,
     weight: '500g',
+    isDeliverable: true,
     coatings: [],
     flavors: []
   },
@@ -415,6 +421,7 @@ export const products = [
     image: apricot,
     price: 480,
     weight: '500g',
+    isDeliverable: true,
     coatings: [],
     flavors: []
   },
@@ -426,6 +433,7 @@ export const products = [
     image: makhana_1,
     price: 340,
     weight: '500g',
+    isDeliverable: true,
     coatings: [],
     flavors: []
   },
@@ -437,6 +445,7 @@ export const products = [
     image:cranberry,
     price: 380,
     weight: '500g',
+    isDeliverable: true,
     coatings: [],
     flavors: []
   },
@@ -448,6 +457,7 @@ export const products = [
     image: blueberry,
     price: 380,
     weight: '500g',
+    isDeliverable: true,
     coatings: [],
     flavors: []
   },
