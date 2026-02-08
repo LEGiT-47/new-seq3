@@ -335,6 +335,7 @@ export const products = [
     price: 650,
     weight: '500g',
     bestseller: true,
+    isDeliverable: true,
     coatings: [],
     flavors: []
   },
