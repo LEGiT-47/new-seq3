@@ -9,6 +9,8 @@ import Home from './pages/Home';
 import Products from './pages/Products';
 import ProductDetail from './pages/ProductDetail';
 import Checkout from './pages/Checkout';
+import AdminLogin from './pages/AdminLogin';
+import AdminDashboard from './pages/AdminDashboard';
 import Gifting from './pages/Gifting';
 import About from './pages/About';
 import Contact from './pages/Contact';
