@@ -26,7 +26,7 @@ export const generateOrderNumber = () => {
   return `ORD-${timestamp}-${random}`;
 };
 
-// Generate Razorpay order ID prefix (for internal tracking)
+// Generate Razorpay order ID prefix
 export const generateRazorpayOrderPrefix = () => {
   return crypto.randomBytes(6).toString('hex').toUpperCase();
 };
@@ -45,9 +45,9 @@ export const calculateOrderTotal = (items) => {
 
 // Error handler helper
 export class AppError extends Error {
-  constructor(message, statusCode = 500) {
+  constructor(message, statusCode) {
     super(message);
-    this.statusCode = statusCode;
+    this.statusCode = statusCode || 500;
   }
 }
 
@@ -60,9 +60,8 @@ export const asyncHandler = (fn) => {
 
 // Check if product is deliverable
 export const isDeliverableProduct = (productId) => {
-  // Products 21, 22, 23 are deliverable (Dry Fruits, Makhana, Gud Chana)
-  // Update this based on your actual product IDs
-  const deliverableProductIds = [21, 22, 23, 29]; // Almonds, Cashew, Pistachio, Makhana, Chana
+  // Products 21, 22, 23, 29 are deliverable (Dry Fruits, Makhana, Almonds, Cashew, etc)
+  const deliverableProductIds = [21, 22, 23, 29];
   return deliverableProductIds.includes(productId);
 };
 
@@ -80,10 +79,11 @@ export const sendErrorResponse = (res, statusCode, message) => {
 };
 
 // Send success response
-export const sendSuccessResponse = (res, statusCode, data, message = 'Success') {
+export const sendSuccessResponse = (res, statusCode, data, message) => {
+  const msg = message || 'Success';
   return res.status(statusCode).json({
     success: true,
-    message,
+    message: msg,
     data,
   });
 };
