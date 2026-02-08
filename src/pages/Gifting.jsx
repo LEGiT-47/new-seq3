@@ -191,13 +191,16 @@ const Gifting = () => {
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="all">All Packs</SelectItem>
-                          {giftingSolutions.map((pack) => (
-                            <SelectItem key={pack.id} value={pack.id.toString()}>
-                              <div className="flex flex-col">
-                                <span className="font-medium">{pack.name}</span>
-                              </div>
-                            </SelectItem>
-                          ))}
+                          {giftingSolutions.map((pack) => {
+                            const packId = pack.id || pack._id;
+                            return (
+                              <SelectItem key={packId} value={packId.toString()}>
+                                <div className="flex flex-col">
+                                  <span className="font-medium">{pack.name}</span>
+                                </div>
+                              </SelectItem>
+                            );
+                          })}
                         </SelectContent>
                       </Select>
                     </div>
