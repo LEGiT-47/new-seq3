@@ -1,11 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '../components/ui/button';
 import { Card, CardContent } from '../components/ui/card';
 import { Badge } from '../components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
 import { useCart } from '../context/CartContext';
-import { categories, getBestsellerProducts } from '../data/products';
+import { productAPI } from '../lib/api';
 import { ArrowRight, Star, Shield, Gift, Truck, MessageCircle, ShoppingCart } from 'lucide-react';
 import { toast } from 'sonner';
 import HeroCarousel from '../components/HeroCarousel';
@@ -19,7 +19,25 @@ import fourth from '../assets/fourth.png';
 const Home = () => {
   const { addToCart } = useCart();
   const [selectedOptions, setSelectedOptions] = useState({});
-  const bestsellerProducts = getBestsellerProducts();
+  const [bestsellerProducts, setBestsellerProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchBestsellers = async () => {
+      try {
+        setLoading(true);
+        const response = await productAPI.getBestsellers();
+        setBestsellerProducts(response.data.data || response.data);
+      } catch (error) {
+        console.error('Error fetching bestsellers:', error);
+        toast.error('Failed to load bestseller products');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchBestsellers();
+  }, []);
 
   const handleOptionChange = (productId, option, value) => {
     setSelectedOptions(prev => ({
