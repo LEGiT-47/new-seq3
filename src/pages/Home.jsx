@@ -266,7 +266,13 @@ const Home = () => {
             </div>
 
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4 md:gap-6">
-              {categories.filter(cat => !['gifting', 'services'].includes(cat.id)).map((category, index) => (
+              {[
+                { id: 'chocolates', name: 'Chocolates', description: 'Premium chocolate-coated nuts', icon: '🤎' },
+                { id: 'nuts', name: 'Flavoured Nuts', description: 'Seasoned and roasted nuts', icon: '🥜' },
+                { id: 'jaggery', name: 'Jaggery Coated', description: 'Natural sweetness with seeds', icon: '🍯' },
+                { id: 'dryfruits', name: 'Dry Fruits', description: 'Premium dried fruits and nuts', icon: '🌰' },
+                { id: 'seeds', name: 'Seeds', description: 'Nutritious seeds collection', icon: '🌻' },
+              ].map((category, index) => (
                 <Link
                   key={category.id}
                   to={`/products/${category.id}`}
@@ -274,18 +280,9 @@ const Home = () => {
                 >
                   <Card className="hover-lift bg-card border-border h-full">
                     <CardContent className="p-3 sm:p-4 md:p-6 text-center flex flex-col h-full">
-                      {/* Zoomed image: keep inside overflow-hidden and increase default scale */}
-                <div className="w-full h-24 sm:h-28 md:h-40 mb-3 sm:mb-3 md:mb-6 rounded-lg overflow-hidden">
-                  <img
-                    src={category.image}
-                    alt={category.name}
-                    className="w-full h-full object-cover object-center"
-                    style={{ transform: 'scale(1.5)', transition: 'transform 0.45s ease' }}
-                  />
-                </div>
                       <div className="text-2xl sm:text-2xl md:text-4xl mb-2 sm:mb-2 md:mb-3">{category.icon}</div>
                       <h3 className="font-semibold mb-2 text-xs sm:text-sm md:text-lg line-clamp-2">{category.name}</h3>
-                      <p className="text-xs sm:text-xs md:text-sm text-muted-foreground mb-310m:mb-4 md:mb-6 flex-grow line-clamp-2">{category.description}</p>
+                      <p className="text-xs sm:text-xs md:text-sm text-muted-foreground mb-3 sm:mb-4 md:mb-6 flex-grow line-clamp-2">{category.description}</p>
                       <Button variant="outline" size="sm" className="group-hover:bg-primary group-hover:text-primary-foreground transition-colors w-full text-xs md:text-sm md:h-10">
                         Browse
                       </Button>
