@@ -1,0 +1,273 @@
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+
+@layer base {
+    :root {
+        /* Core Colors - Warm Earth Tones */
+        --background: 43 96% 97%; /* Warm cream */
+        --foreground: 25 30% 20%; /* Deep brown */
+        
+        /* Primary - Rich Terracotta */
+        --primary: 15 65% 50%; /* Terracotta */
+        --primary-foreground: 43 96% 97%;
+        --primary-glow: 15 65% 70%; /* Lighter terracotta for gradients */
+        
+        /* Secondary - Warm Brown */
+        --secondary: 25 30% 35%; /* Warm brown */
+        --secondary-foreground: 43 96% 97%;
+        
+        /* Accent - Muted Gold */
+        --accent: 40 55% 65%; /* Muted gold */
+        --accent-foreground: 25 30% 20%;
+        
+        /* Card & UI Elements */
+        --card: 43 96% 99%; /* Slightly warmer white */
+        --card-foreground: 25 30% 20%;
+        --popover: 43 96% 99%;
+        --popover-foreground: 25 30% 20%;
+        
+        /* Muted Elements */
+        --muted: 25 15% 88%; /* Warm gray */
+        --muted-foreground: 25 20% 45%;
+        
+        /* Interactive Elements */
+        --border: 25 15% 85%;
+        --input: 25 15% 85%;
+        --ring: 15 65% 50%;
+        
+        /* Status Colors */
+        --destructive: 0 84% 60%;
+        --destructive-foreground: 43 96% 97%;
+        --success: 120 50% 45%;
+        --success-foreground: 43 96% 97%;
+        
+        /* Custom Gradients */
+        --gradient-primary: linear-gradient(135deg, hsl(15 65% 50%), hsl(15 65% 70%));
+        --gradient-warm: linear-gradient(135deg, hsl(40 55% 85%), hsl(43 96% 97%));
+        --gradient-overlay: linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0.3) 100%);
+        
+        /* Shadows */
+        --shadow-soft: 0 2px 8px -2px hsl(25 30% 20% / 0.1);
+        --shadow-medium: 0 8px 25px -5px hsl(25 30% 20% / 0.15);
+        --shadow-large: 0 20px 40px -10px hsl(25 30% 20% / 0.2);
+        --shadow-glow: 0 0 30px hsl(15 65% 70% / 0.3);
+        
+        /* Animation */
+        --transition-smooth: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        --transition-bounce: 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        
+        /* Radius */
+        --radius: 0.75rem;
+        --radius-sm: 0.5rem;
+        --radius-lg: 1rem;
+    }
+    
+    .dark {
+        --background: 25 30% 8%; /* Dark brown */
+        --foreground: 43 96% 97%;
+        
+        --primary: 15 65% 55%;
+        --primary-foreground: 25 30% 8%;
+        --primary-glow: 15 65% 70%;
+        
+        --secondary: 25 30% 15%;
+        --secondary-foreground: 43 96% 97%;
+        
+        --accent: 40 55% 60%;
+        --accent-foreground: 25 30% 8%;
+        
+        --card: 25 30% 12%;
+        --card-foreground: 43 96% 97%;
+        --popover: 25 30% 12%;
+        --popover-foreground: 43 96% 97%;
+        
+        --muted: 25 30% 18%;
+        --muted-foreground: 25 20% 60%;
+        
+        --border: 25 30% 20%;
+        --input: 25 30% 20%;
+        --ring: 15 65% 55%;
+        
+        --gradient-primary: linear-gradient(135deg, hsl(15 65% 55%), hsl(15 65% 70%));
+        --gradient-warm: linear-gradient(135deg, hsl(25 30% 15%), hsl(25 30% 12%));
+    }
+}
+
+@layer base {
+    * {
+        @apply border-border;
+    }
+    
+    body {
+        @apply bg-background text-foreground font-sans antialiased;
+    }
+    
+    html {
+        scroll-behavior: smooth;
+    }
+    
+    /* Typography */
+    .font-display {
+        font-family: 'Playfair Display', serif;
+    }
+    
+    .font-sans {
+        font-family: 'Inter', sans-serif;
+    }
+}
+
+@layer components {
+    /* Gradient backgrounds */
+    .bg-gradient-primary {
+        background: var(--gradient-primary);
+    }
+    
+    .bg-gradient-warm {
+        background: var(--gradient-warm);
+    }
+    
+    /* Shadow utilities */
+    .shadow-soft {
+        box-shadow: var(--shadow-soft);
+    }
+    
+    .shadow-medium {
+        box-shadow: var(--shadow-medium);
+    }
+    
+    .shadow-large {
+        box-shadow: var(--shadow-large);
+    }
+    
+    .shadow-glow {
+        box-shadow: var(--shadow-glow);
+    }
+    
+    /* Custom animations */
+    .animate-fade-in {
+        animation: fadeIn 0.6s ease-out;
+    }
+    
+    .animate-slide-up {
+        animation: slideUp 0.6s ease-out;
+    }
+    
+    .animate-scale-in {
+        animation: scaleIn 0.4s ease-out;
+    }
+    
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+    
+    @keyframes slideUp {
+        from { 
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to { 
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    @keyframes scaleIn {
+        from { 
+            opacity: 0;
+            transform: scale(0.9);
+        }
+        to { 
+            opacity: 1;
+            transform: scale(1);
+        }
+    }
+    
+    /* Hover effects */
+    .hover-lift {
+        transition: transform var(--transition-smooth), box-shadow var(--transition-smooth);
+    }
+    
+    .hover-lift:hover {
+        transform: translateY(-4px);
+        box-shadow: var(--shadow-large);
+    }
+    
+    /* WhatsApp floating button */
+    .whatsapp-float {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        z-index: 50;
+        width: 60px;
+        height: 60px;
+        background: #25D366;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 4px 20px rgba(37, 211, 102, 0.3);
+        transition: transform var(--transition-bounce), box-shadow var(--transition-smooth);
+    }
+    
+    .whatsapp-float:hover {
+        transform: scale(1.1);
+        box-shadow: 0 6px 25px rgba(37, 211, 102, 0.4);
+    }
+}
+
+@layer base {
+    [data-debug-wrapper="true"] {
+        display: contents !important;
+    }
+
+    [data-debug-wrapper="true"] > * {
+        margin-left: inherit;
+        margin-right: inherit;
+        margin-top: inherit;
+        margin-bottom: inherit;
+        padding-left: inherit;
+        padding-right: inherit;
+        padding-top: inherit;
+        padding-bottom: inherit;
+        column-gap: inherit;
+        row-gap: inherit;
+        gap: inherit;
+        border-left-width: inherit;
+        border-right-width: inherit;
+        border-top-width: inherit;
+        border-bottom-width: inherit;
+        border-left-style: inherit;
+        border-right-style: inherit;
+        border-top-style: inherit;
+        border-bottom-style: inherit;
+        border-left-color: inherit;
+        border-right-color: inherit;
+        border-top-color: inherit;
+        border-bottom-color: inherit;
+    }
+
+    /* Leaflet Map Container Fixes */
+    .leaflet-container {
+        z-index: 0 !important;
+        overflow: hidden !important;
+    }
+
+    .leaflet-control-container {
+        z-index: 10 !important;
+    }
+
+    .leaflet-top,
+    .leaflet-bottom {
+        z-index: 10 !important;
+        pointer-events: none;
+    }
+
+    .leaflet-control {
+        pointer-events: auto;
+    }
+}

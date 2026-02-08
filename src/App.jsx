@@ -1,0 +1,63 @@
+import React from 'react';
+import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
+import { useEffect } from 'react';
+import { Toaster } from './components/ui/sonner';
+
+// Components
+import Navigation from './components/Navigation';
+import Home from './pages/Home';
+import Products from './pages/Products';
+import Gifting from './pages/Gifting';
+import About from './pages/About';
+import Contact from './pages/Contact';
+import ContractManufacturing from './pages/ContractManufacturing';
+import Cart from './components/Cart';
+import WhatsAppFloat from './components/WhatsAppFloat';
+import FestivePopup from './components/FestivePopup';
+import LoadingScreen from './components/LoadingScreen';
+import Footer from './components/Footer';
+
+// Context
+import { CartProvider } from './context/CartContext';
+
+function ScrollToTop() {
+  const { pathname } = useLocation();
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [pathname]);
+
+  return null;
+}
+
+function App() {
+  return (
+    <CartProvider>
+      <LoadingScreen minDuration={1000} />
+      <div className="App min-h-screen bg-background flex flex-col">
+        <BrowserRouter>
+          <ScrollToTop />
+          <Navigation />
+          <div className="flex-grow">
+            <Routes>
+              <Route path="/" element={<Home />} />
+              <Route path="/products" element={<Products />} />
+              <Route path="/products/:category" element={<Products />} />
+              <Route path="/gifting" element={<Gifting />} />
+              <Route path="/about" element={<About />} />
+              <Route path="/contact" element={<Contact />} />
+              <Route path="/contract-manufacturing" element={<ContractManufacturing />} />
+            </Routes>
+          </div>
+          <Footer />
+          <Cart />
+          <WhatsAppFloat />
+          {/* <FestivePopup /> */}
+          <Toaster position="top-center" />
+        </BrowserRouter>
+      </div>
+    </CartProvider>
+  );
+}
+
+export default App;
