@@ -1,19 +1,42 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '../components/ui/button';
 import { Card, CardContent } from '../components/ui/card';
 import { Badge } from '../components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
 import { useCart } from '../context/CartContext';
-import { getProductsByCategory } from '../data/products';
+import { productAPI } from '../lib/api';
 import { MessageCircle, Gift } from 'lucide-react';
 import { toast } from 'sonner';
 
 const Gifting = () => {
   const [serviceSelections, setServiceSelections] = useState({});
   const { addToCart } = useCart();
+  const [giftingSolutions, setGiftingSolutions] = useState([]);
+  const [giftingServices, setGiftingServices] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const giftingSolutions = getProductsByCategory('gifting');
-  const giftingServices = getProductsByCategory('services');
+  useEffect(() => {
+    const fetchGiftingProducts = async () => {
+      try {
+        setLoading(true);
+        const allProductsResponse = await productAPI.getAll();
+        const allProducts = allProductsResponse.data.data || allProductsResponse.data;
+
+        const solutions = allProducts.filter(p => p.category === 'gifting');
+        const services = allProducts.filter(p => p.category === 'services');
+
+        setGiftingSolutions(solutions);
+        setGiftingServices(services);
+      } catch (error) {
+        console.error('Error fetching gifting products:', error);
+        toast.error('Failed to load gifting products');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchGiftingProducts();
+  }, []);
 
   const festivalOptions = {
     'Corporate Gifting': [
@@ -105,9 +128,15 @@ const Gifting = () => {
 
           {/* Services with Selection Dropdowns */}
           <div className="space-y-4 sm:space-y-6 mb-12">
-            {giftingServices.length > 0 ? (
-              giftingServices.map((service) => (
-                <div key={service.id} className="bg-card border border-border rounded-lg p-4 sm:p-6">
+            {loading ? (
+              <div className="text-center py-12">
+                <p className="text-muted-foreground">Loading gifting services...</p>
+              </div>
+            ) : giftingServices.length > 0 ? (
+              giftingServices.map((service) => {
+                const serviceId = service.id || service._id;
+                return (
+                <div key={serviceId} className="bg-card border border-border rounded-lg p-4 sm:p-6">
                   {/* Service Header */}
                   <h2 className="text-lg sm:text-xl font-bold mb-2">{service.name}</h2>
                   <p className="text-xs sm:text-sm text-muted-foreground mb-6">{service.description}</p>
@@ -121,8 +150,8 @@ const Gifting = () => {
                           {service.name.includes('Festive') ? 'Select Festival' : 'Select Occasion'}
                         </label>
                         <Select
-                          value={serviceSelections[service.id]?.festival || ''}
-                          onValueChange={(value) => handleServiceSelection(service.id, 'festival', value)}
+                          value={serviceSelections[serviceId]?.festival || ''}
+                          onValueChange={(value) => handleServiceSelection(serviceId, 'festival', value)}
                         >
                           <SelectTrigger className="w-full h-9 sm:h-10 text-xs sm:text-sm">
                             <SelectValue placeholder={`Choose a ${service.name.includes('Festive') ? 'festival' : 'occasion'}`} />
@@ -139,15 +168,15 @@ const Gifting = () => {
                     )}
 
                     {/* Other Occasion Input */}
-                    {serviceSelections[service.id]?.festival === 'Other' && (
+                    {serviceSelections[serviceId]?.festival === 'Other' && (
                       <div>
                         <label className="text-xs sm:text-sm font-medium text-muted-foreground block mb-2">
                           Please specify the occasion
                         </label>
                         <input
                           type="text"
-                          value={serviceSelections[service.id]?.otherOccasion || ''}
-                          onChange={(e) => handleServiceSelection(service.id, 'otherOccasion', e.target.value)}
+                          value={serviceSelections[serviceId]?.otherOccasion || ''}
+                          onChange={(e) => handleServiceSelection(serviceId, 'otherOccasion', e.target.value)}
                           placeholder="Enter your occasion"
                           className="w-full h-9 sm:h-10 px-3 rounded-md border border-input bg-background text-xs sm:text-sm"
                         />
@@ -160,65 +189,75 @@ const Gifting = () => {
                         Select Pack
                       </label>
                       <Select
-                        value={serviceSelections[service.id]?.packType || ''}
-                        onValueChange={(value) => handleServiceSelection(service.id, 'packType', value)}
+                        value={serviceSelections[serviceId]?.packType || ''}
+                        onValueChange={(value) => handleServiceSelection(serviceId, 'packType', value)}
                       >
                         <SelectTrigger className="w-full h-9 sm:h-10 text-xs sm:text-sm">
                           <SelectValue placeholder="Choose a pack" />
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="all">All Packs</SelectItem>
-                          {giftingSolutions.map((pack) => (
-                            <SelectItem key={pack.id} value={pack.id.toString()}>
-                              <div className="flex flex-col">
-                                <span className="font-medium">{pack.name}</span>
-                              </div>
-                            </SelectItem>
-                          ))}
+                          {giftingSolutions.map((pack) => {
+                            const packId = pack.id || pack._id;
+                            return (
+                              <SelectItem key={packId} value={packId.toString()}>
+                                <div className="flex flex-col">
+                                  <span className="font-medium">{pack.name}</span>
+                                </div>
+                              </SelectItem>
+                            );
+                          })}
                         </SelectContent>
                       </Select>
                     </div>
                   </div>
 
                   {/* Display Selected Pack Details */}
-                  {serviceSelections[service.id]?.packType && serviceSelections[service.id]?.packType !== 'all' && (
+                  {serviceSelections[serviceId]?.packType && serviceSelections[serviceId]?.packType !== 'all' && (
                     <div className="mt-6 p-4 bg-muted/50 rounded-lg border border-border">
                       {giftingSolutions
-                        .filter(pack => pack.id.toString() === serviceSelections[service.id].packType)
-                        .map((pack) => (
-                          <div key={pack.id}>
-                            <h3 className="font-semibold text-sm sm:text-base mb-2">{pack.name}</h3>
-                            <p className="text-xs sm:text-sm text-muted-foreground mb-4">{pack.description}</p>
-                            <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
-                              <Button
-                                size="sm"
-                                className="flex-1 bg-[#25D366] hover:bg-[#128C7E] text-white text-xs sm:text-sm h-9 sm:h-10"
-                                onClick={() => handleBuyNow(pack)}
-                              >
-                                <MessageCircle className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
-                                Buy Now
-                              </Button>
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                className="flex-1 text-xs sm:text-sm h-9 sm:h-10"
-                                onClick={() => handleAddToCart(pack)}
-                              >
-                                Add to Cart
-                              </Button>
+                        .filter(pack => {
+                          const packId = pack.id || pack._id;
+                          return packId.toString() === serviceSelections[serviceId].packType;
+                        })
+                        .map((pack) => {
+                          const packId = pack.id || pack._id;
+                          return (
+                            <div key={packId}>
+                              <h3 className="font-semibold text-sm sm:text-base mb-2">{pack.name}</h3>
+                              <p className="text-xs sm:text-sm text-muted-foreground mb-4">{pack.description}</p>
+                              <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
+                                <Button
+                                  size="sm"
+                                  className="flex-1 bg-[#25D366] hover:bg-[#128C7E] text-white text-xs sm:text-sm h-9 sm:h-10"
+                                  onClick={() => handleBuyNow(pack)}
+                                >
+                                  <MessageCircle className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+                                  Buy Now
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  className="flex-1 text-xs sm:text-sm h-9 sm:h-10"
+                                  onClick={() => handleAddToCart(pack)}
+                                >
+                                  Add to Cart
+                                </Button>
+                              </div>
                             </div>
-                          </div>
-                        ))}
+                          );
+                        })}
                     </div>
                   )}
 
-                  {serviceSelections[service.id]?.packType === 'all' && (
+                  {serviceSelections[serviceId]?.packType === 'all' && (
                     <div className="mt-6 p-4 bg-muted/50 rounded-lg border border-border">
                       <p className="text-xs sm:text-sm text-muted-foreground">Select a specific pack to view details and purchase options.</p>
                     </div>
                   )}
                 </div>
-              ))
+              );
+              })
             ) : (
               <div className="text-center py-12 sm:py-16">
                 <Gift className="h-12 w-12 text-muted-foreground mx-auto mb-4" />

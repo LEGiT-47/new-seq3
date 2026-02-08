@@ -55,13 +55,66 @@ export const adminAuthAPI = {
   verifyToken: () => apiClient.get('/admin/auth/verify'),
 };
 
-// Product API calls
+// Product API calls with fallback to local data
 export const productAPI = {
-  getAll: () => apiClient.get('/products'),
-  getByCategory: (category) => apiClient.get(`/products/category/${category}`),
-  getById: (id) => apiClient.get(`/products/${id}`),
-  getBestsellers: () => apiClient.get('/products/bestseller/products'),
-  getDeliverable: () => apiClient.get('/products/deliverable/list'),
+  getAll: async () => {
+    try {
+      return await apiClient.get('/products');
+    } catch (error) {
+      console.warn('Backend API unavailable, using local data', error.message);
+      // Fallback to local products data
+      const { products } = await import('../data/products.jsx');
+      return { data: { data: products } };
+    }
+  },
+
+  getByCategory: async (category) => {
+    try {
+      return await apiClient.get(`/products/category/${category}`);
+    } catch (error) {
+      console.warn('Backend API unavailable, using local data', error.message);
+      const { getProductsByCategory } = await import('../data/products.jsx');
+      const products = getProductsByCategory(category);
+      return { data: { data: products } };
+    }
+  },
+
+  getById: async (id) => {
+    try {
+      return await apiClient.get(`/products/${id}`);
+    } catch (error) {
+      console.warn('Backend API unavailable, using local data', error.message);
+      const { getProductById } = await import('../data/products.jsx');
+      const product = getProductById(id);
+      if (!product) {
+        throw new Error('Product not found');
+      }
+      return { data: { data: product } };
+    }
+  },
+
+  getBestsellers: async () => {
+    try {
+      return await apiClient.get('/products/bestseller/products');
+    } catch (error) {
+      console.warn('Backend API unavailable, using local data', error.message);
+      const { getBestsellerProducts } = await import('../data/products.jsx');
+      const products = getBestsellerProducts();
+      return { data: { data: products } };
+    }
+  },
+
+  getDeliverable: async () => {
+    try {
+      return await apiClient.get('/products/deliverable/list');
+    } catch (error) {
+      console.warn('Backend API unavailable, using local data', error.message);
+      const { getProductsByCategory } = await import('../data/products.jsx');
+      const allProducts = getProductsByCategory('all');
+      const deliverable = allProducts.filter(p => p.isDeliverable);
+      return { data: { data: deliverable } };
+    }
+  },
 };
 
 // Order API calls

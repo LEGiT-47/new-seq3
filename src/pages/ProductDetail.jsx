@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../co
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
 import { useCart } from '../context/CartContext';
-import { getProductById } from '../data/products';
+import { productAPI } from '../lib/api';
 import { ShoppingCart, MessageCircle, Heart, Share2, Truck, Shield, Star } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -18,34 +18,51 @@ const ProductDetail = () => {
   const [selectedFlavor, setSelectedFlavor] = useState('');
   const [quantity, setQuantity] = useState(1);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const { addToCart } = useCart();
 
   useEffect(() => {
-    const productData = getProductById(id);
-    if (productData) {
-      setProduct(productData);
-      if (productData.defaultCoating) {
-        setSelectedCoating(productData.defaultCoating);
+    const fetchProduct = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const response = await productAPI.getById(id);
+        const productData = response.data.data || response.data;
+
+        if (productData) {
+          setProduct(productData);
+          if (productData.defaultCoating) {
+            setSelectedCoating(productData.defaultCoating);
+          }
+        } else {
+          setError('Product not found');
+        }
+      } catch (err) {
+        console.error('Error fetching product:', err);
+        setError('Failed to load product details');
+        toast.error('Failed to load product');
+      } finally {
+        setLoading(false);
       }
-    } else {
-      setLoading(false);
-    }
-    setLoading(false);
+    };
+
+    fetchProduct();
   }, [id]);
 
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <p>Loading...</p>
+        <p className="text-muted-foreground">Loading product details...</p>
       </div>
     );
   }
 
-  if (!product) {
+  if (error || !product) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <h1 className="text-2xl font-bold mb-4">Product Not Found</h1>
+          <h1 className="text-2xl font-bold mb-4">{error || 'Product Not Found'}</h1>
+          <p className="text-muted-foreground mb-6">The product you're looking for doesn't exist or couldn't be loaded.</p>
           <Button onClick={() => navigate('/products')}>Back to Products</Button>
         </div>
       </div>
@@ -88,8 +105,8 @@ const ProductDetail = () => {
     window.open(whatsappUrl, '_blank');
   };
 
-  // Sample product details (these will come from database later)
-  const benefits = [
+  // Product details from database or defaults
+  const benefits = product.benefits && product.benefits.length > 0 ? product.benefits : [
     'Rich in antioxidants',
     'High in protein and fiber',
     'Helps improve digestion',
@@ -97,7 +114,7 @@ const ProductDetail = () => {
     'Enhances immune system',
   ];
 
-  const qualityHighlights = [
+  const qualityHighlights = product.qualityHighlights && product.qualityHighlights.length > 0 ? product.qualityHighlights : [
     'Premium quality sourced directly',
     'No artificial additives',
     'Carefully roasted for maximum flavor',
@@ -105,7 +122,7 @@ const ProductDetail = () => {
     'Packed in food-grade materials',
   ];
 
-  const testimonials = [
+  const testimonials = product.testimonials && product.testimonials.length > 0 ? product.testimonials : [
     {
       author: 'Rahul K.',
       text: 'Excellent quality and taste. Best product I have tried. Highly recommended!',

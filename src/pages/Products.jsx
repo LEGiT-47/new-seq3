@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Button } from '../components/ui/button';
 import { Card, CardContent } from '../components/ui/card';
@@ -6,7 +6,7 @@ import { Badge } from '../components/ui/badge';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '../components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
 import { useCart } from '../context/CartContext';
-import { categories, getProductsByCategory } from '../data/products';
+import { productAPI } from '../lib/api';
 import { ShoppingCart, MessageCircle, Filter } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -14,7 +14,30 @@ const Products = () => {
   const { category: urlCategory } = useParams();
   const [activeCategory, setActiveCategory] = useState(urlCategory || 'chocolates');
   const [selectedOptions, setSelectedOptions] = useState({});
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const { addToCart } = useCart();
+
+  // Fetch products from backend
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const response = await productAPI.getAll();
+        setProducts(response.data.data || response.data);
+      } catch (err) {
+        console.error('Error fetching products:', err);
+        setError('Failed to load products. Please try again later.');
+        toast.error('Failed to load products');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProducts();
+  }, []);
 
   
 
@@ -32,12 +55,18 @@ const Products = () => {
     return product.image;
   };
 
-  const categoryProducts = getProductsByCategory(activeCategory).filter(
-    product => product.category !== 'gifting' && product.category !== 'services' && !product.isHidden
-  );
+  // Get filtered products based on active category
+  const getProductsByCategory = (categoryId) => {
+    if (!categoryId || categoryId === 'all') {
+      return products.filter(p => p.category !== 'gifting' && p.category !== 'services' && !p.isHidden);
+    }
+    return products.filter(p => p.category === categoryId && p.category !== 'gifting' && p.category !== 'services' && !p.isHidden);
+  };
+
+  const categoryProducts = getProductsByCategory(activeCategory);
 
   const handleAddToCart = (product) => {
-    const options = selectedOptions[product.id] || {};
+    const options = selectedOptions[product.id || product._id] || {};
 
     addToCart(product, 1, {
       coating: options.coating || null,
@@ -47,12 +76,12 @@ const Products = () => {
     toast.success(`${product.name} added to cart!`);
     setSelectedOptions(prev => ({
       ...prev,
-      [product.id]: {}
+      [product.id || product._id]: {}
     }));
   };
 
   const handleBuyNow = (product) => {
-    const options = selectedOptions[product.id] || {};
+    const options = selectedOptions[product.id || product._id] || {};
 
     let message = `Hello! I would like to order ${product.name}`;
 
@@ -71,17 +100,28 @@ const Products = () => {
     window.open(whatsappUrl, '_blank');
   };
 
+  // Build categories from fetched products
   const allCategories = useMemo(() => {
-    const filtered = categories.filter(cat => cat.id !== 'gifting' && cat.id !== 'services');
-    const validCategories = filtered.filter(cat => {
-      const catProducts = getProductsByCategory(cat.id).filter(
-        product => product.category !== 'gifting' && product.category !== 'services' && !product.isHidden
-      );
-      return catProducts.length > 0 || cat.id !== 'specials';
+    const categoriesSet = new Set();
+    products.forEach(p => {
+      if (p.category !== 'gifting' && p.category !== 'services' && !p.isHidden) {
+        categoriesSet.add(p.category);
+      }
     });
+
+    const categoryMap = {
+      'chocolates': { id: 'chocolates', name: 'Chocolates', description: 'Premium chocolate-coated nuts and delicacies', icon: '🤎' },
+      'nuts': { id: 'nuts', name: 'Flavoured Nuts', description: 'Deliciously seasoned and roasted nuts', icon: '🥜' },
+      'jaggery': { id: 'jaggery', name: 'Jaggery Coated', description: 'Natural sweetness with sesame and poppy seeds', icon: '🍯' },
+      'dryfruits': { id: 'dryfruits', name: 'Dry Fruits', description: 'Premium quality dried fruits and nuts', icon: '🌰' },
+      'seeds': { id: 'seeds', name: 'Seeds', description: 'Premium quality seeds rich in nutrition', icon: '🌻' },
+    };
+
+    const validCategories = Array.from(categoriesSet).map(cat => categoryMap[cat] || { id: cat, name: cat, description: '', icon: '📦' });
+
     // Add "All Products" at the beginning
-    return [{ id: 'all', name: 'All Products', description: '', icon: '🛍️', image: '' }, ...validCategories];
-  }, []);
+    return [{ id: 'all', name: 'All Products', description: '', icon: '🛍️' }, ...validCategories];
+  }, [products]);
 
   return (
     <div className="min-h-screen py-6 sm:py-8">
@@ -127,152 +167,162 @@ const Products = () => {
             </div>
 
             {/* Products Grid */}
-            {allCategories.map((cat) => {
-              const tabProducts = getProductsByCategory(cat.id).filter(
-                product => product.category !== 'gifting' && product.category !== 'services' && !product.isHidden
-              );
+            {loading ? (
+              <div className="text-center py-12 sm:py-16">
+                <p className="text-muted-foreground">Loading products...</p>
+              </div>
+            ) : error ? (
+              <div className="text-center py-12 sm:py-16">
+                <p className="text-destructive">{error}</p>
+                <Button className="mt-4" onClick={() => window.location.reload()}>
+                  Try Again
+                </Button>
+              </div>
+            ) : (
+              allCategories.map((cat) => {
+                const tabProducts = getProductsByCategory(cat.id);
 
-              return (
-                <TabsContent key={cat.id} value={cat.id}>
-                  <div className="mb-6 flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <Filter className="h-4 w-4" />
-                      <span className="text-xs sm:text-sm text-muted-foreground">
-                        Showing {tabProducts.length} products
-                      </span>
+                return (
+                  <TabsContent key={cat.id} value={cat.id}>
+                    <div className="mb-6 flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Filter className="h-4 w-4" />
+                        <span className="text-xs sm:text-sm text-muted-foreground">
+                          Showing {tabProducts.length} products
+                        </span>
+                      </div>
                     </div>
-                  </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
-                    {tabProducts.map((product) => {
-                      const hasCoatings = product.coatings && product.coatings.length > 0;
-                      const hasFlavors = product.flavors && product.flavors.length > 0;
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
+                      {tabProducts.map((product) => {
+                        const productId = product.id || product._id;
+                        const hasCoatings = product.coatings && product.coatings.length > 0;
+                        const hasFlavors = product.flavors && product.flavors.length > 0;
+                        const categoryName = allCategories.find(c => c.id === product.category)?.name || product.category;
 
-                        return (
-                        <Card key={product.id} className="hover-lift bg-card border-border group flex flex-col">
-                          <CardContent className="p-0 flex flex-col h-full">
-                          <div className="relative cursor-zoom-in">
-                            <div className="overflow-hidden rounded-t-lg">
-                            <img
-                              src={getProductImage(product)}
-                              alt={product.name}
-                              className="w-full h-40 sm:h-48 object-cover transition-transform duration-300 transform hover:scale-110 group-hover:scale-105"
-                              onClick={() => window.open(getProductImage(product), '_blank')}
-                              role="button"
-                              aria-label={`Zoom ${product.name}`}
-                            />
-                            </div>
-                            {product.bestseller && (
-                            <Badge className="absolute top-3 left-3 bg-destructive text-destructive-foreground text-xs sm:text-sm">
-                              Bestseller
-                            </Badge>
-                            )}
-                          </div>
-
-                          <div className="p-3 sm:p-4 flex flex-col flex-grow">
-                            <div className="mb-2">
-                            <Badge variant="secondary" className="text-xs">
-                              {categories.find(c => c.id === product.category)?.name || product.category}
-                            </Badge>
+                          return (
+                          <Card key={productId} className="hover-lift bg-card border-border group flex flex-col">
+                            <CardContent className="p-0 flex flex-col h-full">
+                            <div className="relative cursor-zoom-in">
+                              <Link to={`/product/${productId}`} className="overflow-hidden rounded-t-lg block">
+                                <img
+                                  src={getProductImage(product)}
+                                  alt={product.name}
+                                  className="w-full h-40 sm:h-48 object-cover transition-transform duration-300 transform hover:scale-110 group-hover:scale-105"
+                                />
+                              </Link>
+                              {product.bestseller && (
+                              <Badge className="absolute top-3 left-3 bg-destructive text-destructive-foreground text-xs sm:text-sm">
+                                Bestseller
+                              </Badge>
+                              )}
                             </div>
 
-                            <h3 className="font-semibold mb-1 text-xs sm:text-sm md:text-base line-clamp-2">{product.name}</h3>
-                            <p className="text-xs text-muted-foreground mb-2 line-clamp-2">
-                            {product.description}
-                            </p>
+                            <div className="p-3 sm:p-4 flex flex-col flex-grow">
+                              <div className="mb-2">
+                              <Badge variant="secondary" className="text-xs">
+                                {categoryName}
+                              </Badge>
+                              </div>
 
-                            {(hasCoatings || hasFlavors) && (
-                            <div className="mb-3 space-y-2">
-                              {hasCoatings && (
-                              <div>
-                                <label className="text-xs font-medium text-muted-foreground block mb-1">
-                                Coating
-                                </label>
-                                <Select
-                                value={selectedOptions[product.id]?.coating || ''}
-                                onValueChange={(value) => handleOptionChange(product.id, 'coating', value === '__none__' ? null : value)}
-                                >
-                                <SelectTrigger className="h-8 text-xs">
-                                  <SelectValue placeholder="Select a coating" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value="__none__">No coating</SelectItem>
-                                  {product.coatings.map((coating) => (
-                                  <SelectItem key={coating} value={coating}>
-                                    {coating}
-                                  </SelectItem>
-                                  ))}
-                                </SelectContent>
-                                </Select>
+                              <h3 className="font-semibold mb-1 text-xs sm:text-sm md:text-base line-clamp-2">{product.name}</h3>
+                              <p className="text-xs text-muted-foreground mb-2 line-clamp-2">
+                              {product.description}
+                              </p>
+
+                              {(hasCoatings || hasFlavors) && (
+                              <div className="mb-3 space-y-2">
+                                {hasCoatings && (
+                                <div>
+                                  <label className="text-xs font-medium text-muted-foreground block mb-1">
+                                  Coating
+                                  </label>
+                                  <Select
+                                  value={selectedOptions[productId]?.coating || ''}
+                                  onValueChange={(value) => handleOptionChange(productId, 'coating', value === '__none__' ? null : value)}
+                                  >
+                                  <SelectTrigger className="h-8 text-xs">
+                                    <SelectValue placeholder="Select a coating" />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="__none__">No coating</SelectItem>
+                                    {product.coatings.map((coating) => (
+                                    <SelectItem key={coating} value={coating}>
+                                      {coating}
+                                    </SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                  </Select>
+                                </div>
+                                )}
+
+                                {hasFlavors && (
+                                <div>
+                                  <label className="text-xs font-medium text-muted-foreground block mb-1">
+                                  Flavor
+                                  </label>
+                                  <Select
+                                  value={selectedOptions[productId]?.flavor || ''}
+                                  onValueChange={(value) => handleOptionChange(productId, 'flavor', value === '__none__' ? null : value)}
+                                  >
+                                  <SelectTrigger className="h-8 text-xs">
+                                    <SelectValue placeholder="Select a flavor" />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="__none__">No flavor</SelectItem>
+                                    {product.flavors.map((flavor) => (
+                                    <SelectItem key={flavor} value={flavor}>
+                                      {flavor}
+                                    </SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                  </Select>
+                                </div>
+                                )}
                               </div>
                               )}
 
-                              {hasFlavors && (
-                              <div>
-                                <label className="text-xs font-medium text-muted-foreground block mb-1">
-                                Flavor
-                                </label>
-                                <Select
-                                value={selectedOptions[product.id]?.flavor || ''}
-                                onValueChange={(value) => handleOptionChange(product.id, 'flavor', value === '__none__' ? null : value)}
-                                >
-                                <SelectTrigger className="h-8 text-xs">
-                                  <SelectValue placeholder="Select a flavor" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value="__none__">No flavor</SelectItem>
-                                  {product.flavors.map((flavor) => (
-                                  <SelectItem key={flavor} value={flavor}>
-                                    {flavor}
-                                  </SelectItem>
-                                  ))}
-                                </SelectContent>
-                                </Select>
+                              <p className="text-lg font-bold mb-4 hidden">₹{product.price}</p>
+
+                              <div className="flex flex-col gap-2 mt-auto">
+                              <Button
+                                size="sm"
+                                className="w-full bg-[#25D366] hover:bg-[#128C7E] text-white text-xs sm:text-sm h-9 sm:h-10"
+                                onClick={() => handleBuyNow(product)}
+                              >
+                                <MessageCircle className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+                                Buy Now
+                              </Button>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="w-full text-xs sm:text-sm h-9 sm:h-10"
+                                onClick={() => handleAddToCart(product)}
+                              >
+                                <ShoppingCart className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+                                Add to Cart
+                              </Button>
                               </div>
-                              )}
                             </div>
-                            )}
-
-                            <p className="text-lg font-bold mb-4 hidden">₹{product.price}</p>
-
-                            <div className="flex flex-col gap-2 mt-auto">
-                            <Button
-                              size="sm"
-                              className="w-full bg-[#25D366] hover:bg-[#128C7E] text-white text-xs sm:text-sm h-9 sm:h-10"
-                              onClick={() => handleBuyNow(product)}
-                            >
-                              <MessageCircle className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
-                              Buy Now
-                            </Button>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="w-full text-xs sm:text-sm h-9 sm:h-10"
-                              onClick={() => handleAddToCart(product)}
-                            >
-                              <ShoppingCart className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
-                              Add to Cart
-                            </Button>
-                            </div>
-                          </div>
-                          </CardContent>
-                        </Card>
-                        );
-                    })}
-                  </div>
-
-                  {tabProducts.length === 0 && (
-                    <div className="text-center py-12 sm:py-16">
-                      <ShoppingCart className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                      <h3 className="text-lg sm:text-xl font-semibold mb-2">No products found</h3>
-                      <p className="text-xs sm:text-sm text-muted-foreground">
-                        We couldn't find any products in this category.
-                      </p>
+                            </CardContent>
+                          </Card>
+                          );
+                      })}
                     </div>
-                  )}
-                </TabsContent>
-              );
-            })}
+
+                    {tabProducts.length === 0 && (
+                      <div className="text-center py-12 sm:py-16">
+                        <ShoppingCart className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                        <h3 className="text-lg sm:text-xl font-semibold mb-2">No products found</h3>
+                        <p className="text-xs sm:text-sm text-muted-foreground">
+                          We couldn't find any products in this category.
+                        </p>
+                      </div>
+                    )}
+                  </TabsContent>
+                );
+              })
+            )}
           </Tabs>
 
           {/* Bottom CTA */}
