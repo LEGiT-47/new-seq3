@@ -38,9 +38,11 @@ function ScrollToTop() {
 
 function App() {
   return (
-    <CartProvider>
-      <LoadingScreen minDuration={1000} />
-      <div className="App min-h-screen bg-background flex flex-col">
+    <AuthProvider>
+      <OccasionProvider>
+        <CartProvider>
+          <LoadingScreen minDuration={1000} />
+          <div className="App min-h-screen bg-background flex flex-col">
         <BrowserRouter>
           <ScrollToTop />
           <Navigation />
@@ -66,7 +68,9 @@ function App() {
           <Toaster position="top-center" />
         </BrowserRouter>
       </div>
-    </CartProvider>
+        </CartProvider>
+      </OccasionProvider>
+    </AuthProvider>
   );
 }
 
