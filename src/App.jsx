@@ -23,6 +23,8 @@ import Footer from './components/Footer';
 
 // Context
 import { CartProvider } from './context/CartContext';
+import { AuthProvider } from './context/AuthContext';
+import { OccasionProvider } from './context/OccasionContext';
 
 function ScrollToTop() {
   const { pathname } = useLocation();
