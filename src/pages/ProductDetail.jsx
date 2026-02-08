@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../co
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
 import { useCart } from '../context/CartContext';
-import { getProductById } from '../data/products';
+import { productAPI } from '../lib/api';
 import { ShoppingCart, MessageCircle, Heart, Share2, Truck, Shield, Star } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -18,19 +18,35 @@ const ProductDetail = () => {
   const [selectedFlavor, setSelectedFlavor] = useState('');
   const [quantity, setQuantity] = useState(1);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const { addToCart } = useCart();
 
   useEffect(() => {
-    const productData = getProductById(id);
-    if (productData) {
-      setProduct(productData);
-      if (productData.defaultCoating) {
-        setSelectedCoating(productData.defaultCoating);
+    const fetchProduct = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const response = await productAPI.getById(id);
+        const productData = response.data.data || response.data;
+
+        if (productData) {
+          setProduct(productData);
+          if (productData.defaultCoating) {
+            setSelectedCoating(productData.defaultCoating);
+          }
+        } else {
+          setError('Product not found');
+        }
+      } catch (err) {
+        console.error('Error fetching product:', err);
+        setError('Failed to load product details');
+        toast.error('Failed to load product');
+      } finally {
+        setLoading(false);
       }
-    } else {
-      setLoading(false);
-    }
-    setLoading(false);
+    };
+
+    fetchProduct();
   }, [id]);
 
   if (loading) {
