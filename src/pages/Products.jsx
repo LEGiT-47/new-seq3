@@ -55,12 +55,18 @@ const Products = () => {
     return product.image;
   };
 
-  const categoryProducts = getProductsByCategory(activeCategory).filter(
-    product => product.category !== 'gifting' && product.category !== 'services' && !product.isHidden
-  );
+  // Get filtered products based on active category
+  const getProductsByCategory = (categoryId) => {
+    if (!categoryId || categoryId === 'all') {
+      return products.filter(p => p.category !== 'gifting' && p.category !== 'services' && !p.isHidden);
+    }
+    return products.filter(p => p.category === categoryId && p.category !== 'gifting' && p.category !== 'services' && !p.isHidden);
+  };
+
+  const categoryProducts = getProductsByCategory(activeCategory);
 
   const handleAddToCart = (product) => {
-    const options = selectedOptions[product.id] || {};
+    const options = selectedOptions[product.id || product._id] || {};
 
     addToCart(product, 1, {
       coating: options.coating || null,
@@ -70,12 +76,12 @@ const Products = () => {
     toast.success(`${product.name} added to cart!`);
     setSelectedOptions(prev => ({
       ...prev,
-      [product.id]: {}
+      [product.id || product._id]: {}
     }));
   };
 
   const handleBuyNow = (product) => {
-    const options = selectedOptions[product.id] || {};
+    const options = selectedOptions[product.id || product._id] || {};
 
     let message = `Hello! I would like to order ${product.name}`;
 
@@ -94,17 +100,28 @@ const Products = () => {
     window.open(whatsappUrl, '_blank');
   };
 
+  // Build categories from fetched products
   const allCategories = useMemo(() => {
-    const filtered = categories.filter(cat => cat.id !== 'gifting' && cat.id !== 'services');
-    const validCategories = filtered.filter(cat => {
-      const catProducts = getProductsByCategory(cat.id).filter(
-        product => product.category !== 'gifting' && product.category !== 'services' && !product.isHidden
-      );
-      return catProducts.length > 0 || cat.id !== 'specials';
+    const categoriesSet = new Set();
+    products.forEach(p => {
+      if (p.category !== 'gifting' && p.category !== 'services' && !p.isHidden) {
+        categoriesSet.add(p.category);
+      }
     });
+
+    const categoryMap = {
+      'chocolates': { id: 'chocolates', name: 'Chocolates', description: 'Premium chocolate-coated nuts and delicacies', icon: '🤎' },
+      'nuts': { id: 'nuts', name: 'Flavoured Nuts', description: 'Deliciously seasoned and roasted nuts', icon: '🥜' },
+      'jaggery': { id: 'jaggery', name: 'Jaggery Coated', description: 'Natural sweetness with sesame and poppy seeds', icon: '🍯' },
+      'dryfruits': { id: 'dryfruits', name: 'Dry Fruits', description: 'Premium quality dried fruits and nuts', icon: '🌰' },
+      'seeds': { id: 'seeds', name: 'Seeds', description: 'Premium quality seeds rich in nutrition', icon: '🌻' },
+    };
+
+    const validCategories = Array.from(categoriesSet).map(cat => categoryMap[cat] || { id: cat, name: cat, description: '', icon: '📦' });
+
     // Add "All Products" at the beginning
-    return [{ id: 'all', name: 'All Products', description: '', icon: '🛍️', image: '' }, ...validCategories];
-  }, []);
+    return [{ id: 'all', name: 'All Products', description: '', icon: '🛍️' }, ...validCategories];
+  }, [products]);
 
   return (
     <div className="min-h-screen py-6 sm:py-8">
