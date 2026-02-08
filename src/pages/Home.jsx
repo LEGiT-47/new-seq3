@@ -9,6 +9,7 @@ import { categories, getBestsellerProducts } from '../data/products';
 import { ArrowRight, Star, Shield, Gift, Truck, MessageCircle, ShoppingCart } from 'lucide-react';
 import { toast } from 'sonner';
 import HeroCarousel from '../components/HeroCarousel';
+import OccasionBanner from '../components/OccasionBanner';
 import partner from '../assets/partner.jpg';
 import first from '../assets/first.jpg';
 import second from '../assets/second.jpg';
