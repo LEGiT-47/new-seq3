@@ -7,6 +7,7 @@ import { Toaster } from './components/ui/sonner';
 import Navigation from './components/Navigation';
 import Home from './pages/Home';
 import Products from './pages/Products';
+import ProductDetail from './pages/ProductDetail';
 import Gifting from './pages/Gifting';
 import About from './pages/About';
 import Contact from './pages/Contact';
