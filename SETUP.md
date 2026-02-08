@@ -34,9 +34,7 @@ sequeira-foods/
 ## Step 1: Database Setup (MongoDB Atlas)
 
 Your MongoDB connection URL:
-```
-mongodb+srv://virajprabhu47:V6lleOGZBAdrEToW@cluster0.rskn6q9.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0
-```
+
 
 **Important:** Save this URL locally. It will be used in backend `.env` file.
 
