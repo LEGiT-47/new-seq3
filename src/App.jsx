@@ -7,6 +7,10 @@ import { Toaster } from './components/ui/sonner';
 import Navigation from './components/Navigation';
 import Home from './pages/Home';
 import Products from './pages/Products';
+import ProductDetail from './pages/ProductDetail';
+import Checkout from './pages/Checkout';
+import AdminLogin from './pages/AdminLogin';
+import AdminDashboard from './pages/AdminDashboard';
 import Gifting from './pages/Gifting';
 import About from './pages/About';
 import Contact from './pages/Contact';
@@ -19,6 +23,8 @@ import Footer from './components/Footer';
 
 // Context
 import { CartProvider } from './context/CartContext';
+import { AuthProvider } from './context/AuthContext';
+import { OccasionProvider } from './context/OccasionContext';
 
 function ScrollToTop() {
   const { pathname } = useLocation();
@@ -32,9 +38,11 @@ function ScrollToTop() {
 
 function App() {
   return (
-    <CartProvider>
-      <LoadingScreen minDuration={1000} />
-      <div className="App min-h-screen bg-background flex flex-col">
+    <AuthProvider>
+      <OccasionProvider>
+        <CartProvider>
+          <LoadingScreen minDuration={1000} />
+          <div className="App min-h-screen bg-background flex flex-col">
         <BrowserRouter>
           <ScrollToTop />
           <Navigation />
@@ -43,10 +51,14 @@ function App() {
               <Route path="/" element={<Home />} />
               <Route path="/products" element={<Products />} />
               <Route path="/products/:category" element={<Products />} />
+              <Route path="/product/:id" element={<ProductDetail />} />
+              <Route path="/checkout" element={<Checkout />} />
               <Route path="/gifting" element={<Gifting />} />
               <Route path="/about" element={<About />} />
               <Route path="/contact" element={<Contact />} />
               <Route path="/contract-manufacturing" element={<ContractManufacturing />} />
+              <Route path="/admin/login" element={<AdminLogin />} />
+              <Route path="/admin/dashboard" element={<AdminDashboard />} />
             </Routes>
           </div>
           <Footer />
@@ -56,7 +68,9 @@ function App() {
           <Toaster position="top-center" />
         </BrowserRouter>
       </div>
-    </CartProvider>
+        </CartProvider>
+      </OccasionProvider>
+    </AuthProvider>
   );
 }
 

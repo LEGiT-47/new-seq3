@@ -9,6 +9,7 @@ import { categories, getBestsellerProducts } from '../data/products';
 import { ArrowRight, Star, Shield, Gift, Truck, MessageCircle, ShoppingCart } from 'lucide-react';
 import { toast } from 'sonner';
 import HeroCarousel from '../components/HeroCarousel';
+import OccasionBanner from '../components/OccasionBanner';
 import partner from '../assets/partner.jpg';
 import first from '../assets/first.jpg';
 import second from '../assets/second.jpg';
@@ -202,6 +203,13 @@ const Home = () => {
   return (
     <div className="min-h-screen">
       <HeroCarousel slides={heroSlides} />
+
+      {/* Occasion Banner */}
+      <section className="py-8 sm:py-12 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto">
+          <OccasionBanner />
+        </div>
+      </section>
 
       {/* Key Highlights */}
       <section className="py-12 sm:py-16 bg-gradient-warm">
