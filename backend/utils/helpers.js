@@ -87,3 +87,25 @@ export const sendSuccessResponse = (res, statusCode, data, message) => {
     data,
   });
 };
+
+// Verify Razorpay signature
+export const verifyRazorpaySignature = (razorpayOrderId, razorpayPaymentId, razorpaySignature) => {
+  try {
+    const secret = process.env.RAZORPAY_KEY_SECRET || 'test_secret';
+
+    // Create signature string: orderId|paymentId
+    const signatureString = `${razorpayOrderId}|${razorpayPaymentId}`;
+
+    // Create HMAC SHA256 signature
+    const generatedSignature = crypto
+      .createHmac('sha256', secret)
+      .update(signatureString)
+      .digest('hex');
+
+    // Compare signatures
+    return generatedSignature === razorpaySignature;
+  } catch (error) {
+    console.error('Error verifying Razorpay signature:', error);
+    return false;
+  }
+};

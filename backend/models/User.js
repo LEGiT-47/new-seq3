@@ -35,6 +35,20 @@ const userSchema = new mongoose.Schema(
         isDefault: Boolean,
       },
     ],
+    cart: [
+      {
+        id: mongoose.Schema.Types.ObjectId,
+        productId: Number,
+        name: String,
+        price: Number,
+        quantity: Number,
+        selectedCoating: String,
+        selectedFlavor: String,
+        image: String,
+        category: String,
+        isDeliverable: Boolean,
+      },
+    ],
   },
   { timestamps: true }
 );

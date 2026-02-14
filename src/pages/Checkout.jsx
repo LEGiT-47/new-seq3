@@ -1,18 +1,19 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '../components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
 import { useCart } from '../context/CartContext';
+import { useAuth } from '../context/AuthContext';
 import { orderAPI, paymentAPI } from '../lib/api';
 import { toast } from 'sonner';
 import { Loader2, Lock, Check } from 'lucide-react';
 
 const Checkout = () => {
   const navigate = useNavigate();
-  const { cart, clearCart } = useCart();
+  const { cartItems, clearCart, getDeliveryItems } = useCart();
+  const { isAuthenticated, user } = useAuth();
   const [step, setStep] = useState('address'); // address, confirmation, payment
   const [loading, setLoading] = useState(false);
   
@@ -28,14 +29,19 @@ const Checkout = () => {
   const [order, setOrder] = useState(null);
   const [razorpayKey, setRazorpayKey] = useState(null);
 
-  // Check if user is logged in
-  const user = JSON.parse(localStorage.getItem('user') || '{}');
-  const token = localStorage.getItem('userToken');
+  // Get only delivery items
+  const deliveryItems = getDeliveryItems();
 
-  React.useEffect(() => {
-    if (!token || !user.id) {
+  useEffect(() => {
+    if (!isAuthenticated || !user) {
       toast.error('Please log in to continue with checkout');
-      navigate('/');
+      navigate('/login');
+      return;
+    }
+
+    if (deliveryItems.length === 0) {
+      toast.error('No delivery items in cart');
+      navigate('/products');
       return;
     }
 
@@ -45,15 +51,15 @@ const Checkout = () => {
     }).catch(() => {
       console.log('Razorpay key not configured yet');
     });
-  }, [token, user, navigate]);
+  }, [isAuthenticated, user, navigate, deliveryItems]);
 
-  if (!token || cart.length === 0) {
+  if (!isAuthenticated || deliveryItems.length === 0) {
     return (
       <div className="min-h-screen py-6 flex items-center justify-center">
         <Card className="max-w-md">
           <CardHeader>
-            <CardTitle>Your Cart is Empty</CardTitle>
-            <CardDescription>Add items to cart to proceed with checkout</CardDescription>
+            <CardTitle>No Delivery Items in Cart</CardTitle>
+            <CardDescription>Add delivery items to proceed with checkout</CardDescription>
           </CardHeader>
           <CardContent>
             <Button className="w-full" onClick={() => navigate('/products')}>
@@ -65,7 +71,7 @@ const Checkout = () => {
     );
   }
 
-  const totalAmount = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  const totalAmount = deliveryItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
   const handleAddressChange = (e) => {
     const { name, value } = e.target;
@@ -97,16 +103,19 @@ const Checkout = () => {
     setLoading(true);
     try {
       const orderData = {
-        items: cart.map((item) => ({
-          productId: item.id,
+        items: deliveryItems.map((item) => ({
+          productId: item.id || item.productId,
           quantity: item.quantity,
-          selectedOptions: item.selectedOptions || {},
+          selectedOptions: {
+            coating: item.selectedCoating,
+            flavor: item.selectedFlavor
+          },
         })),
         deliveryAddress: formData,
       };
 
       const response = await orderAPI.create(orderData);
-      setOrder(response.data.data.order);
+      setOrder(response.data.data.order || response.data.data);
       setStep('confirmation');
       toast.success('Order created successfully');
     } catch (error) {
@@ -371,8 +380,8 @@ const Checkout = () => {
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="space-y-2 max-h-64 overflow-y-auto">
-                    {cart.map((item) => (
-                      <div key={item.id} className="flex justify-between text-sm">
+                    {deliveryItems.map((item) => (
+                      <div key={item.cartItemId || item.id} className="flex justify-between text-sm">
                         <span className="flex-1 text-muted-foreground">
                           {item.name} x {item.quantity}
                         </span>
