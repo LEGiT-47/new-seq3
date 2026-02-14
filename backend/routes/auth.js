@@ -17,12 +17,18 @@ router.post(
   '/signup',
   validateUserSignup,
   asyncHandler(async (req, res) => {
-    const { name, email, phone, password } = req.validatedBody;
+    const { name, email, phone, password, address } = req.validatedBody;
 
-    // Check if user already exists
-    const existingUser = await User.findOne({ email });
-    if (existingUser) {
+    // Check if user already exists by email
+    const existingUserEmail = await User.findOne({ email });
+    if (existingUserEmail) {
       return sendErrorResponse(res, 409, 'Email already registered');
+    }
+
+    // Check if user already exists by phone
+    const existingUserPhone = await User.findOne({ phone });
+    if (existingUserPhone) {
+      return sendErrorResponse(res, 409, 'Phone number already registered');
     }
 
     // Create new user
@@ -32,6 +38,19 @@ router.post(
       phone,
       password,
     });
+
+    // Add address if provided
+    if (address && (address.street || address.city || address.state || address.pincode)) {
+      user.addresses.push({
+        name: address.name || name,
+        phone: address.phone || phone,
+        street: address.street,
+        city: address.city,
+        state: address.state,
+        pincode: address.pincode,
+        isDefault: true // First address is default
+      });
+    }
 
     await user.save();
 
@@ -47,6 +66,7 @@ router.post(
           name: user.name,
           email: user.email,
           phone: user.phone,
+          addresses: user.addresses,
         },
         token,
       },

@@ -8,6 +8,14 @@ export const schemas = {
     email: Joi.string().email().lowercase().required(),
     phone: Joi.string().pattern(/^\+?[0-9]{10,}$/).required(),
     password: Joi.string().min(6).max(50).required(),
+    address: Joi.object({
+      name: Joi.string().trim().max(100).allow(''),
+      phone: Joi.string().allow(''),
+      street: Joi.string().trim().max(200).allow(''),
+      city: Joi.string().trim().max(100).allow(''),
+      state: Joi.string().trim().max(100).allow(''),
+      pincode: Joi.string().pattern(/^[0-9]*$/).allow(''),
+    }).optional(),
   }),
 
   userLogin: Joi.object({

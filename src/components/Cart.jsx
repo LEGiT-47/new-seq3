@@ -48,9 +48,9 @@ const Cart = () => {
       return;
     }
 
-    // Redirect to checkout page for delivery items
+    // Redirect to address selection page for delivery items
     setIsCartOpen(false);
-    navigate('/checkout');
+    navigate('/select-address');
   };
 
   const handleBuyNowWhatsApp = () => {

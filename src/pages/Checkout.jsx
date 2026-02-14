@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '../components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
 import { Input } from '../components/ui/input';
@@ -12,20 +12,13 @@ import { Loader2, Lock, Check } from 'lucide-react';
 
 const Checkout = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { cartItems, clearCart, getDeliveryItems } = useCart();
   const { isAuthenticated, user } = useAuth();
-  const [step, setStep] = useState('address'); // address, confirmation, payment
+  const [step, setStep] = useState('confirmation'); // confirmation, payment
   const [loading, setLoading] = useState(false);
+  const [selectedAddress, setSelectedAddress] = useState(null);
   
-  const [formData, setFormData] = useState({
-    name: '',
-    phone: '',
-    street: '',
-    city: '',
-    state: '',
-    pincode: '',
-  });
-
   const [order, setOrder] = useState(null);
   const [razorpayKey, setRazorpayKey] = useState(null);
 
@@ -45,13 +38,22 @@ const Checkout = () => {
       return;
     }
 
+    // Get selected address from location state
+    if (location.state?.selectedAddress) {
+      setSelectedAddress(location.state.selectedAddress);
+    } else {
+      // If no address was passed, go back to address selection
+      navigate('/select-address');
+      return;
+    }
+
     // Fetch Razorpay key
     paymentAPI.getRazorpayKey().then((res) => {
       setRazorpayKey(res.data.data.keyId);
     }).catch(() => {
       console.log('Razorpay key not configured yet');
     });
-  }, [isAuthenticated, user, navigate, deliveryItems]);
+  }, [isAuthenticated, user, navigate, deliveryItems, location]);
 
   if (!isAuthenticated || deliveryItems.length === 0) {
     return (

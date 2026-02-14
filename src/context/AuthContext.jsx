@@ -21,9 +21,20 @@ export const AuthProvider = ({ children }) => {
     setLoading(false);
   }, []);
 
-  const signup = async (name, email, phone, password) => {
+  const signup = async (name, email, phone, password, address = {}) => {
     try {
-      const response = await authAPI.signup({ name, email, phone, password });
+      const signupData = { name, email, phone, password };
+
+      // Add address if provided and has at least one field
+      if (address && (address.street || address.city || address.state || address.pincode)) {
+        signupData.address = {
+          name: name, // Use user's name as address name
+          phone: phone, // Use user's phone
+          ...address
+        };
+      }
+
+      const response = await authAPI.signup(signupData);
       const { user: userData, token: newToken } = response.data.data;
 
       setUser(userData);
