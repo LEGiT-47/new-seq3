@@ -1,16 +1,31 @@
 import React, { useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 import { Sheet, SheetContent, SheetTrigger } from './ui/sheet';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from './ui/dropdown-menu';
 import { useCart } from '../context/CartContext';
-import { Menu, X, ShoppingCart, Phone } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
+import { Menu, X, ShoppingCart, Phone, User, LogOut } from 'lucide-react';
 import logo from '../assets/logo-br.jpg';
 
 const Navigation = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { getTotalItems, setIsCartOpen } = useCart();
+  const { isAuthenticated, user, logout } = useAuth();
   const location = useLocation();
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    logout();
+    navigate('/');
+  };
 
   const navigation = [
     { name: 'Home', path: '/' },
@@ -91,14 +106,61 @@ const Navigation = () => {
             >
               <ShoppingCart className="h-5 w-5" />
               {getTotalItems() > 0 && (
-                <Badge 
-                  variant="destructive" 
+                <Badge
+                  variant="destructive"
                   className="absolute -top-2 -right-2 h-5 w-5 flex items-center justify-center text-xs"
                 >
                   {getTotalItems()}
                 </Badge>
               )}
             </Button>
+
+            {/* User Menu / Auth Buttons */}
+            {isAuthenticated && user ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="sm" className="hidden sm:flex gap-2">
+                    <User className="h-4 w-4" />
+                    <span className="text-xs md:text-sm">{user.name?.split(' ')[0]}</span>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-48">
+                  <div className="px-2 py-1.5 text-sm">
+                    <p className="font-medium">{user.name}</p>
+                    <p className="text-xs text-muted-foreground">{user.email}</p>
+                  </div>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem asChild>
+                    <Link to="/profile">View Profile</Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link to="/orders">Order History</Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={handleLogout} className="text-destructive cursor-pointer">
+                    <LogOut className="h-4 w-4 mr-2" />
+                    Logout
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              <div className="hidden sm:flex items-center gap-2">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  asChild
+                >
+                  <Link to="/login">Login</Link>
+                </Button>
+                <Button
+                  size="sm"
+                  className="bg-primary hover:bg-primary/90 text-white"
+                  asChild
+                >
+                  <Link to="/signup">Sign up</Link>
+                </Button>
+              </div>
+            )}
 
             {/* Mobile Menu */}
             <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
@@ -116,8 +178,8 @@ const Navigation = () => {
                         key={item.name}
                         to={item.path}
                         className={`text-lg font-medium transition-colors hover:text-primary ${
-                          isActive(item.path) 
-                            ? 'text-primary' 
+                          isActive(item.path)
+                            ? 'text-primary'
                             : 'text-muted-foreground'
                         }`}
                         onClick={() => setIsMobileMenuOpen(false)}
@@ -125,6 +187,61 @@ const Navigation = () => {
                         {item.name}
                       </Link>
                     ))}
+                  </div>
+
+                  {/* Mobile Auth */}
+                  <div className="pt-6 border-t border-border space-y-3">
+                    {isAuthenticated && user ? (
+                      <>
+                        <div className="px-3 py-2 bg-muted rounded-lg">
+                          <p className="font-medium text-sm">{user.name}</p>
+                          <p className="text-xs text-muted-foreground">{user.email}</p>
+                        </div>
+                        <Link
+                          to="/profile"
+                          className="block px-3 py-2 text-sm font-medium hover:bg-muted rounded-lg transition-colors"
+                          onClick={() => setIsMobileMenuOpen(false)}
+                        >
+                          View Profile
+                        </Link>
+                        <Link
+                          to="/orders"
+                          className="block px-3 py-2 text-sm font-medium hover:bg-muted rounded-lg transition-colors"
+                          onClick={() => setIsMobileMenuOpen(false)}
+                        >
+                          Order History
+                        </Link>
+                        <Button
+                          variant="outline"
+                          className="w-full"
+                          onClick={() => {
+                            handleLogout();
+                            setIsMobileMenuOpen(false);
+                          }}
+                        >
+                          <LogOut className="h-4 w-4 mr-2" />
+                          Logout
+                        </Button>
+                      </>
+                    ) : (
+                      <div className="space-y-2">
+                        <Button
+                          variant="outline"
+                          className="w-full"
+                          asChild
+                          onClick={() => setIsMobileMenuOpen(false)}
+                        >
+                          <Link to="/login">Login</Link>
+                        </Button>
+                        <Button
+                          className="w-full bg-primary hover:bg-primary/90 text-white"
+                          asChild
+                          onClick={() => setIsMobileMenuOpen(false)}
+                        >
+                          <Link to="/signup">Sign up</Link>
+                        </Button>
+                      </div>
+                    )}
                   </div>
 
                   {/* Mobile Contact */}

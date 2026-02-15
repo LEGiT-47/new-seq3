@@ -12,6 +12,7 @@ import {
   sendErrorResponse,
   sendSuccessResponse,
   areAllItemsDeliverable,
+  verifyRazorpaySignature,
 } from '../utils/helpers.js';
 import axios from 'axios';
 
@@ -226,41 +227,57 @@ router.post(
       return sendErrorResponse(res, 400, 'Order already paid');
     }
 
-    // In production, verify signature with Razorpay
-    // For now, just mark as paid if Razorpay payment ID is provided
-    if (razorpayPaymentId) {
-      order.paymentStatus = 'paid';
-      order.razorpayOrderId = razorpayOrderId;
-      order.razorpayPaymentId = razorpayPaymentId;
-      order.razorpaySignature = razorpaySignature;
-      order.deliveryStatus = 'pending';
+    // Verify Razorpay signature
+    const isSignatureValid = verifyRazorpaySignature(
+      razorpayOrderId,
+      razorpayPaymentId,
+      razorpaySignature
+    );
 
-      await order.save();
+    if (!isSignatureValid) {
+      // Log failed verification attempts for security
+      console.error(`Payment signature verification failed for order ${orderId}`);
 
-      // Update payment transaction
+      // Update payment transaction status to failed
       const paymentTx = await PaymentTransaction.findOne({ razorpayOrderId });
       if (paymentTx) {
-        paymentTx.status = 'success';
-        paymentTx.razorpayPaymentId = razorpayPaymentId;
+        paymentTx.status = 'failed';
         await paymentTx.save();
       }
 
-      sendSuccessResponse(
-        res,
-        200,
-        {
-          order: {
-            id: order._id,
-            orderNumber: order.orderNumber,
-            paymentStatus: order.paymentStatus,
-            deliveryStatus: order.deliveryStatus,
-          },
-        },
-        'Payment verified successfully'
-      );
-    } else {
-      return sendErrorResponse(res, 400, 'Invalid payment verification');
+      return sendErrorResponse(res, 400, 'Payment verification failed. Invalid signature.');
     }
+
+    // Signature is valid, mark order as paid
+    order.paymentStatus = 'paid';
+    order.razorpayOrderId = razorpayOrderId;
+    order.razorpayPaymentId = razorpayPaymentId;
+    order.razorpaySignature = razorpaySignature;
+    order.deliveryStatus = 'pending';
+
+    await order.save();
+
+    // Update payment transaction
+    const paymentTx = await PaymentTransaction.findOne({ razorpayOrderId });
+    if (paymentTx) {
+      paymentTx.status = 'success';
+      paymentTx.razorpayPaymentId = razorpayPaymentId;
+      await paymentTx.save();
+    }
+
+    sendSuccessResponse(
+      res,
+      200,
+      {
+        order: {
+          id: order._id,
+          orderNumber: order.orderNumber,
+          paymentStatus: order.paymentStatus,
+          deliveryStatus: order.deliveryStatus,
+        },
+      },
+      'Payment verified successfully'
+    );
   })
 );
 

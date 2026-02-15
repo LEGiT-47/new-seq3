@@ -9,6 +9,10 @@ import Home from './pages/Home';
 import Products from './pages/Products';
 import ProductDetail from './pages/ProductDetail';
 import Checkout from './pages/Checkout';
+import Login from './pages/Login';
+import Signup from './pages/Signup';
+import OrderHistory from './pages/OrderHistory';
+import AddressSelection from './pages/AddressSelection';
 import AdminLogin from './pages/AdminLogin';
 import AdminDashboard from './pages/AdminDashboard';
 import Gifting from './pages/Gifting';
@@ -53,6 +57,10 @@ function App() {
               <Route path="/products/:category" element={<Products />} />
               <Route path="/product/:id" element={<ProductDetail />} />
               <Route path="/checkout" element={<Checkout />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/signup" element={<Signup />} />
+              <Route path="/orders" element={<OrderHistory />} />
+              <Route path="/select-address" element={<AddressSelection />} />
               <Route path="/gifting" element={<Gifting />} />
               <Route path="/about" element={<About />} />
               <Route path="/contact" element={<Contact />} />

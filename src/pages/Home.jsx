@@ -326,83 +326,41 @@ const Home = () => {
                 return (
                   <Card key={productId} className="hover-lift bg-card border-border group flex flex-col">
                     <CardContent className="p-0 flex flex-col h-full">
-                      <Link to={`/product/${productId}`} className="relative overflow-hidden rounded-t-lg block">
-                        <img
-                          src={product.image}
-                          alt={product.name}
-                          className="w-full h-40 sm:h-48 object-cover transition-transform duration-300 hover:scale-105"
-                        />
+                      <div className="relative overflow-hidden rounded-t-lg block">
+                        <Link to={`/product/${productId}`}>
+                          <img
+                            src={product.image}
+                            alt={product.name}
+                            className="w-full h-40 sm:h-48 object-cover transition-transform duration-300 group-hover:scale-105"
+                          />
+                        </Link>
                         <Badge className="absolute top-3 left-3 bg-destructive text-destructive-foreground text-xs sm:text-sm">
                           Bestseller
                         </Badge>
-                      </Link>
+                      </div>
 
-                      <div className="p-3 sm:p-4 flex flex-col flex-grow">
+                      <Link to={`/product/${productId}`} className="p-3 sm:p-4 flex flex-col flex-grow cursor-pointer hover:bg-muted/30 transition-colors rounded-b-lg">
                         <div className="mb-2">
                           <Badge variant="secondary" className="text-xs">
                             {categoryMap[product.category] || product.category}
                           </Badge>
                         </div>
                         <h3 className="font-semibold mb-1 text-xs sm:text-sm md:text-base line-clamp-2">{product.name}</h3>
-                        <p className="text-xs text-muted-foreground mb-2 line-clamp-2">{product.description}</p>
+                        <p className="text-xs text-muted-foreground mb-3 line-clamp-2">{product.description}</p>
 
-                        {(hasCoatings || hasFlavors) && (
-                          <div className="mb-3 space-y-2">
-                            {hasCoatings && (
-                              <div>
-                                <label className="text-xs font-medium text-muted-foreground block mb-1">
-                                  Coating
-                                </label>
-                                <Select
-                                  value={selectedOptions[productId]?.coating || ''}
-                                  onValueChange={(value) => handleOptionChange(productId, 'coating', value === '__none__' ? null : value)}
-                                >
-                                  <SelectTrigger className="h-8 text-xs">
-                                    <SelectValue placeholder="Select a coating" />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    <SelectItem value="__none__">No coating</SelectItem>
-                                    {product.coatings.map((coating) => (
-                                      <SelectItem key={coating} value={coating}>
-                                        {coating}
-                                      </SelectItem>
-                                    ))}
-                                  </SelectContent>
-                                </Select>
-                              </div>
-                            )}
-
-                            {hasFlavors && (
-                              <div>
-                                <label className="text-xs font-medium text-muted-foreground block mb-1">
-                                  Flavor
-                                </label>
-                                <Select
-                                  value={selectedOptions[productId]?.flavor || ''}
-                                  onValueChange={(value) => handleOptionChange(productId, 'flavor', value === '__none__' ? null : value)}
-                                >
-                                  <SelectTrigger className="h-8 text-xs">
-                                    <SelectValue placeholder="Select a flavor" />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    <SelectItem value="__none__">No flavor</SelectItem>
-                                    {product.flavors.map((flavor) => (
-                                      <SelectItem key={flavor} value={flavor}>
-                                        {flavor}
-                                      </SelectItem>
-                                    ))}
-                                  </SelectContent>
-                                </Select>
-                              </div>
-                            )}
-                          </div>
-                        )}
+                        <div className="flex items-baseline justify-between mb-3">
+                          <p className="text-lg font-bold">₹{product.price}</p>
+                          <p className="text-xs text-muted-foreground">{product.weight}</p>
+                        </div>
 
                         <div className="flex flex-col gap-2 mt-auto">
                           <Button
                             size="sm"
                             className="w-full bg-[#25D366] hover:bg-[#128C7E] text-white text-xs sm:text-sm h-9 sm:h-10"
-                            onClick={() => handleBuyNow(product)}
+                            onClick={(e) => {
+                              e.preventDefault();
+                              handleBuyNow(product);
+                            }}
                           >
                             <MessageCircle className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
                             Buy Now
@@ -411,13 +369,16 @@ const Home = () => {
                             variant="outline"
                             size="sm"
                             className="w-full text-xs sm:text-sm h-9 sm:h-10"
-                            onClick={() => handleAddToCart(product)}
+                            onClick={(e) => {
+                              e.preventDefault();
+                              handleAddToCart(product);
+                            }}
                           >
                             <ShoppingCart className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
                             Add to Cart
                           </Button>
                         </div>
-                      </div>
+                      </Link>
                     </CardContent>
                   </Card>
                 );

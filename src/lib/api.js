@@ -132,6 +132,20 @@ export const paymentAPI = {
   getPaymentStatus: (orderId) => apiClient.get(`/payments/status/${orderId}`),
 };
 
+// Cart API calls
+export const cartAPI = {
+  getCart: () => apiClient.get('/cart'),
+  addToCart: (data) => apiClient.post('/cart/add', data),
+  updateCart: (productId, data) => apiClient.patch(`/cart/update/${productId}`, data),
+  removeFromCart: (productId, selectedCoating, selectedFlavor) => {
+    const params = {};
+    if (selectedCoating) params.selectedCoating = selectedCoating;
+    if (selectedFlavor) params.selectedFlavor = selectedFlavor;
+    return apiClient.delete(`/cart/remove/${productId}`, { params });
+  },
+  clearCart: () => apiClient.delete('/cart/clear'),
+};
+
 // Admin API calls (requires admin token)
 const adminApiClient = axios.create({
   baseURL: API_BASE_URL,
