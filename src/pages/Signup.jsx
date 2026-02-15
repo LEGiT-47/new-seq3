@@ -15,6 +15,7 @@ const Signup = () => {
   const [step, setStep] = useState('phone'); // 'phone' | 'otp' | 'details'
   const [loading, setLoading] = useState(false);
   const [phoneNumber, setPhoneNumber] = useState('');
+  const [countryCode, setCountryCode] = useState('+91');
   const [otp, setOtp] = useState('');
   const [otpTimer, setOtpTimer] = useState(0);
   const [showAddressForm, setShowAddressForm] = useState(false);
@@ -49,8 +50,8 @@ const Signup = () => {
 
     try {
       setLoading(true);
-      const response = await authAPI.sendOTP({ phone: phoneNumber });
-      
+      const response = await authAPI.sendOTP({ phone: phoneNumber, countryCode });
+
       if (response.data.success || response.status === 200) {
         toast.success('OTP sent to your phone');
         setStep('otp');
@@ -189,7 +190,7 @@ const Signup = () => {
 
     try {
       setLoading(true);
-      await authAPI.sendOTP({ phone: phoneNumber });
+      await authAPI.sendOTP({ phone: phoneNumber, countryCode });
       toast.success('OTP resent to your phone');
       setOtpTimer(600);
       const interval = setInterval(() => {
@@ -244,6 +245,31 @@ const Signup = () => {
           {/* Step 1: Phone Number */}
           {step === 'phone' && (
             <form onSubmit={handleSendOTP} className="space-y-4">
+              {/* Country Code */}
+              <div className="space-y-2">
+                <label htmlFor="countryCode" className="text-sm font-medium text-foreground">
+                  Country Code
+                </label>
+                <select
+                  id="countryCode"
+                  value={countryCode}
+                  onChange={(e) => setCountryCode(e.target.value)}
+                  className="w-full px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent bg-background"
+                  disabled={loading}
+                >
+                  <option value="+91">🇮🇳 India (+91)</option>
+                  <option value="+1">🇺🇸 United States (+1)</option>
+                  <option value="+44">🇬🇧 United Kingdom (+44)</option>
+                  <option value="+86">🇨🇳 China (+86)</option>
+                  <option value="+81">🇯🇵 Japan (+81)</option>
+                  <option value="+61">🇦🇺 Australia (+61)</option>
+                  <option value="+33">🇫🇷 France (+33)</option>
+                  <option value="+49">🇩🇪 Germany (+49)</option>
+                  <option value="+39">🇮🇹 Italy (+39)</option>
+                  <option value="+34">🇪🇸 Spain (+34)</option>
+                </select>
+              </div>
+
               <div className="space-y-2">
                 <label htmlFor="phone" className="text-sm font-medium text-foreground">
                   Mobile Number
@@ -346,6 +372,8 @@ const Signup = () => {
                   setStep('phone');
                   setOtp('');
                   setOtpTimer(0);
+                  setPhoneNumber('');
+                  setCountryCode('+91');
                 }}
                 className="w-full text-sm text-muted-foreground hover:underline"
               >
