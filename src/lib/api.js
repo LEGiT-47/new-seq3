@@ -7,9 +7,18 @@ const API_ROOT_URL = import.meta.env.VITE_API_URL?.replace('/api', '') || 'http:
 // Helper function to get full image URL
 export const getImageUrl = (imagePath) => {
   if (!imagePath) return '';
+
+  // If it's already a full URL, return as is
   if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
-    return imagePath; // Already a full URL
+    return imagePath;
   }
+
+  // For image files with common extensions that are already imported, return as is
+  // This handles local assets (already resolved to full paths by webpack)
+  if (typeof imagePath === 'string' && (imagePath.includes('.jpg') || imagePath.includes('.JPG') || imagePath.includes('.png'))) {
+    return imagePath;
+  }
+
   // Prepend API root URL to relative paths
   return `${API_ROOT_URL}${imagePath}`;
 };
@@ -69,11 +78,49 @@ export const adminAuthAPI = {
   verifyToken: () => apiClient.get('/admin/auth/verify'),
 };
 
+// Create a mapping of local product images
+const createLocalImageMap = async () => {
+  const { products: localProducts } = await import('../data/products.jsx');
+  const imageMap = {};
+
+  localProducts.forEach(product => {
+    if (product.image && typeof product.image === 'string') {
+      // Extract filename from image path
+      const filename = product.image.split('/').pop().toLowerCase();
+      imageMap[filename] = product.image;
+      // Also map by product name
+      imageMap[product.name.toLowerCase()] = product.image;
+    }
+  });
+
+  return imageMap;
+};
+
+// Helper function to merge local images with backend products
+const enrichProductsWithImages = async (products) => {
+  const imageMap = await createLocalImageMap();
+
+  return products.map(product => {
+    if (product.image) {
+      const filename = product.image.split('/').pop().toLowerCase();
+      // If we have a local image, use that instead of backend URL
+      if (imageMap[filename]) {
+        return { ...product, image: imageMap[filename] };
+      }
+    }
+    return product;
+  });
+};
+
 // Product API calls with fallback to local data
 export const productAPI = {
   getAll: async () => {
     try {
-      return await apiClient.get('/products');
+      const response = await apiClient.get('/products');
+      // Enrich with local images
+      const data = response.data.data || response.data;
+      const enriched = await enrichProductsWithImages(Array.isArray(data) ? data : [data]);
+      return { data: { data: enriched } };
     } catch (error) {
       console.warn('Backend API unavailable, using local data', error.message);
       // Fallback to local products data
@@ -84,7 +131,10 @@ export const productAPI = {
 
   getByCategory: async (category) => {
     try {
-      return await apiClient.get(`/products/category/${category}`);
+      const response = await apiClient.get(`/products/category/${category}`);
+      const data = response.data.data || response.data;
+      const enriched = await enrichProductsWithImages(Array.isArray(data) ? data : [data]);
+      return { data: { data: enriched } };
     } catch (error) {
       console.warn('Backend API unavailable, using local data', error.message);
       const { getProductsByCategory } = await import('../data/products.jsx');
@@ -95,7 +145,10 @@ export const productAPI = {
 
   getById: async (id) => {
     try {
-      return await apiClient.get(`/products/${id}`);
+      const response = await apiClient.get(`/products/${id}`);
+      const product = response.data.data || response.data;
+      const enriched = await enrichProductsWithImages([product]);
+      return { data: { data: enriched[0] } };
     } catch (error) {
       console.warn('Backend API unavailable, using local data', error.message);
       const { getProductById } = await import('../data/products.jsx');
@@ -109,7 +162,10 @@ export const productAPI = {
 
   getBestsellers: async () => {
     try {
-      return await apiClient.get('/products/bestseller/products');
+      const response = await apiClient.get('/products/bestseller/products');
+      const data = response.data.data || response.data;
+      const enriched = await enrichProductsWithImages(Array.isArray(data) ? data : [data]);
+      return { data: { data: enriched } };
     } catch (error) {
       console.warn('Backend API unavailable, using local data', error.message);
       const { getBestsellerProducts } = await import('../data/products.jsx');
@@ -120,7 +176,10 @@ export const productAPI = {
 
   getDeliverable: async () => {
     try {
-      return await apiClient.get('/products/deliverable/list');
+      const response = await apiClient.get('/products/deliverable/list');
+      const data = response.data.data || response.data;
+      const enriched = await enrichProductsWithImages(Array.isArray(data) ? data : [data]);
+      return { data: { data: enriched } };
     } catch (error) {
       console.warn('Backend API unavailable, using local data', error.message);
       const { getProductsByCategory } = await import('../data/products.jsx');

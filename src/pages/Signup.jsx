@@ -12,14 +12,14 @@ const Signup = () => {
   const { signup } = useAuth();
   
   // Step tracking
-  const [step, setStep] = useState('phone'); // 'phone' | 'otp' | 'details'
+  const [step, setStep] = useState('credentials'); // 'credentials' | 'otp' | 'details'
   const [loading, setLoading] = useState(false);
   const [phoneNumber, setPhoneNumber] = useState('');
   const [countryCode, setCountryCode] = useState('+91');
   const [otp, setOtp] = useState('');
   const [otpTimer, setOtpTimer] = useState(0);
   const [showAddressForm, setShowAddressForm] = useState(false);
-  
+
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -39,18 +39,42 @@ const Signup = () => {
     setPhoneNumber(value);
   };
 
-  // Step 1: Send OTP
+  // Step 1: Send OTP (with name and password)
   const handleSendOTP = async (e) => {
     e.preventDefault();
 
+    // Validate phone number
     if (!phoneNumber || phoneNumber.length < 10) {
       toast.error('Please enter a valid 10-digit phone number');
       return;
     }
 
+    // Validate name
+    if (!formData.name || formData.name.trim().length === 0) {
+      toast.error('Please enter your full name');
+      return;
+    }
+
+    // Validate password
+    if (!formData.password || formData.password.length < 6) {
+      toast.error('Password must be at least 6 characters');
+      return;
+    }
+
+    // Validate password match
+    if (formData.password !== formData.confirmPassword) {
+      toast.error('Passwords do not match');
+      return;
+    }
+
     try {
       setLoading(true);
-      const response = await authAPI.sendOTP({ phone: phoneNumber, countryCode });
+      const response = await authAPI.sendOTP({
+        phone: phoneNumber,
+        name: formData.name,
+        password: formData.password,
+        countryCode
+      });
 
       if (response.data.success || response.status === 200) {
         toast.success('OTP sent to your phone');
@@ -121,23 +145,8 @@ const Signup = () => {
     }
   };
 
-  // Validate details form
+  // Validate details form (email and address only)
   const validateDetailsForm = () => {
-    if (!formData.name || !formData.password || !formData.confirmPassword) {
-      toast.error('Please fill in all required fields');
-      return false;
-    }
-
-    if (formData.password.length < 6) {
-      toast.error('Password must be at least 6 characters');
-      return false;
-    }
-
-    if (formData.password !== formData.confirmPassword) {
-      toast.error('Passwords do not match');
-      return false;
-    }
-
     if (formData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
       toast.error('Please enter a valid email address');
       return false;
@@ -146,7 +155,7 @@ const Signup = () => {
     return true;
   };
 
-  // Step 3: Complete signup
+  // Step 3: Complete signup (email and address only)
   const handleCompleteSignup = async (e) => {
     e.preventDefault();
 
@@ -158,8 +167,6 @@ const Signup = () => {
       setLoading(true);
       const response = await authAPI.signupComplete({
         phone: phoneNumber,
-        name: formData.name,
-        password: formData.password,
         email: formData.email || undefined,
         address: (formData.address.street || formData.address.city) ? {
           street: formData.address.street,
@@ -224,9 +231,9 @@ const Signup = () => {
           
           {/* Step indicator */}
           <div className="flex items-center justify-center gap-2 mt-4 text-xs">
-            <div className={`flex items-center gap-1 ${step === 'phone' || step === 'otp' || step === 'details' ? 'text-primary' : 'text-muted-foreground'}`}>
-              <Phone className="h-4 w-4" />
-              <span>Phone</span>
+            <div className={`flex items-center gap-1 ${step === 'credentials' || step === 'otp' || step === 'details' ? 'text-primary' : 'text-muted-foreground'}`}>
+              <Lock className="h-4 w-4" />
+              <span>Credentials</span>
             </div>
             <div className="h-1 w-4 bg-muted"></div>
             <div className={`flex items-center gap-1 ${step === 'otp' || step === 'details' ? 'text-primary' : 'text-muted-foreground'}`}>
@@ -235,16 +242,16 @@ const Signup = () => {
             </div>
             <div className="h-1 w-4 bg-muted"></div>
             <div className={`flex items-center gap-1 ${step === 'details' ? 'text-primary' : 'text-muted-foreground'}`}>
-              <User className="h-4 w-4" />
+              <Mail className="h-4 w-4" />
               <span>Details</span>
             </div>
           </div>
         </CardHeader>
 
         <CardContent>
-          {/* Step 1: Phone Number */}
-          {step === 'phone' && (
-            <form onSubmit={handleSendOTP} className="space-y-4">
+          {/* Step 1: Credentials (Phone, Name, Password) */}
+          {step === 'credentials' && (
+            <form onSubmit={handleSendOTP} className="space-y-4 max-h-96 overflow-y-auto pr-2">
               {/* Country Code */}
               <div className="space-y-2">
                 <label htmlFor="countryCode" className="text-sm font-medium text-foreground">
@@ -270,9 +277,10 @@ const Signup = () => {
                 </select>
               </div>
 
+              {/* Mobile Number */}
               <div className="space-y-2">
                 <label htmlFor="phone" className="text-sm font-medium text-foreground">
-                  Mobile Number
+                  Mobile Number *
                 </label>
                 <div className="relative">
                   <Phone className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
@@ -290,10 +298,71 @@ const Signup = () => {
                 <p className="text-xs text-muted-foreground">We'll send you a verification code</p>
               </div>
 
+              {/* Full Name */}
+              <div className="space-y-2">
+                <label htmlFor="name" className="text-sm font-medium text-foreground">
+                  Full Name *
+                </label>
+                <div className="relative">
+                  <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                  <input
+                    id="name"
+                    name="name"
+                    type="text"
+                    placeholder="John Doe"
+                    value={formData.name}
+                    onChange={handleChange}
+                    className="w-full pl-10 pr-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                    disabled={loading}
+                  />
+                </div>
+              </div>
+
+              {/* Password */}
+              <div className="space-y-2">
+                <label htmlFor="password" className="text-sm font-medium text-foreground">
+                  Password *
+                </label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                  <input
+                    id="password"
+                    name="password"
+                    type="password"
+                    placeholder="••••••••"
+                    value={formData.password}
+                    onChange={handleChange}
+                    className="w-full pl-10 pr-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                    disabled={loading}
+                  />
+                </div>
+                <p className="text-xs text-muted-foreground">At least 6 characters</p>
+              </div>
+
+              {/* Confirm Password */}
+              <div className="space-y-2">
+                <label htmlFor="confirmPassword" className="text-sm font-medium text-foreground">
+                  Confirm Password *
+                </label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                  <input
+                    id="confirmPassword"
+                    name="confirmPassword"
+                    type="password"
+                    placeholder="••••••••"
+                    value={formData.confirmPassword}
+                    onChange={handleChange}
+                    className="w-full pl-10 pr-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                    disabled={loading}
+                  />
+                </div>
+              </div>
+
               <Button
                 type="submit"
-                className="w-full bg-primary hover:bg-primary/90 text-white"
-                disabled={loading || phoneNumber.length < 10}
+                className="w-full bg-primary hover:bg-primary/90 text-white mt-6"
+                disabled={loading || phoneNumber.length < 10 || !formData.name || !formData.password}
                 size="lg"
               >
                 {loading ? 'Sending OTP...' : 'Send OTP'}
@@ -369,11 +438,23 @@ const Signup = () => {
               <button
                 type="button"
                 onClick={() => {
-                  setStep('phone');
+                  setStep('credentials');
                   setOtp('');
                   setOtpTimer(0);
                   setPhoneNumber('');
                   setCountryCode('+91');
+                  setFormData({
+                    name: formData.name,
+                    email: '',
+                    password: formData.password,
+                    confirmPassword: formData.confirmPassword,
+                    address: {
+                      street: '',
+                      city: '',
+                      state: '',
+                      pincode: ''
+                    }
+                  });
                 }}
                 className="w-full text-sm text-muted-foreground hover:underline"
               >
@@ -382,29 +463,9 @@ const Signup = () => {
             </form>
           )}
 
-          {/* Step 3: Complete Details */}
+          {/* Step 3: Complete Details (Email and Address) */}
           {step === 'details' && (
             <form onSubmit={handleCompleteSignup} className="space-y-4 max-h-96 overflow-y-auto pr-2">
-              {/* Name Field */}
-              <div className="space-y-2">
-                <label htmlFor="name" className="text-sm font-medium text-foreground">
-                  Full Name *
-                </label>
-                <div className="relative">
-                  <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                  <input
-                    id="name"
-                    name="name"
-                    type="text"
-                    placeholder="John Doe"
-                    value={formData.name}
-                    onChange={handleChange}
-                    className="w-full pl-10 pr-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
-                    disabled={loading}
-                  />
-                </div>
-              </div>
-
               {/* Email Field (Optional) */}
               <div className="space-y-2">
                 <label htmlFor="email" className="text-sm font-medium text-foreground">
@@ -418,47 +479,6 @@ const Signup = () => {
                     type="email"
                     placeholder="you@example.com"
                     value={formData.email}
-                    onChange={handleChange}
-                    className="w-full pl-10 pr-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
-                    disabled={loading}
-                  />
-                </div>
-              </div>
-
-              {/* Password Field */}
-              <div className="space-y-2">
-                <label htmlFor="password" className="text-sm font-medium text-foreground">
-                  Password *
-                </label>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                  <input
-                    id="password"
-                    name="password"
-                    type="password"
-                    placeholder="••••••••"
-                    value={formData.password}
-                    onChange={handleChange}
-                    className="w-full pl-10 pr-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
-                    disabled={loading}
-                  />
-                </div>
-                <p className="text-xs text-muted-foreground">At least 6 characters</p>
-              </div>
-
-              {/* Confirm Password Field */}
-              <div className="space-y-2">
-                <label htmlFor="confirmPassword" className="text-sm font-medium text-foreground">
-                  Confirm Password *
-                </label>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                  <input
-                    id="confirmPassword"
-                    name="confirmPassword"
-                    type="password"
-                    placeholder="••••••••"
-                    value={formData.confirmPassword}
                     onChange={handleChange}
                     className="w-full pl-10 pr-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
                     disabled={loading}
