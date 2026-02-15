@@ -2,38 +2,46 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Button } from '../components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
-import { Mail, Lock, LogIn } from 'lucide-react';
-import { useAuth } from '../context/AuthContext';
+import { Phone, Lock, LogIn } from 'lucide-react';
+import { authAPI } from '../lib/api';
 import { toast } from 'sonner';
 
 const Login = () => {
-  const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  const { login } = useAuth();
   const navigate = useNavigate();
+
+  const handlePhoneChange = (e) => {
+    const value = e.target.value.replace(/[^\d]/g, '');
+    setPhone(value);
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    if (!email || !password) {
-      toast.error('Please fill in all fields');
+    if (!phone || phone.length < 10 || !password) {
+      toast.error('Please enter a valid phone number and password');
       return;
     }
 
     try {
       setLoading(true);
-      const result = await login(email, password);
+      const response = await authAPI.login({ phone, password });
       
-      if (result.success) {
+      if (response.data.success || response.status === 200) {
+        const { user: userData, token: newToken } = response.data.data;
+
+        // Store in localStorage
+        localStorage.setItem('userToken', newToken);
+        localStorage.setItem('user', JSON.stringify(userData));
+
         toast.success('Logged in successfully!');
         navigate('/');
-      } else {
-        toast.error(result.error || 'Login failed');
       }
     } catch (error) {
-      toast.error('An error occurred. Please try again.');
       console.error('Login error:', error);
+      toast.error(error.response?.data?.message || 'Login failed. Please check your credentials.');
     } finally {
       setLoading(false);
     }
@@ -48,19 +56,20 @@ const Login = () => {
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Email Field */}
+            {/* Phone Number Field */}
             <div className="space-y-2">
-              <label htmlFor="email" className="text-sm font-medium text-foreground">
-                Email Address
+              <label htmlFor="phone" className="text-sm font-medium text-foreground">
+                Mobile Number
               </label>
               <div className="relative">
-                <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                <Phone className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                 <input
-                  id="email"
-                  type="email"
-                  placeholder="you@example.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  id="phone"
+                  type="tel"
+                  placeholder="9876543210"
+                  value={phone}
+                  onChange={handlePhoneChange}
+                  maxLength="10"
                   className="w-full pl-10 pr-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
                   disabled={loading}
                 />
@@ -101,7 +110,7 @@ const Login = () => {
             <Button
               type="submit"
               className="w-full bg-primary hover:bg-primary/90 text-white"
-              disabled={loading}
+              disabled={loading || phone.length < 10}
               size="lg"
             >
               <LogIn className="h-4 w-4 mr-2" />

@@ -9,14 +9,15 @@ const userSchema = new mongoose.Schema(
     },
     email: {
       type: String,
-      required: true,
       unique: true,
+      sparse: true,
       lowercase: true,
       match: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
     },
     phone: {
       type: String,
       required: true,
+      unique: true,
     },
     password: {
       type: String,
@@ -49,6 +50,17 @@ const userSchema = new mongoose.Schema(
         isDeliverable: Boolean,
       },
     ],
+    otp: String,
+    otpExpiresAt: Date,
+    isPhoneVerified: {
+      type: Boolean,
+      default: false,
+    },
+    signupStep: {
+      type: String,
+      enum: ['phone', 'verified', 'completed'],
+      default: 'phone',
+    },
   },
   { timestamps: true }
 );

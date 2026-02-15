@@ -19,7 +19,7 @@ export const schemas = {
   }),
 
   userLogin: Joi.object({
-    email: Joi.string().email().lowercase().required(),
+    phone: Joi.string().pattern(/^\+?[0-9]{10,}$/).required(),
     password: Joi.string().required(),
   }),
 

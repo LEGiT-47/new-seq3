@@ -53,7 +53,10 @@ apiClient.interceptors.response.use(
 // Auth API calls
 export const authAPI = {
   signup: (data) => apiClient.post('/auth/signup', data),
-  login: (email, password) => apiClient.post('/auth/login', { email, password }),
+  sendOTP: (data) => apiClient.post('/auth/send-otp', data),
+  verifyOTP: (data) => apiClient.post('/auth/verify-otp', data),
+  signupComplete: (data) => apiClient.post('/auth/signup-complete', data),
+  login: (data) => apiClient.post('/auth/login', data),
   getProfile: () => apiClient.get('/auth/profile'),
   updateProfile: (data) => apiClient.put('/auth/profile', data),
   addAddress: (data) => apiClient.post('/auth/addresses', data),
