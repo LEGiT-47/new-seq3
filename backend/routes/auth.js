@@ -18,7 +18,8 @@ const router = express.Router();
 router.post(
   '/send-otp',
   asyncHandler(async (req, res) => {
-    const { phone } = req.body;
+    const { phone, countryCode } = req.body;
+    const defaultCountryCode = process.env.DEFAULT_COUNTRY_CODE || '+91';
 
     if (!phone) {
       return sendErrorResponse(res, 400, 'Phone number is required');
@@ -35,8 +36,9 @@ router.post(
     const otpExpiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes expiry
 
     try {
-      // Send OTP via SMS
-      await sendOTP(phone, otp);
+      // Send OTP via SMS with country code
+      const finalCountryCode = countryCode || defaultCountryCode;
+      await sendOTP(phone, otp, finalCountryCode);
 
       // If user exists but not verified, update their OTP
       // Otherwise create a temporary user

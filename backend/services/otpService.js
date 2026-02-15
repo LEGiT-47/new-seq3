@@ -12,16 +12,22 @@ export const generateOTP = () => {
 };
 
 // Send OTP via SMS
-export const sendOTP = async (phoneNumber, otp) => {
+export const sendOTP = async (phoneNumber, otp, countryCode = '+91') => {
   try {
     if (!twilioPhoneNumber) {
       throw new Error('Twilio phone number not configured');
     }
 
+    // Format phone number to E.164 format if not already formatted
+    let formattedPhone = phoneNumber;
+    if (!phoneNumber.startsWith('+')) {
+      formattedPhone = `${countryCode}${phoneNumber}`;
+    }
+
     const message = await client.messages.create({
       body: `Your verification code is: ${otp}. It will expire in 10 minutes.`,
       from: twilioPhoneNumber,
-      to: phoneNumber,
+      to: formattedPhone,
     });
 
     console.log(`OTP sent successfully. Message SID: ${message.sid}`);
