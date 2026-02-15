@@ -75,32 +75,12 @@ const Checkout = () => {
 
   const totalAmount = deliveryItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
-  const handleAddressChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-  };
-
-  const validateForm = () => {
-    if (!formData.name || !formData.phone || !formData.street || !formData.city || !formData.state || !formData.pincode) {
-      toast.error('Please fill all fields');
-      return false;
-    }
-    if (!/^[0-9]{10,}$/.test(formData.phone)) {
-      toast.error('Please enter a valid phone number');
-      return false;
-    }
-    if (!/^[0-9]{6}$/.test(formData.pincode)) {
-      toast.error('Please enter a valid pincode');
-      return false;
-    }
-    return true;
-  };
-
   const handleCreateOrder = async () => {
-    if (!validateForm()) return;
+    if (!selectedAddress) {
+      toast.error('No address selected');
+      navigate('/select-address');
+      return;
+    }
 
     setLoading(true);
     try {
@@ -113,12 +93,19 @@ const Checkout = () => {
             flavor: item.selectedFlavor
           },
         })),
-        deliveryAddress: formData,
+        deliveryAddress: {
+          name: selectedAddress.name,
+          phone: selectedAddress.phone,
+          street: selectedAddress.street,
+          city: selectedAddress.city,
+          state: selectedAddress.state,
+          pincode: selectedAddress.pincode,
+        },
       };
 
       const response = await orderAPI.create(orderData);
       setOrder(response.data.data.order || response.data.data);
-      setStep('confirmation');
+      setStep('success');
       toast.success('Order created successfully');
     } catch (error) {
       toast.error(error.response?.data?.error || 'Failed to create order');
@@ -167,8 +154,8 @@ const Checkout = () => {
           }
         },
         prefill: {
-          name: formData.name,
-          contact: formData.phone,
+          name: selectedAddress?.name || user?.name || '',
+          contact: selectedAddress?.phone || user?.phone || '',
         },
         theme: {
           color: '#0066cc',
@@ -194,89 +181,61 @@ const Checkout = () => {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Main Checkout Form */}
             <div className="lg:col-span-2">
-              {step === 'address' && (
+              {step === 'confirmation' && !order && (
                 <Card>
                   <CardHeader>
-                    <CardTitle>Delivery Address</CardTitle>
-                    <CardDescription>Enter where you want your order delivered</CardDescription>
+                    <CardTitle>Order Summary</CardTitle>
+                    <CardDescription>Review your order details before payment</CardDescription>
                   </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <Label htmlFor="name">Full Name</Label>
-                        <Input
-                          id="name"
-                          name="name"
-                          value={formData.name}
-                          onChange={handleAddressChange}
-                          placeholder="Your full name"
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="phone">Phone Number</Label>
-                        <Input
-                          id="phone"
-                          name="phone"
-                          type="tel"
-                          value={formData.phone}
-                          onChange={handleAddressChange}
-                          placeholder="10-digit number"
-                        />
-                      </div>
+                  <CardContent className="space-y-6">
+                    <div className="border-b pb-4">
+                      <h3 className="font-semibold mb-3">Delivery Address</h3>
+                      {selectedAddress ? (
+                        <div className="text-sm text-muted-foreground space-y-1">
+                          <p className="font-medium text-foreground">{selectedAddress.name}</p>
+                          <p>{selectedAddress.street}</p>
+                          <p>{selectedAddress.city}, {selectedAddress.state} {selectedAddress.pincode}</p>
+                          <p>Phone: {selectedAddress.phone}</p>
+                          <button
+                            onClick={() => navigate('/select-address')}
+                            className="text-primary hover:underline text-xs mt-2"
+                          >
+                            Change Address
+                          </button>
+                        </div>
+                      ) : null}
                     </div>
 
                     <div>
-                      <Label htmlFor="street">Street Address</Label>
-                      <Input
-                        id="street"
-                        name="street"
-                        value={formData.street}
-                        onChange={handleAddressChange}
-                        placeholder="House no, Building name"
-                      />
+                      <h3 className="font-semibold mb-3">Items</h3>
+                      <div className="space-y-2">
+                        {deliveryItems.map((item) => (
+                          <div key={item.cartItemId || item.id} className="flex justify-between text-sm">
+                            <span>{item.name} x {item.quantity}</span>
+                            <span>₹{item.price * item.quantity}</span>
+                          </div>
+                        ))}
+                      </div>
                     </div>
 
-                    <div className="grid grid-cols-3 gap-4">
-                      <div>
-                        <Label htmlFor="city">City</Label>
-                        <Input
-                          id="city"
-                          name="city"
-                          value={formData.city}
-                          onChange={handleAddressChange}
-                          placeholder="City"
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="state">State</Label>
-                        <Input
-                          id="state"
-                          name="state"
-                          value={formData.state}
-                          onChange={handleAddressChange}
-                          placeholder="State"
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="pincode">Pincode</Label>
-                        <Input
-                          id="pincode"
-                          name="pincode"
-                          value={formData.pincode}
-                          onChange={handleAddressChange}
-                          placeholder="6-digit"
-                          maxLength="6"
-                        />
-                      </div>
+                    <div className="border-t pt-4 flex justify-between font-semibold">
+                      <span>Total Amount</span>
+                      <span className="text-lg">₹{totalAmount}</span>
+                    </div>
+
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                      <p className="text-sm text-blue-700">
+                        Your order will be delivered in 7-8 business days. You will receive updates via WhatsApp.
+                      </p>
                     </div>
 
                     <Button
-                      className="w-full mt-6"
+                      className="w-full"
                       onClick={handleCreateOrder}
                       disabled={loading}
                     >
                       {loading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-                      Continue to Payment
+                      Proceed to Payment
                     </Button>
                   </CardContent>
                 </Card>
@@ -285,22 +244,22 @@ const Checkout = () => {
               {step === 'confirmation' && order && (
                 <Card>
                   <CardHeader>
-                    <CardTitle>Order Confirmation</CardTitle>
-                    <CardDescription>Review your order details</CardDescription>
+                    <CardTitle>Ready for Payment</CardTitle>
+                    <CardDescription>Complete your payment to confirm the order</CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-6">
                     <div className="border-b pb-4">
                       <h3 className="font-semibold mb-3">Delivery Address</h3>
-                      <p className="text-sm text-muted-foreground">
-                        {formData.name}<br />
-                        {formData.street}<br />
-                        {formData.city}, {formData.state} {formData.pincode}<br />
-                        Phone: {formData.phone}
+                      <p className="text-sm text-muted-foreground space-y-1">
+                        <div className="font-medium text-foreground">{selectedAddress.name}</div>
+                        <div>{selectedAddress.street}</div>
+                        <div>{selectedAddress.city}, {selectedAddress.state} {selectedAddress.pincode}</div>
+                        <div>Phone: {selectedAddress.phone}</div>
                       </p>
                     </div>
 
                     <div>
-                      <h3 className="font-semibold mb-3">Items</h3>
+                      <h3 className="font-semibold mb-3">Order Items</h3>
                       <div className="space-y-2">
                         {order.items.map((item) => (
                           <div key={item.productId} className="flex justify-between text-sm">
@@ -316,29 +275,15 @@ const Checkout = () => {
                       <span className="text-lg">₹{order.totalAmount}</span>
                     </div>
 
-                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                      <p className="text-sm text-blue-700">
-                        Your order will be delivered in 7-8 business days. You will receive updates via WhatsApp.
-                      </p>
-                    </div>
-
-                    <div className="flex gap-3">
-                      <Button
-                        variant="outline"
-                        className="flex-1"
-                        onClick={() => setStep('address')}
-                      >
-                        Edit Address
-                      </Button>
-                      <Button
-                        className="flex-1"
-                        onClick={handlePaymentInitiate}
-                        disabled={loading || !razorpayKey}
-                      >
-                        {loading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-                        {!razorpayKey ? 'Payment Not Available' : 'Proceed to Payment'}
-                      </Button>
-                    </div>
+                    <Button
+                      className="w-full"
+                      onClick={handlePaymentInitiate}
+                      disabled={loading || !razorpayKey}
+                      size="lg"
+                    >
+                      {loading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                      {!razorpayKey ? 'Payment Not Available' : 'Pay Now'}
+                    </Button>
                   </CardContent>
                 </Card>
               )}

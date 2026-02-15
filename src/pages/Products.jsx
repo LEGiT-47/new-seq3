@@ -230,7 +230,10 @@ const Products = () => {
                               {product.description}
                               </p>
 
-                              <p className="text-lg font-bold mb-4">₹{product.price}</p>
+                              <div className="flex items-baseline justify-between mb-4">
+                                <p className="text-lg font-bold">₹{product.price}</p>
+                                <p className="text-xs text-muted-foreground">{product.weight}</p>
+                              </div>
 
                               <div className="flex flex-col gap-2 mt-auto">
                               <Button
