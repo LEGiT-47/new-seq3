@@ -6,7 +6,7 @@ import { Badge } from '../components/ui/badge';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '../components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
 import { useCart } from '../context/CartContext';
-import { productAPI } from '../lib/api';
+import { productAPI, getImageUrl } from '../lib/api';
 import { ShoppingCart, MessageCircle, Filter } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -52,7 +52,7 @@ const Products = () => {
   };
 
   const getProductImage = (product) => {
-    return product.image;
+    return getImageUrl(product.image);
   };
 
   // Get filtered products based on active category

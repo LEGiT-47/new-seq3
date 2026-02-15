@@ -11,6 +11,7 @@ import ProductDetail from './pages/ProductDetail';
 import Checkout from './pages/Checkout';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
+import Profile from './pages/Profile';
 import OrderHistory from './pages/OrderHistory';
 import AddressSelection from './pages/AddressSelection';
 import AdminLogin from './pages/AdminLogin';
@@ -59,6 +60,7 @@ function App() {
               <Route path="/checkout" element={<Checkout />} />
               <Route path="/login" element={<Login />} />
               <Route path="/signup" element={<Signup />} />
+              <Route path="/profile" element={<Profile />} />
               <Route path="/orders" element={<OrderHistory />} />
               <Route path="/select-address" element={<AddressSelection />} />
               <Route path="/gifting" element={<Gifting />} />

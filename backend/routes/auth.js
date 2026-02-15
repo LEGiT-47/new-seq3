@@ -1,4 +1,5 @@
 import express from 'express';
+import mongoose from 'mongoose';
 import User from '../models/User.js';
 import {
   generateUserToken,
@@ -9,35 +10,132 @@ import {
 import { verifyUserToken } from '../middleware/auth.js';
 import { loginLimiter } from '../middleware/rateLimiter.js';
 import { validateUserSignup, validateUserLogin } from '../middleware/validation.js';
+import { generateOTP, sendOTP, verifyOTP } from '../services/otpService.js';
 
 const router = express.Router();
 
-// User Signup
+// Step 1: Send OTP to phone number
 router.post(
-  '/signup',
-  validateUserSignup,
+  '/send-otp',
   asyncHandler(async (req, res) => {
-    const { name, email, phone, password, address } = req.validatedBody;
+    const { phone } = req.body;
 
-    // Check if user already exists by email
-    const existingUserEmail = await User.findOne({ email });
-    if (existingUserEmail) {
-      return sendErrorResponse(res, 409, 'Email already registered');
+    if (!phone) {
+      return sendErrorResponse(res, 400, 'Phone number is required');
     }
 
-    // Check if user already exists by phone
-    const existingUserPhone = await User.findOne({ phone });
-    if (existingUserPhone) {
+    // Check if phone is already registered
+    const existingUser = await User.findOne({ phone });
+    if (existingUser && existingUser.isPhoneVerified) {
       return sendErrorResponse(res, 409, 'Phone number already registered');
     }
 
-    // Create new user
-    const user = new User({
-      name,
-      email,
-      phone,
-      password,
+    // Generate OTP
+    const otp = generateOTP();
+    const otpExpiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes expiry
+
+    try {
+      // Send OTP via SMS
+      await sendOTP(phone, otp);
+
+      // If user exists but not verified, update their OTP
+      // Otherwise create a temporary user
+      if (existingUser && !existingUser.isPhoneVerified) {
+        existingUser.otp = otp;
+        existingUser.otpExpiresAt = otpExpiresAt;
+        await existingUser.save();
+      } else {
+        // Create temporary user record (will be completed in step 2)
+        const tempUser = new User({
+          phone,
+          otp,
+          otpExpiresAt,
+          signupStep: 'phone',
+          name: 'Pending',
+          password: 'temp', // Will be updated in step 2
+        });
+        await tempUser.save();
+      }
+
+      sendSuccessResponse(res, 200, {
+        message: 'OTP sent successfully',
+        expiresIn: 600, // 10 minutes in seconds
+      });
+    } catch (error) {
+      console.error('Error sending OTP:', error);
+      return sendErrorResponse(res, 500, 'Failed to send OTP. Please try again.');
+    }
+  })
+);
+
+// Step 2: Verify OTP
+router.post(
+  '/verify-otp',
+  asyncHandler(async (req, res) => {
+    const { phone, otp } = req.body;
+
+    if (!phone || !otp) {
+      return sendErrorResponse(res, 400, 'Phone number and OTP are required');
+    }
+
+    const user = await User.findOne({ phone });
+    if (!user) {
+      return sendErrorResponse(res, 404, 'User not found. Please send OTP first.');
+    }
+
+    // Verify OTP
+    const verification = verifyOTP(user.otp, otp, user.otpExpiresAt);
+    if (!verification.success) {
+      return sendErrorResponse(res, 400, verification.message);
+    }
+
+    // Mark phone as verified
+    user.isPhoneVerified = true;
+    user.signupStep = 'verified';
+    await user.save();
+
+    sendSuccessResponse(res, 200, {
+      message: 'OTP verified successfully',
+      phoneVerified: true,
     });
+  })
+);
+
+// Step 3: Complete Signup (with email and address)
+router.post(
+  '/signup-complete',
+  asyncHandler(async (req, res) => {
+    const { phone, name, password, email, address } = req.body;
+
+    if (!phone || !name || !password) {
+      return sendErrorResponse(res, 400, 'Phone, name, and password are required');
+    }
+
+    // Find user by phone
+    const user = await User.findOne({ phone });
+    if (!user) {
+      return sendErrorResponse(res, 404, 'User not found. Please verify OTP first.');
+    }
+
+    if (!user.isPhoneVerified) {
+      return sendErrorResponse(res, 400, 'Phone number not verified. Please verify OTP first.');
+    }
+
+    // Check if email is already registered
+    if (email) {
+      const existingEmail = await User.findOne({ email, phone: { $ne: phone } });
+      if (existingEmail) {
+        return sendErrorResponse(res, 409, 'Email already registered');
+      }
+    }
+
+    // Update user with remaining info
+    user.name = name;
+    user.password = password;
+    if (email) {
+      user.email = email;
+    }
+    user.signupStep = 'completed';
 
     // Add address if provided
     if (address && (address.street || address.city || address.state || address.pincode)) {
@@ -48,7 +146,7 @@ router.post(
         city: address.city,
         state: address.state,
         pincode: address.pincode,
-        isDefault: true // First address is default
+        isDefault: true,
       });
     }
 
@@ -70,29 +168,37 @@ router.post(
         },
         token,
       },
-      'User registered successfully'
+      'Account created successfully'
     );
   })
 );
 
-// User Login
+// User Login with Phone Number
 router.post(
   '/login',
   loginLimiter,
-  validateUserLogin,
   asyncHandler(async (req, res) => {
-    const { email, password } = req.validatedBody;
+    const { phone, password } = req.body;
 
-    // Find user by email
-    const user = await User.findOne({ email });
+    if (!phone || !password) {
+      return sendErrorResponse(res, 400, 'Phone number and password are required');
+    }
+
+    // Find user by phone
+    const user = await User.findOne({ phone });
     if (!user) {
-      return sendErrorResponse(res, 401, 'Invalid email or password');
+      return sendErrorResponse(res, 401, 'Invalid phone number or password');
+    }
+
+    // Check if signup is completed
+    if (user.signupStep !== 'completed') {
+      return sendErrorResponse(res, 400, 'Please complete your signup first');
     }
 
     // Verify password
     const isPasswordValid = await user.comparePassword(password);
     if (!isPasswordValid) {
-      return sendErrorResponse(res, 401, 'Invalid email or password');
+      return sendErrorResponse(res, 401, 'Invalid phone number or password');
     }
 
     // Generate token
