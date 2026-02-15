@@ -28,12 +28,27 @@ const corsOptions = {
     const allowedOrigins = [
       'http://localhost:5173',
       'http://localhost:3000',
+      'http://localhost:3001',
       process.env.FRONTEND_URL,
+      // Allow Fly.io deployment URLs (for development)
+      /\.fly\.dev$/,
+      // Allow Netlify deployment URLs
+      /\.netlify\.app$/,
     ].filter(Boolean);
 
-    if (!origin || allowedOrigins.includes(origin)) {
+    // Check if origin is allowed
+    const isAllowed = allowedOrigins.some(allowed => {
+      if (typeof allowed === 'string') {
+        return allowed === origin;
+      }
+      // Handle regex patterns
+      return allowed.test(origin);
+    });
+
+    if (!origin || isAllowed) {
       callback(null, true);
     } else {
+      console.warn(`CORS blocked origin: ${origin}`);
       callback(new Error('Not allowed by CORS'));
     }
   },
