@@ -5,7 +5,7 @@ import { Card, CardContent } from '../components/ui/card';
 import { Badge } from '../components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
 import { useCart } from '../context/CartContext';
-import { productAPI } from '../lib/api';
+import { productAPI, getImageUrl } from '../lib/api';
 import { ArrowRight, Star, Shield, Gift, Truck, MessageCircle, ShoppingCart } from 'lucide-react';
 import { toast } from 'sonner';
 import HeroCarousel from '../components/HeroCarousel';
@@ -329,7 +329,7 @@ const Home = () => {
                       <div className="relative overflow-hidden rounded-t-lg block">
                         <Link to={`/product/${productId}`}>
                           <img
-                            src={product.image}
+                            src={getImageUrl(product.image)}
                             alt={product.name}
                             className="w-full h-40 sm:h-48 object-cover transition-transform duration-300 group-hover:scale-105"
                           />

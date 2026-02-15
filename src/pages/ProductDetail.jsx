@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../co
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
 import { useCart } from '../context/CartContext';
-import { productAPI } from '../lib/api';
+import { productAPI, getImageUrl } from '../lib/api';
 import { ShoppingCart, MessageCircle, Heart, Share2, Truck, Shield, Star } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -164,7 +164,7 @@ const ProductDetail = () => {
               <Card className="overflow-hidden">
                 <CardContent className="p-0">
                   <img
-                    src={product.image}
+                    src={getImageUrl(product.image)}
                     alt={product.name}
                     className="w-full aspect-square object-cover hover:scale-105 transition-transform duration-300"
                   />

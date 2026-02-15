@@ -2,6 +2,17 @@ import axios from 'axios';
 
 // Set API base URL
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const API_ROOT_URL = import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:5000';
+
+// Helper function to get full image URL
+export const getImageUrl = (imagePath) => {
+  if (!imagePath) return '';
+  if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
+    return imagePath; // Already a full URL
+  }
+  // Prepend API root URL to relative paths
+  return `${API_ROOT_URL}${imagePath}`;
+};
 
 // Create axios instance
 const apiClient = axios.create({
