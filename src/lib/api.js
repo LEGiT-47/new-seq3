@@ -10,16 +10,15 @@ export const getImageUrl = (imagePath) => {
 
   // If it's already a full URL, return as is
   if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
+    return imagePath; // Already a full URL (e.g., from Unsplash)
+  }
+
+  // For image paths like /images/products/*, return as-is (served from public folder)
+  if (imagePath.startsWith('/images/')) {
     return imagePath;
   }
 
-  // For image files with common extensions that are already imported, return as is
-  // This handles local assets (already resolved to full paths by webpack)
-  if (typeof imagePath === 'string' && (imagePath.includes('.jpg') || imagePath.includes('.JPG') || imagePath.includes('.png'))) {
-    return imagePath;
-  }
-
-  // Prepend API root URL to relative paths
+  // For other relative paths, prepend API root URL
   return `${API_ROOT_URL}${imagePath}`;
 };
 
@@ -62,6 +61,7 @@ apiClient.interceptors.response.use(
 // Auth API calls
 export const authAPI = {
   signup: (data) => apiClient.post('/auth/signup', data),
+  checkPhone: (data) => apiClient.post('/auth/check-phone', data),
   sendOTP: (data) => apiClient.post('/auth/send-otp', data),
   verifyOTP: (data) => apiClient.post('/auth/verify-otp', data),
   signupComplete: (data) => apiClient.post('/auth/signup-complete', data),

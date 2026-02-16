@@ -7,19 +7,46 @@ import { useAuth } from '../context/AuthContext';
 import { authAPI } from '../lib/api';
 import { toast } from 'sonner';
 
+/**
+ * OTP VERIFICATION TOGGLE
+ *
+ * Set to true to enable Twilio SMS OTP verification during signup
+ * Set to false to skip OTP and directly verify phone number in database
+ *
+ * USE_TWILIO = false (Current):
+ *   - User enters phone number
+ *   - Frontend checks if phone exists in database
+ *   - If available, proceeds directly to details form (name, email, password)
+ *   - Faster signup flow, no SMS wait time
+ *   - Good for development/testing
+ *
+ * USE_TWILIO = true (With Twilio):
+ *   - User enters phone number
+ *   - OTP is sent via SMS (requires Twilio credentials)
+ *   - User must verify with 6-digit code
+ *   - Then proceeds to details form
+ *   - More secure for production
+ *
+ * To enable OTP in future:
+ *   1. Set USE_TWILIO = true
+ *   2. Ensure TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN in .env
+ *   3. Update backend environment variables
+ */
+const USE_TWILIO = false;
+
 const Signup = () => {
   const navigate = useNavigate();
   const { signup } = useAuth();
   
   // Step tracking
-  const [step, setStep] = useState('credentials'); // 'credentials' | 'otp' | 'details'
+  const [step, setStep] = useState('phone'); // 'phone' | 'otp' | 'details'
   const [loading, setLoading] = useState(false);
   const [phoneNumber, setPhoneNumber] = useState('');
   const [countryCode, setCountryCode] = useState('+91');
   const [otp, setOtp] = useState('');
   const [otpTimer, setOtpTimer] = useState(0);
   const [showAddressForm, setShowAddressForm] = useState(false);
-
+  
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -39,61 +66,57 @@ const Signup = () => {
     setPhoneNumber(value);
   };
 
-  // Step 1: Send OTP (with name and password)
+  // Step 1: Send OTP or Check Phone (based on USE_TWILIO flag)
   const handleSendOTP = async (e) => {
     e.preventDefault();
 
-    // Validate phone number
     if (!phoneNumber || phoneNumber.length < 10) {
       toast.error('Please enter a valid 10-digit phone number');
       return;
     }
 
-    // Validate name
-    if (!formData.name || formData.name.trim().length === 0) {
-      toast.error('Please enter your full name');
-      return;
-    }
-
-    // Validate password
-    if (!formData.password || formData.password.length < 6) {
-      toast.error('Password must be at least 6 characters');
-      return;
-    }
-
-    // Validate password match
-    if (formData.password !== formData.confirmPassword) {
-      toast.error('Passwords do not match');
-      return;
-    }
-
     try {
       setLoading(true);
-      const response = await authAPI.sendOTP({
-        phone: phoneNumber,
-        name: formData.name,
-        password: formData.password,
-        countryCode
-      });
 
-      if (response.data.success || response.status === 200) {
-        toast.success('OTP sent to your phone');
-        setStep('otp');
-        // Start OTP timer (10 minutes)
-        setOtpTimer(600);
-        const interval = setInterval(() => {
-          setOtpTimer(prev => {
-            if (prev <= 1) {
-              clearInterval(interval);
-              return 0;
-            }
-            return prev - 1;
-          });
-        }, 1000);
+      if (USE_TWILIO) {
+        // OTP Flow: Send OTP via Twilio
+        const response = await authAPI.sendOTP({ phone: phoneNumber, countryCode });
+
+        if (response.data.success || response.status === 200) {
+          toast.success('OTP sent to your phone');
+          setStep('otp');
+          // Start OTP timer (10 minutes)
+          setOtpTimer(600);
+          const interval = setInterval(() => {
+            setOtpTimer(prev => {
+              if (prev <= 1) {
+                clearInterval(interval);
+                return 0;
+              }
+              return prev - 1;
+            });
+          }, 1000);
+        }
+      } else {
+        // Non-OTP Flow: Just check if phone exists in DB
+        const response = await authAPI.checkPhone({ phone: phoneNumber });
+
+        if (response.data.success || response.status === 200) {
+          toast.success('Phone number verified. Please complete your details');
+          setStep('details'); // Skip OTP, go directly to details
+        }
       }
     } catch (error) {
-      console.error('Error sending OTP:', error);
-      toast.error(error.response?.data?.message || 'Failed to send OTP');
+      console.error('Error in signup process:', error);
+      if (error.response?.status === 409) {
+        toast.error('This phone number is already registered. Please login instead.');
+      } else {
+        toast.error(
+          USE_TWILIO
+            ? error.response?.data?.message || 'Failed to send OTP'
+            : error.response?.data?.message || 'Phone number not available'
+        );
+      }
     } finally {
       setLoading(false);
     }
@@ -145,8 +168,23 @@ const Signup = () => {
     }
   };
 
-  // Validate details form (email and address only)
+  // Validate details form
   const validateDetailsForm = () => {
+    if (!formData.name || !formData.password || !formData.confirmPassword) {
+      toast.error('Please fill in all required fields');
+      return false;
+    }
+
+    if (formData.password.length < 6) {
+      toast.error('Password must be at least 6 characters');
+      return false;
+    }
+
+    if (formData.password !== formData.confirmPassword) {
+      toast.error('Passwords do not match');
+      return false;
+    }
+
     if (formData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
       toast.error('Please enter a valid email address');
       return false;
@@ -155,7 +193,7 @@ const Signup = () => {
     return true;
   };
 
-  // Step 3: Complete signup (email and address only)
+  // Step 3: Complete signup
   const handleCompleteSignup = async (e) => {
     e.preventDefault();
 
@@ -167,6 +205,8 @@ const Signup = () => {
       setLoading(true);
       const response = await authAPI.signupComplete({
         phone: phoneNumber,
+        name: formData.name,
+        password: formData.password,
         email: formData.email || undefined,
         address: (formData.address.street || formData.address.city) ? {
           street: formData.address.street,
@@ -177,6 +217,13 @@ const Signup = () => {
       });
 
       if (response.data.success || response.status === 201) {
+        // Store user data in localStorage so AuthContext can pick it up
+        const { user: userData, token: newToken } = response.data.data || response.data;
+        if (newToken && userData) {
+          localStorage.setItem('userToken', newToken);
+          localStorage.setItem('user', JSON.stringify(userData));
+        }
+
         toast.success('Account created successfully!');
         navigate('/');
       }
@@ -227,31 +274,49 @@ const Signup = () => {
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-2 text-center">
           <CardTitle className="text-2xl">Create Account</CardTitle>
-          <CardDescription>Sign up to get started with Sequeira Foods</CardDescription>
-          
+          <CardDescription>
+            Sign up to get started with Sequeira Foods
+          </CardDescription>
+
           {/* Step indicator */}
           <div className="flex items-center justify-center gap-2 mt-4 text-xs">
-            <div className={`flex items-center gap-1 ${step === 'credentials' || step === 'otp' || step === 'details' ? 'text-primary' : 'text-muted-foreground'}`}>
-              <Lock className="h-4 w-4" />
-              <span>Credentials</span>
-            </div>
-            <div className="h-1 w-4 bg-muted"></div>
-            <div className={`flex items-center gap-1 ${step === 'otp' || step === 'details' ? 'text-primary' : 'text-muted-foreground'}`}>
-              <CheckCircle className="h-4 w-4" />
-              <span>Verify</span>
-            </div>
-            <div className="h-1 w-4 bg-muted"></div>
-            <div className={`flex items-center gap-1 ${step === 'details' ? 'text-primary' : 'text-muted-foreground'}`}>
-              <Mail className="h-4 w-4" />
-              <span>Details</span>
-            </div>
+            {USE_TWILIO ? (
+              <>
+                <div className={`flex items-center gap-1 ${step === 'phone' || step === 'otp' || step === 'details' ? 'text-primary' : 'text-muted-foreground'}`}>
+                  <Phone className="h-4 w-4" />
+                  <span>Phone</span>
+                </div>
+                <div className="h-1 w-4 bg-muted"></div>
+                <div className={`flex items-center gap-1 ${step === 'otp' || step === 'details' ? 'text-primary' : 'text-muted-foreground'}`}>
+                  <CheckCircle className="h-4 w-4" />
+                  <span>Verify</span>
+                </div>
+                <div className="h-1 w-4 bg-muted"></div>
+                <div className={`flex items-center gap-1 ${step === 'details' ? 'text-primary' : 'text-muted-foreground'}`}>
+                  <User className="h-4 w-4" />
+                  <span>Details</span>
+                </div>
+              </>
+            ) : (
+              <>
+                <div className={`flex items-center gap-1 ${step === 'phone' || step === 'details' ? 'text-primary' : 'text-muted-foreground'}`}>
+                  <Phone className="h-4 w-4" />
+                  <span>Phone</span>
+                </div>
+                <div className="h-1 w-4 bg-muted"></div>
+                <div className={`flex items-center gap-1 ${step === 'details' ? 'text-primary' : 'text-muted-foreground'}`}>
+                  <User className="h-4 w-4" />
+                  <span>Details</span>
+                </div>
+              </>
+            )}
           </div>
         </CardHeader>
 
         <CardContent>
-          {/* Step 1: Credentials (Phone, Name, Password) */}
-          {step === 'credentials' && (
-            <form onSubmit={handleSendOTP} className="space-y-4 max-h-96 overflow-y-auto pr-2">
+          {/* Step 1: Phone Number */}
+          {step === 'phone' && (
+            <form onSubmit={handleSendOTP} className="space-y-4">
               {/* Country Code */}
               <div className="space-y-2">
                 <label htmlFor="countryCode" className="text-sm font-medium text-foreground">
@@ -277,10 +342,9 @@ const Signup = () => {
                 </select>
               </div>
 
-              {/* Mobile Number */}
               <div className="space-y-2">
                 <label htmlFor="phone" className="text-sm font-medium text-foreground">
-                  Mobile Number *
+                  Mobile Number
                 </label>
                 <div className="relative">
                   <Phone className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
@@ -298,74 +362,16 @@ const Signup = () => {
                 <p className="text-xs text-muted-foreground">We'll send you a verification code</p>
               </div>
 
-              {/* Full Name */}
-              <div className="space-y-2">
-                <label htmlFor="name" className="text-sm font-medium text-foreground">
-                  Full Name *
-                </label>
-                <div className="relative">
-                  <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                  <input
-                    id="name"
-                    name="name"
-                    type="text"
-                    placeholder="John Doe"
-                    value={formData.name}
-                    onChange={handleChange}
-                    className="w-full pl-10 pr-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
-                    disabled={loading}
-                  />
-                </div>
-              </div>
-
-              {/* Password */}
-              <div className="space-y-2">
-                <label htmlFor="password" className="text-sm font-medium text-foreground">
-                  Password *
-                </label>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                  <input
-                    id="password"
-                    name="password"
-                    type="password"
-                    placeholder="••••••••"
-                    value={formData.password}
-                    onChange={handleChange}
-                    className="w-full pl-10 pr-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
-                    disabled={loading}
-                  />
-                </div>
-                <p className="text-xs text-muted-foreground">At least 6 characters</p>
-              </div>
-
-              {/* Confirm Password */}
-              <div className="space-y-2">
-                <label htmlFor="confirmPassword" className="text-sm font-medium text-foreground">
-                  Confirm Password *
-                </label>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                  <input
-                    id="confirmPassword"
-                    name="confirmPassword"
-                    type="password"
-                    placeholder="••••••••"
-                    value={formData.confirmPassword}
-                    onChange={handleChange}
-                    className="w-full pl-10 pr-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
-                    disabled={loading}
-                  />
-                </div>
-              </div>
-
               <Button
                 type="submit"
-                className="w-full bg-primary hover:bg-primary/90 text-white mt-6"
-                disabled={loading || phoneNumber.length < 10 || !formData.name || !formData.password}
+                className="w-full bg-primary hover:bg-primary/90 text-white"
+                disabled={loading || phoneNumber.length < 10}
                 size="lg"
               >
-                {loading ? 'Sending OTP...' : 'Send OTP'}
+                {loading 
+                  ? (USE_TWILIO ? 'Sending OTP...' : 'Verifying...') 
+                  : (USE_TWILIO ? 'Send OTP' : 'Continue')
+                }
               </Button>
 
               <p className="text-center text-sm text-muted-foreground">
@@ -438,23 +444,11 @@ const Signup = () => {
               <button
                 type="button"
                 onClick={() => {
-                  setStep('credentials');
+                  setStep('phone');
                   setOtp('');
                   setOtpTimer(0);
                   setPhoneNumber('');
                   setCountryCode('+91');
-                  setFormData({
-                    name: formData.name,
-                    email: '',
-                    password: formData.password,
-                    confirmPassword: formData.confirmPassword,
-                    address: {
-                      street: '',
-                      city: '',
-                      state: '',
-                      pincode: ''
-                    }
-                  });
                 }}
                 className="w-full text-sm text-muted-foreground hover:underline"
               >
@@ -463,9 +457,29 @@ const Signup = () => {
             </form>
           )}
 
-          {/* Step 3: Complete Details (Email and Address) */}
+          {/* Step 3: Complete Details */}
           {step === 'details' && (
             <form onSubmit={handleCompleteSignup} className="space-y-4 max-h-96 overflow-y-auto pr-2">
+              {/* Name Field */}
+              <div className="space-y-2">
+                <label htmlFor="name" className="text-sm font-medium text-foreground">
+                  Full Name *
+                </label>
+                <div className="relative">
+                  <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                  <input
+                    id="name"
+                    name="name"
+                    type="text"
+                    placeholder="John Doe"
+                    value={formData.name}
+                    onChange={handleChange}
+                    className="w-full pl-10 pr-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                    disabled={loading}
+                  />
+                </div>
+              </div>
+
               {/* Email Field (Optional) */}
               <div className="space-y-2">
                 <label htmlFor="email" className="text-sm font-medium text-foreground">
@@ -479,6 +493,47 @@ const Signup = () => {
                     type="email"
                     placeholder="you@example.com"
                     value={formData.email}
+                    onChange={handleChange}
+                    className="w-full pl-10 pr-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                    disabled={loading}
+                  />
+                </div>
+              </div>
+
+              {/* Password Field */}
+              <div className="space-y-2">
+                <label htmlFor="password" className="text-sm font-medium text-foreground">
+                  Password *
+                </label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                  <input
+                    id="password"
+                    name="password"
+                    type="password"
+                    placeholder="••••••••"
+                    value={formData.password}
+                    onChange={handleChange}
+                    className="w-full pl-10 pr-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                    disabled={loading}
+                  />
+                </div>
+                <p className="text-xs text-muted-foreground">At least 6 characters</p>
+              </div>
+
+              {/* Confirm Password Field */}
+              <div className="space-y-2">
+                <label htmlFor="confirmPassword" className="text-sm font-medium text-foreground">
+                  Confirm Password *
+                </label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                  <input
+                    id="confirmPassword"
+                    name="confirmPassword"
+                    type="password"
+                    placeholder="••••••••"
+                    value={formData.confirmPassword}
                     onChange={handleChange}
                     className="w-full pl-10 pr-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
                     disabled={loading}
