@@ -14,7 +14,6 @@ import { generateOTP, sendOTP, verifyOTP } from '../services/otpService.js';
 
 const router = express.Router();
 
-<<<<<<< warrior-jewel-by6ymbft
 // Check if phone number exists (for non-OTP signup)
 router.post(
   '/check-phone',
@@ -51,21 +50,14 @@ router.post(
 );
 
 // Step 1: Send OTP to phone number
-=======
-// Step 1: Send OTP to phone number (with name and password)
->>>>>>> main
 router.post(
   '/send-otp',
   asyncHandler(async (req, res) => {
-    const { phone, name, password, countryCode } = req.body;
+    const { phone, countryCode } = req.body;
     const defaultCountryCode = process.env.DEFAULT_COUNTRY_CODE || '+91';
 
-    if (!phone || !name || !password) {
-      return sendErrorResponse(res, 400, 'Phone number, name, and password are required');
-    }
-
-    if (password.length < 6) {
-      return sendErrorResponse(res, 400, 'Password must be at least 6 characters');
+    if (!phone) {
+      return sendErrorResponse(res, 400, 'Phone number is required');
     }
 
     // Check if phone is already registered
@@ -83,23 +75,21 @@ router.post(
       const finalCountryCode = countryCode || defaultCountryCode;
       await sendOTP(phone, otp, finalCountryCode);
 
-      // If user exists but not verified, update their OTP and credentials
-      // Otherwise create a temporary user with credentials
+      // If user exists but not verified, update their OTP
+      // Otherwise create a temporary user
       if (existingUser && !existingUser.isPhoneVerified) {
-        existingUser.name = name;
-        existingUser.password = password;
         existingUser.otp = otp;
         existingUser.otpExpiresAt = otpExpiresAt;
         await existingUser.save();
       } else {
-        // Create temporary user record with name and password (will be completed in step 2)
+        // Create temporary user record (will be completed in step 3)
         const tempUser = new User({
           phone,
-          name,
-          password,
           otp,
           otpExpiresAt,
           signupStep: 'phone',
+          name: 'Pending',
+          password: 'temp',
         });
         await tempUser.save();
       }

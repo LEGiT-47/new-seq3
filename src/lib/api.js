@@ -10,26 +10,15 @@ export const getImageUrl = (imagePath) => {
 
   // If it's already a full URL, return as is
   if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
-<<<<<<< warrior-jewel-by6ymbft
     return imagePath; // Already a full URL (e.g., from Unsplash)
   }
+
   // For image paths like /images/products/*, return as-is (served from public folder)
   if (imagePath.startsWith('/images/')) {
     return imagePath;
   }
+
   // For other relative paths, prepend API root URL
-=======
-    return imagePath;
-  }
-
-  // For image files with common extensions that are already imported, return as is
-  // This handles local assets (already resolved to full paths by webpack)
-  if (typeof imagePath === 'string' && (imagePath.includes('.jpg') || imagePath.includes('.JPG') || imagePath.includes('.png'))) {
-    return imagePath;
-  }
-
-  // Prepend API root URL to relative paths
->>>>>>> main
   return `${API_ROOT_URL}${imagePath}`;
 };
 
