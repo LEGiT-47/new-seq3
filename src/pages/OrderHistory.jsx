@@ -140,7 +140,7 @@ const OrderHistory = () => {
                           order.items.map((item, index) => (
                             <div key={index} className="flex justify-between items-start text-sm">
                               <div className="flex-1 min-w-0">
-                                <p className="font-medium truncate">{item.name}</p>
+                                <p className="font-medium truncate">{item.productName}</p>
                                 {item.selectedOptions && (
                                   <p className="text-xs text-muted-foreground">
                                     {Object.entries(item.selectedOptions)

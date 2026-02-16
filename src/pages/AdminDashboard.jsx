@@ -7,7 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
 import { adminAuthAPI, adminOrderAPI } from '../lib/api';
 import { toast } from 'sonner';
-import { LogOut, TrendingUp, Package, DollarSign, Clock, CheckCircle, Loader2, Search } from 'lucide-react';
+import { LogOut, TrendingUp, Package, DollarSign, Clock, CheckCircle, Loader2, Search, X } from 'lucide-react';
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
@@ -17,6 +17,8 @@ const AdminDashboard = () => {
   const [filteredOrders, setFilteredOrders] = useState([]);
   const [admin, setAdmin] = useState(null);
   const [selectedOrder, setSelectedOrder] = useState(null);
+  const [showModal, setShowModal] = useState(false);
+  const [modalLoading, setModalLoading] = useState(false);
   const [statusFilter, setStatusFilter] = useState('all');
   const [paymentFilter, setPaymentFilter] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
@@ -101,7 +103,7 @@ const AdminDashboard = () => {
   const handleOrderStatusUpdate = async (orderId, newStatus) => {
     try {
       await adminOrderAPI.updateStatus(orderId, { deliveryStatus: newStatus });
-      
+
       setOrders((prev) =>
         prev.map((order) =>
           order._id === orderId ? { ...order, deliveryStatus: newStatus } : order
@@ -111,6 +113,20 @@ const AdminDashboard = () => {
       toast.success('Order status updated');
     } catch (error) {
       toast.error('Failed to update order status');
+    }
+  };
+
+  const handleViewDetails = async (orderId) => {
+    setModalLoading(true);
+    try {
+      const response = await adminOrderAPI.getById(orderId);
+      setSelectedOrder(response.data.data);
+      setShowModal(true);
+    } catch (error) {
+      console.error('Error fetching order details:', error);
+      toast.error('Failed to load order details');
+    } finally {
+      setModalLoading(false);
     }
   };
 
@@ -255,6 +271,7 @@ const AdminDashboard = () => {
               <OrdersList
                 orders={filteredOrders}
                 onStatusChange={handleOrderStatusUpdate}
+                onViewDetails={handleViewDetails}
               />
             </TabsContent>
 
@@ -262,6 +279,7 @@ const AdminDashboard = () => {
               <OrdersList
                 orders={filteredOrders.filter((o) => o.deliveryStatus === 'pending')}
                 onStatusChange={handleOrderStatusUpdate}
+                onViewDetails={handleViewDetails}
               />
             </TabsContent>
 
@@ -269,17 +287,178 @@ const AdminDashboard = () => {
               <OrdersList
                 orders={filteredOrders.filter((o) => o.deliveryStatus === 'shipped')}
                 onStatusChange={handleOrderStatusUpdate}
+                onViewDetails={handleViewDetails}
               />
             </TabsContent>
           </Tabs>
         </div>
       </div>
+
+      {/* Order Details Modal */}
+      {showModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+          <Card className="w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            <CardHeader className="flex flex-row items-center justify-between sticky top-0 bg-background border-b">
+              <CardTitle>Order Details</CardTitle>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setShowModal(false)}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </CardHeader>
+            <CardContent className="pt-6 space-y-6">
+              {modalLoading ? (
+                <div className="flex items-center justify-center py-8">
+                  <Loader2 className="h-8 w-8 animate-spin" />
+                </div>
+              ) : selectedOrder ? (
+                <>
+                  {/* Order Header */}
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <h3 className="text-lg font-semibold">Order #{selectedOrder.order.orderNumber}</h3>
+                      <p className="text-sm text-muted-foreground">
+                        {new Date(selectedOrder.order.createdAt).toLocaleDateString('en-IN', {
+                          year: 'numeric',
+                          month: 'long',
+                          day: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit',
+                        })}
+                      </p>
+                    </div>
+                    <div className="flex gap-2">
+                      <Badge variant={selectedOrder.order.paymentStatus === 'paid' ? 'default' : 'secondary'}>
+                        {selectedOrder.order.paymentStatus}
+                      </Badge>
+                      <Badge variant="outline">
+                        {selectedOrder.order.deliveryStatus}
+                      </Badge>
+                    </div>
+                  </div>
+
+                  {/* Customer Information */}
+                  <div>
+                    <h4 className="font-semibold mb-3">Customer Information</h4>
+                    <div className="grid grid-cols-2 gap-4 text-sm">
+                      <div>
+                        <p className="text-muted-foreground text-xs">Name</p>
+                        <p className="font-medium">{selectedOrder.order.customerDetails.name}</p>
+                      </div>
+                      <div>
+                        <p className="text-muted-foreground text-xs">Email</p>
+                        <p className="font-medium">{selectedOrder.order.customerDetails.email}</p>
+                      </div>
+                      <div>
+                        <p className="text-muted-foreground text-xs">Phone</p>
+                        <p className="font-medium">{selectedOrder.order.customerDetails.phone}</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Delivery Address */}
+                  <div>
+                    <h4 className="font-semibold mb-3">Delivery Address</h4>
+                    <div className="text-sm bg-muted/50 rounded-lg p-3 space-y-1">
+                      <p className="font-medium">{selectedOrder.order.deliveryAddress.name}</p>
+                      <p>{selectedOrder.order.deliveryAddress.street}</p>
+                      <p>{selectedOrder.order.deliveryAddress.city}, {selectedOrder.order.deliveryAddress.state} {selectedOrder.order.deliveryAddress.pincode}</p>
+                      <p>Phone: {selectedOrder.order.deliveryAddress.phone}</p>
+                    </div>
+                  </div>
+
+                  {/* Order Items */}
+                  <div>
+                    <h4 className="font-semibold mb-3">Items</h4>
+                    <div className="space-y-3">
+                      {selectedOrder.order.items.map((item, index) => (
+                        <div key={index} className="flex justify-between items-start text-sm border-b pb-3">
+                          <div className="flex-1">
+                            <p className="font-medium">{item.productName}</p>
+                            {item.selectedOptions && Object.keys(item.selectedOptions).length > 0 && (
+                              <p className="text-xs text-muted-foreground mt-1">
+                                {Object.entries(item.selectedOptions)
+                                  .filter(([, v]) => v)
+                                  .map(([k, v]) => `${k}: ${v}`)
+                                  .join(', ')}
+                              </p>
+                            )}
+                          </div>
+                          <div className="text-right ml-2">
+                            <p>Qty: {item.quantity}</p>
+                            <p className="font-medium">₹{item.price * item.quantity}</p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Payment Information */}
+                  <div>
+                    <h4 className="font-semibold mb-3">Payment Information</h4>
+                    <div className="space-y-2 text-sm bg-muted/50 rounded-lg p-3">
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Subtotal:</span>
+                        <span>₹{selectedOrder.order.totalAmount}</span>
+                      </div>
+                      <div className="flex justify-between border-t pt-2 font-semibold">
+                        <span>Total Amount:</span>
+                        <span>₹{selectedOrder.order.totalAmount}</span>
+                      </div>
+                      {selectedOrder.order.paymentMethod && (
+                        <div className="flex justify-between text-xs pt-2">
+                          <span className="text-muted-foreground">Payment Method:</span>
+                          <span>{selectedOrder.order.paymentMethod}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Payment Transactions */}
+                  {selectedOrder.paymentTransactions && selectedOrder.paymentTransactions.length > 0 && (
+                    <div>
+                      <h4 className="font-semibold mb-3">Payment Transactions</h4>
+                      <div className="space-y-2">
+                        {selectedOrder.paymentTransactions.map((tx, index) => (
+                          <div key={index} className="text-sm bg-muted/50 rounded-lg p-3 flex justify-between items-center">
+                            <div>
+                              <p className="font-medium capitalize">{tx.status}</p>
+                              <p className="text-xs text-muted-foreground">
+                                {new Date(tx.createdAt).toLocaleDateString('en-IN')} - Attempt #{tx.attemptNumber}
+                              </p>
+                            </div>
+                            <Badge variant={tx.status === 'success' ? 'default' : 'secondary'}>
+                              ₹{tx.amount}
+                            </Badge>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Order Notes */}
+                  {selectedOrder.order.notes && (
+                    <div>
+                      <h4 className="font-semibold mb-2">Notes</h4>
+                      <p className="text-sm text-muted-foreground bg-muted/50 rounded-lg p-3">
+                        {selectedOrder.order.notes}
+                      </p>
+                    </div>
+                  )}
+                </>
+              ) : null}
+            </CardContent>
+          </Card>
+        </div>
+      )}
     </div>
   );
 };
 
 // Orders List Component
-const OrdersList = ({ orders, onStatusChange }) => {
+const OrdersList = ({ orders, onStatusChange, onViewDetails }) => {
   return (
     <div className="border rounded-lg overflow-hidden">
       <div className="overflow-x-auto">
@@ -340,7 +519,11 @@ const OrdersList = ({ orders, onStatusChange }) => {
                     {new Date(order.createdAt).toLocaleDateString()}
                   </td>
                   <td className="px-4 py-3">
-                    <Button variant="outline" size="sm">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => onViewDetails(order._id)}
+                    >
                       View Details
                     </Button>
                   </td>
