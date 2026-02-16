@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Button } from '../components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
-import { User, Mail, Phone, Lock, UserPlus, MapPin, CheckCircle, Clock, AlertCircle } from 'lucide-react';
+import { User, Mail, Phone, Lock, UserPlus, MapPin, CheckCircle, Clock } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { authAPI } from '../lib/api';
 import { toast } from 'sonner';
@@ -275,18 +275,8 @@ const Signup = () => {
         <CardHeader className="space-y-2 text-center">
           <CardTitle className="text-2xl">Create Account</CardTitle>
           <CardDescription>
-            {USE_TWILIO
-              ? 'Sign up with OTP verification to get started with Sequeira Foods'
-              : 'Sign up quickly to get started with Sequeira Foods'}
+            Sign up to get started with Sequeira Foods
           </CardDescription>
-
-          {/* Mode Badge */}
-          {!USE_TWILIO && (
-            <div className="flex items-center justify-center gap-1 text-xs mt-2 px-3 py-1 rounded-full bg-amber-100 text-amber-800 w-fit mx-auto">
-              <AlertCircle className="h-3 w-3" />
-              <span>Phone verification only (OTP disabled)</span>
-            </div>
-          )}
 
           {/* Step indicator */}
           <div className="flex items-center justify-center gap-2 mt-4 text-xs">
