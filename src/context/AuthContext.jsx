@@ -52,9 +52,9 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const login = async (email, password) => {
+  const login = async (phone, password) => {
     try {
-      const response = await authAPI.login(email, password);
+      const response = await authAPI.login({ phone, password });
       const { user: userData, token: newToken } = response.data.data;
 
       setUser(userData);
