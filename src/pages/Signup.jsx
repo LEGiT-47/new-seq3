@@ -2,10 +2,37 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Button } from '../components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
-import { User, Mail, Phone, Lock, UserPlus, MapPin, CheckCircle, Clock } from 'lucide-react';
+import { User, Mail, Phone, Lock, UserPlus, MapPin, CheckCircle, Clock, AlertCircle } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { authAPI } from '../lib/api';
 import { toast } from 'sonner';
+
+/**
+ * OTP VERIFICATION TOGGLE
+ *
+ * Set to true to enable Twilio SMS OTP verification during signup
+ * Set to false to skip OTP and directly verify phone number in database
+ *
+ * USE_TWILIO = false (Current):
+ *   - User enters phone number
+ *   - Frontend checks if phone exists in database
+ *   - If available, proceeds directly to details form (name, email, password)
+ *   - Faster signup flow, no SMS wait time
+ *   - Good for development/testing
+ *
+ * USE_TWILIO = true (With Twilio):
+ *   - User enters phone number
+ *   - OTP is sent via SMS (requires Twilio credentials)
+ *   - User must verify with 6-digit code
+ *   - Then proceeds to details form
+ *   - More secure for production
+ *
+ * To enable OTP in future:
+ *   1. Set USE_TWILIO = true
+ *   2. Ensure TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN in .env
+ *   3. Update backend environment variables
+ */
+const USE_TWILIO = false;
 
 const Signup = () => {
   const navigate = useNavigate();
@@ -39,7 +66,7 @@ const Signup = () => {
     setPhoneNumber(value);
   };
 
-  // Step 1: Send OTP
+  // Step 1: Send OTP or Check Phone (based on USE_TWILIO flag)
   const handleSendOTP = async (e) => {
     e.preventDefault();
 
@@ -50,26 +77,46 @@ const Signup = () => {
 
     try {
       setLoading(true);
-      const response = await authAPI.sendOTP({ phone: phoneNumber, countryCode });
 
-      if (response.data.success || response.status === 200) {
-        toast.success('OTP sent to your phone');
-        setStep('otp');
-        // Start OTP timer (10 minutes)
-        setOtpTimer(600);
-        const interval = setInterval(() => {
-          setOtpTimer(prev => {
-            if (prev <= 1) {
-              clearInterval(interval);
-              return 0;
-            }
-            return prev - 1;
-          });
-        }, 1000);
+      if (USE_TWILIO) {
+        // OTP Flow: Send OTP via Twilio
+        const response = await authAPI.sendOTP({ phone: phoneNumber, countryCode });
+
+        if (response.data.success || response.status === 200) {
+          toast.success('OTP sent to your phone');
+          setStep('otp');
+          // Start OTP timer (10 minutes)
+          setOtpTimer(600);
+          const interval = setInterval(() => {
+            setOtpTimer(prev => {
+              if (prev <= 1) {
+                clearInterval(interval);
+                return 0;
+              }
+              return prev - 1;
+            });
+          }, 1000);
+        }
+      } else {
+        // Non-OTP Flow: Just check if phone exists in DB
+        const response = await authAPI.checkPhone({ phone: phoneNumber });
+
+        if (response.data.success || response.status === 200) {
+          toast.success('Phone number verified. Please complete your details');
+          setStep('details'); // Skip OTP, go directly to details
+        }
       }
     } catch (error) {
-      console.error('Error sending OTP:', error);
-      toast.error(error.response?.data?.message || 'Failed to send OTP');
+      console.error('Error in signup process:', error);
+      if (error.response?.status === 409) {
+        toast.error('This phone number is already registered. Please login instead.');
+      } else {
+        toast.error(
+          USE_TWILIO
+            ? error.response?.data?.message || 'Failed to send OTP'
+            : error.response?.data?.message || 'Phone number not available'
+        );
+      }
     } finally {
       setLoading(false);
     }
@@ -227,24 +274,52 @@ const Signup = () => {
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-2 text-center">
           <CardTitle className="text-2xl">Create Account</CardTitle>
-          <CardDescription>Sign up to get started with Sequeira Foods</CardDescription>
-          
+          <CardDescription>
+            {USE_TWILIO
+              ? 'Sign up with OTP verification to get started with Sequeira Foods'
+              : 'Sign up quickly to get started with Sequeira Foods'}
+          </CardDescription>
+
+          {/* Mode Badge */}
+          {!USE_TWILIO && (
+            <div className="flex items-center justify-center gap-1 text-xs mt-2 px-3 py-1 rounded-full bg-amber-100 text-amber-800 w-fit mx-auto">
+              <AlertCircle className="h-3 w-3" />
+              <span>Phone verification only (OTP disabled)</span>
+            </div>
+          )}
+
           {/* Step indicator */}
           <div className="flex items-center justify-center gap-2 mt-4 text-xs">
-            <div className={`flex items-center gap-1 ${step === 'phone' || step === 'otp' || step === 'details' ? 'text-primary' : 'text-muted-foreground'}`}>
-              <Phone className="h-4 w-4" />
-              <span>Phone</span>
-            </div>
-            <div className="h-1 w-4 bg-muted"></div>
-            <div className={`flex items-center gap-1 ${step === 'otp' || step === 'details' ? 'text-primary' : 'text-muted-foreground'}`}>
-              <CheckCircle className="h-4 w-4" />
-              <span>Verify</span>
-            </div>
-            <div className="h-1 w-4 bg-muted"></div>
-            <div className={`flex items-center gap-1 ${step === 'details' ? 'text-primary' : 'text-muted-foreground'}`}>
-              <User className="h-4 w-4" />
-              <span>Details</span>
-            </div>
+            {USE_TWILIO ? (
+              <>
+                <div className={`flex items-center gap-1 ${step === 'phone' || step === 'otp' || step === 'details' ? 'text-primary' : 'text-muted-foreground'}`}>
+                  <Phone className="h-4 w-4" />
+                  <span>Phone</span>
+                </div>
+                <div className="h-1 w-4 bg-muted"></div>
+                <div className={`flex items-center gap-1 ${step === 'otp' || step === 'details' ? 'text-primary' : 'text-muted-foreground'}`}>
+                  <CheckCircle className="h-4 w-4" />
+                  <span>Verify</span>
+                </div>
+                <div className="h-1 w-4 bg-muted"></div>
+                <div className={`flex items-center gap-1 ${step === 'details' ? 'text-primary' : 'text-muted-foreground'}`}>
+                  <User className="h-4 w-4" />
+                  <span>Details</span>
+                </div>
+              </>
+            ) : (
+              <>
+                <div className={`flex items-center gap-1 ${step === 'phone' || step === 'details' ? 'text-primary' : 'text-muted-foreground'}`}>
+                  <Phone className="h-4 w-4" />
+                  <span>Phone</span>
+                </div>
+                <div className="h-1 w-4 bg-muted"></div>
+                <div className={`flex items-center gap-1 ${step === 'details' ? 'text-primary' : 'text-muted-foreground'}`}>
+                  <User className="h-4 w-4" />
+                  <span>Details</span>
+                </div>
+              </>
+            )}
           </div>
         </CardHeader>
 
@@ -303,7 +378,10 @@ const Signup = () => {
                 disabled={loading || phoneNumber.length < 10}
                 size="lg"
               >
-                {loading ? 'Sending OTP...' : 'Send OTP'}
+                {loading
+                  ? (USE_TWILIO ? 'Sending OTP...' : 'Verifying...')
+                  : (USE_TWILIO ? 'Send OTP' : 'Continue')
+                }
               </Button>
 
               <p className="text-center text-sm text-muted-foreground">

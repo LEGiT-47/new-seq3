@@ -14,6 +14,41 @@ import { generateOTP, sendOTP, verifyOTP } from '../services/otpService.js';
 
 const router = express.Router();
 
+// Check if phone number exists (for non-OTP signup)
+router.post(
+  '/check-phone',
+  asyncHandler(async (req, res) => {
+    const { phone } = req.body;
+
+    if (!phone) {
+      return sendErrorResponse(res, 400, 'Phone number is required');
+    }
+
+    // Check if phone is already registered
+    const existingUser = await User.findOne({ phone });
+    if (existingUser && existingUser.isPhoneVerified) {
+      return sendErrorResponse(res, 409, 'Phone number already registered');
+    }
+
+    // Create temporary user record for non-OTP signup
+    if (!existingUser) {
+      const tempUser = new User({
+        phone,
+        signupStep: 'phone',
+        isPhoneVerified: true, // Mark as verified for non-OTP flow
+        name: 'Pending',
+        password: 'temp',
+      });
+      await tempUser.save();
+    }
+
+    sendSuccessResponse(res, 200, {
+      message: 'Phone number is available',
+      phoneAvailable: true,
+    });
+  })
+);
+
 // Step 1: Send OTP to phone number
 router.post(
   '/send-otp',

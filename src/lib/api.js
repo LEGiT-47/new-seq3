@@ -57,6 +57,7 @@ apiClient.interceptors.response.use(
 // Auth API calls
 export const authAPI = {
   signup: (data) => apiClient.post('/auth/signup', data),
+  checkPhone: (data) => apiClient.post('/auth/check-phone', data),
   sendOTP: (data) => apiClient.post('/auth/send-otp', data),
   verifyOTP: (data) => apiClient.post('/auth/verify-otp', data),
   signupComplete: (data) => apiClient.post('/auth/signup-complete', data),
