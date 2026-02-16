@@ -71,11 +71,11 @@ export const authAPI = {
   addAddress: (data) => apiClient.post('/auth/addresses', data),
 };
 
-// Admin Auth API calls
+// Admin Auth API calls (will use adminApiClient after it's defined below)
 export const adminAuthAPI = {
   login: (username, password) => apiClient.post('/admin/auth/login', { username, password }),
-  getProfile: () => apiClient.get('/admin/auth/profile'),
-  verifyToken: () => apiClient.get('/admin/auth/verify'),
+  getProfile: null, // Will be set below after adminApiClient is created
+  verifyToken: null, // Will be set below after adminApiClient is created
 };
 
 // Create a mapping of local product images
@@ -251,6 +251,10 @@ adminApiClient.interceptors.response.use(
     return Promise.reject(error);
   }
 );
+
+// Now set the admin auth API methods that need the adminApiClient
+adminAuthAPI.getProfile = () => adminApiClient.get('/admin/auth/profile');
+adminAuthAPI.verifyToken = () => adminApiClient.get('/admin/auth/verify');
 
 export const adminOrderAPI = {
   getAll: (params = {}) => adminApiClient.get('/admin/orders', { params }),
