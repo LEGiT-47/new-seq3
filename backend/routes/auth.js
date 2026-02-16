@@ -14,6 +14,7 @@ import { generateOTP, sendOTP, verifyOTP } from '../services/otpService.js';
 
 const router = express.Router();
 
+<<<<<<< warrior-jewel-by6ymbft
 // Check if phone number exists (for non-OTP signup)
 router.post(
   '/check-phone',
@@ -50,14 +51,21 @@ router.post(
 );
 
 // Step 1: Send OTP to phone number
+=======
+// Step 1: Send OTP to phone number (with name and password)
+>>>>>>> main
 router.post(
   '/send-otp',
   asyncHandler(async (req, res) => {
-    const { phone, countryCode } = req.body;
+    const { phone, name, password, countryCode } = req.body;
     const defaultCountryCode = process.env.DEFAULT_COUNTRY_CODE || '+91';
 
-    if (!phone) {
-      return sendErrorResponse(res, 400, 'Phone number is required');
+    if (!phone || !name || !password) {
+      return sendErrorResponse(res, 400, 'Phone number, name, and password are required');
+    }
+
+    if (password.length < 6) {
+      return sendErrorResponse(res, 400, 'Password must be at least 6 characters');
     }
 
     // Check if phone is already registered
@@ -75,21 +83,23 @@ router.post(
       const finalCountryCode = countryCode || defaultCountryCode;
       await sendOTP(phone, otp, finalCountryCode);
 
-      // If user exists but not verified, update their OTP
-      // Otherwise create a temporary user
+      // If user exists but not verified, update their OTP and credentials
+      // Otherwise create a temporary user with credentials
       if (existingUser && !existingUser.isPhoneVerified) {
+        existingUser.name = name;
+        existingUser.password = password;
         existingUser.otp = otp;
         existingUser.otpExpiresAt = otpExpiresAt;
         await existingUser.save();
       } else {
-        // Create temporary user record (will be completed in step 2)
+        // Create temporary user record with name and password (will be completed in step 2)
         const tempUser = new User({
           phone,
+          name,
+          password,
           otp,
           otpExpiresAt,
           signupStep: 'phone',
-          name: 'Pending',
-          password: 'temp', // Will be updated in step 2
         });
         await tempUser.save();
       }
@@ -138,14 +148,14 @@ router.post(
   })
 );
 
-// Step 3: Complete Signup (with email and address)
+// Step 3: Complete Signup (with email and address only)
 router.post(
   '/signup-complete',
   asyncHandler(async (req, res) => {
-    const { phone, name, password, email, address } = req.body;
+    const { phone, email, address } = req.body;
 
-    if (!phone || !name || !password) {
-      return sendErrorResponse(res, 400, 'Phone, name, and password are required');
+    if (!phone) {
+      return sendErrorResponse(res, 400, 'Phone number is required');
     }
 
     // Find user by phone
@@ -164,20 +174,15 @@ router.post(
       if (existingEmail) {
         return sendErrorResponse(res, 409, 'Email already registered');
       }
-    }
-
-    // Update user with remaining info
-    user.name = name;
-    user.password = password;
-    if (email) {
       user.email = email;
     }
+
     user.signupStep = 'completed';
 
     // Add address if provided
     if (address && (address.street || address.city || address.state || address.pincode)) {
       user.addresses.push({
-        name: address.name || name,
+        name: address.name || user.name,
         phone: address.phone || phone,
         street: address.street,
         city: address.city,
