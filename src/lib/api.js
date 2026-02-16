@@ -8,9 +8,13 @@ const API_ROOT_URL = import.meta.env.VITE_API_URL?.replace('/api', '') || 'http:
 export const getImageUrl = (imagePath) => {
   if (!imagePath) return '';
   if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
-    return imagePath; // Already a full URL
+    return imagePath; // Already a full URL (e.g., from Unsplash)
   }
-  // Prepend API root URL to relative paths
+  // For image paths like /images/products/*, return as-is (served from public folder)
+  if (imagePath.startsWith('/images/')) {
+    return imagePath;
+  }
+  // For other relative paths, prepend API root URL
   return `${API_ROOT_URL}${imagePath}`;
 };
 

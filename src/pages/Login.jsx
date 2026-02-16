@@ -3,7 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { Button } from '../components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
 import { Phone, Lock, LogIn } from 'lucide-react';
-import { authAPI } from '../lib/api';
+import { useAuth } from '../context/AuthContext';
 import { toast } from 'sonner';
 
 const Login = () => {
@@ -11,6 +11,7 @@ const Login = () => {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const { login } = useAuth();
 
   const handlePhoneChange = (e) => {
     const value = e.target.value.replace(/[^\d]/g, '');
@@ -19,7 +20,7 @@ const Login = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (!phone || phone.length < 10 || !password) {
       toast.error('Please enter a valid phone number and password');
       return;
@@ -27,21 +28,17 @@ const Login = () => {
 
     try {
       setLoading(true);
-      const response = await authAPI.login({ phone, password });
-      
-      if (response.data.success || response.status === 200) {
-        const { user: userData, token: newToken } = response.data.data;
+      const response = await login(phone, password);
 
-        // Store in localStorage
-        localStorage.setItem('userToken', newToken);
-        localStorage.setItem('user', JSON.stringify(userData));
-
+      if (response.success) {
         toast.success('Logged in successfully!');
         navigate('/');
+      } else {
+        toast.error(response.error || 'Login failed. Please check your credentials.');
       }
     } catch (error) {
       console.error('Login error:', error);
-      toast.error(error.response?.data?.message || 'Login failed. Please check your credentials.');
+      toast.error('Login failed. Please check your credentials.');
     } finally {
       setLoading(false);
     }

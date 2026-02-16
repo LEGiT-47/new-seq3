@@ -170,6 +170,13 @@ const Signup = () => {
       });
 
       if (response.data.success || response.status === 201) {
+        // Store user data in localStorage so AuthContext can pick it up
+        const { user: userData, token: newToken } = response.data.data || response.data;
+        if (newToken && userData) {
+          localStorage.setItem('userToken', newToken);
+          localStorage.setItem('user', JSON.stringify(userData));
+        }
+
         toast.success('Account created successfully!');
         navigate('/');
       }
