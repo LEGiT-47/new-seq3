@@ -75,6 +75,7 @@ const AdminLogin = () => {
                 value={formData.username}
                 onChange={handleChange}
                 placeholder="Enter admin username"
+                disabled={loading}
               />
             </div>
 
@@ -87,6 +88,7 @@ const AdminLogin = () => {
                 value={formData.password}
                 onChange={handleChange}
                 placeholder="Enter password"
+                disabled={loading}
               />
             </div>
 
@@ -94,18 +96,9 @@ const AdminLogin = () => {
               className="w-full"
               type="submit"
               disabled={loading}
-              onClick={(e) => {
-                if (loading) e.preventDefault();
-              }}
             >
-              {loading ? (
-                <>
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  Signing in...
-                </>
-              ) : (
-                'Sign In'
-              )}
+              {loading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+              {loading ? 'Signing in...' : 'Sign In'}
             </Button>
           </form>
 
