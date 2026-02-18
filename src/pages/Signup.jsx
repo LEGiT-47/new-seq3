@@ -387,7 +387,6 @@ const Signup = () => {
 
               <Button
                 type="submit"
-                className="w-full bg-primary hover:bg-primary/90 text-white"
                 disabled={loading}
                 size="lg"
               >
@@ -436,7 +435,6 @@ const Signup = () => {
 
               <Button
                 type="submit"
-                className="w-full bg-primary hover:bg-primary/90 text-white"
                 disabled={loading}
                 size="lg"
               >
@@ -555,7 +553,6 @@ const Signup = () => {
 
               <Button
                 type="submit"
-                className="w-full bg-primary hover:bg-primary/90 text-white mt-6"
                 disabled={loading}
                 size="lg"
               >
