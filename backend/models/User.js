@@ -50,16 +50,16 @@ const userSchema = new mongoose.Schema(
         isDeliverable: Boolean,
       },
     ],
-    otp: String,
-    otpExpiresAt: Date,
-    isPhoneVerified: {
+    isEmailVerified: {
       type: Boolean,
       default: false,
     },
+    emailVerificationToken: String,
+    emailVerificationExpiresAt: Date,
     signupStep: {
       type: String,
-      enum: ['phone', 'verified', 'completed'],
-      default: 'phone',
+      enum: ['email-pending', 'email-verified', 'completed'],
+      default: 'email-pending',
     },
   },
   { timestamps: true }
