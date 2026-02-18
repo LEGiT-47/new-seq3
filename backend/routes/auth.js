@@ -10,161 +10,136 @@ import {
 import { verifyUserToken } from '../middleware/auth.js';
 import { loginLimiter } from '../middleware/rateLimiter.js';
 import { validateUserSignup, validateUserLogin } from '../middleware/validation.js';
-import { generateOTP, sendOTP, verifyOTP } from '../services/otpService.js';
+import { generateVerificationToken, sendVerificationEmail, verifyEmailToken } from '../services/emailService.js';
 
 const router = express.Router();
 
-// Check if phone number exists (for non-OTP signup)
+// Step 1: Initiate signup with email, name, password, and phone
 router.post(
-  '/check-phone',
+  '/send-verification-email',
   asyncHandler(async (req, res) => {
-    const { phone } = req.body;
+    const { email, name, password, phone, countryCode } = req.body;
 
-    if (!phone) {
-      return sendErrorResponse(res, 400, 'Phone number is required');
+    if (!email || !phone || !password || !name) {
+      return sendErrorResponse(res, 400, 'Email, phone, name, and password are required');
+    }
+
+    // Check if email is already registered
+    const existingEmail = await User.findOne({ email });
+    if (existingEmail && existingEmail.isEmailVerified) {
+      return sendErrorResponse(res, 409, 'Email already registered');
     }
 
     // Check if phone is already registered
-    const existingUser = await User.findOne({ phone });
-    if (existingUser && existingUser.isPhoneVerified) {
+    const existingPhone = await User.findOne({ phone });
+    if (existingPhone && existingPhone.isEmailVerified) {
       return sendErrorResponse(res, 409, 'Phone number already registered');
     }
 
-    // Create temporary user record for non-OTP signup
-    if (!existingUser) {
-      const tempUser = new User({
-        phone,
-        signupStep: 'phone',
-        isPhoneVerified: true, // Mark as verified for non-OTP flow
-        name: 'Pending',
-        password: 'temp',
-      });
-      await tempUser.save();
+    // Ensure email and phone are different
+    if (email.includes(phone) || phone.includes(email.split('@')[0])) {
+      return sendErrorResponse(res, 400, 'Email and phone must be different');
     }
 
-    sendSuccessResponse(res, 200, {
-      message: 'Phone number is available',
-      phoneAvailable: true,
-    });
-  })
-);
-
-// Step 1: Send OTP to phone number
-router.post(
-  '/send-otp',
-  asyncHandler(async (req, res) => {
-    const { phone, countryCode } = req.body;
-    const defaultCountryCode = process.env.DEFAULT_COUNTRY_CODE || '+91';
-
-    if (!phone) {
-      return sendErrorResponse(res, 400, 'Phone number is required');
-    }
-
-    // Check if phone is already registered
-    const existingUser = await User.findOne({ phone });
-    if (existingUser && existingUser.isPhoneVerified) {
-      return sendErrorResponse(res, 409, 'Phone number already registered');
-    }
-
-    // Generate OTP
-    const otp = generateOTP();
-    const otpExpiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes expiry
+    // Generate verification token
+    const verificationToken = generateVerificationToken();
+    const verificationExpiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
 
     try {
-      // Send OTP via SMS with country code
-      const finalCountryCode = countryCode || defaultCountryCode;
-      await sendOTP(phone, otp, finalCountryCode);
-
-      // If user exists but not verified, update their OTP
-      // Otherwise create a temporary user
-      if (existingUser && !existingUser.isPhoneVerified) {
-        existingUser.otp = otp;
-        existingUser.otpExpiresAt = otpExpiresAt;
-        await existingUser.save();
-      } else {
-        // Create temporary user record (will be completed in step 3)
-        const tempUser = new User({
+      // Create or update user with pending verification
+      let user = existingEmail || existingPhone;
+      if (!user) {
+        user = new User({
+          email,
           phone,
-          otp,
-          otpExpiresAt,
-          signupStep: 'phone',
-          name: 'Pending',
-          password: 'temp',
+          name,
+          password,
+          emailVerificationToken: verificationToken,
+          emailVerificationExpiresAt: verificationExpiresAt,
+          signupStep: 'email-pending',
         });
-        await tempUser.save();
+      } else {
+        user.email = email;
+        user.phone = phone;
+        user.name = name;
+        user.password = password;
+        user.emailVerificationToken = verificationToken;
+        user.emailVerificationExpiresAt = verificationExpiresAt;
+        user.signupStep = 'email-pending';
+      }
+
+      await user.save();
+
+      // Send verification email
+      const verificationLink = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/verify-email?token=${verificationToken}&email=${encodeURIComponent(email)}`;
+      const emailResult = await sendVerificationEmail(email, verificationToken, verificationLink);
+
+      if (!emailResult.success) {
+        return sendErrorResponse(res, 500, 'Failed to send verification email. Please try again.');
       }
 
       sendSuccessResponse(res, 200, {
-        message: 'OTP sent successfully',
-        expiresIn: 600, // 10 minutes in seconds
+        message: 'Verification email sent successfully',
+        expiresIn: 86400, // 24 hours in seconds
       });
     } catch (error) {
-      console.error('Error sending OTP:', error);
-      return sendErrorResponse(res, 500, 'Failed to send OTP. Please try again.');
+      console.error('Error sending verification email:', error);
+      return sendErrorResponse(res, 500, 'Failed to send verification email. Please try again.');
     }
   })
 );
 
-// Step 2: Verify OTP
+// Step 2: Verify email
 router.post(
-  '/verify-otp',
+  '/verify-email',
   asyncHandler(async (req, res) => {
-    const { phone, otp } = req.body;
+    const { email, token } = req.body;
 
-    if (!phone || !otp) {
-      return sendErrorResponse(res, 400, 'Phone number and OTP are required');
+    if (!email || !token) {
+      return sendErrorResponse(res, 400, 'Email and verification token are required');
     }
 
-    const user = await User.findOne({ phone });
+    const user = await User.findOne({ email });
     if (!user) {
-      return sendErrorResponse(res, 404, 'User not found. Please send OTP first.');
+      return sendErrorResponse(res, 404, 'User not found. Please signup first.');
     }
 
-    // Verify OTP
-    const verification = verifyOTP(user.otp, otp, user.otpExpiresAt);
+    // Verify email token
+    const verification = verifyEmailToken(user.emailVerificationToken, token, user.emailVerificationExpiresAt);
     if (!verification.success) {
       return sendErrorResponse(res, 400, verification.message);
     }
 
-    // Mark phone as verified
-    user.isPhoneVerified = true;
-    user.signupStep = 'verified';
+    // Mark email as verified
+    user.isEmailVerified = true;
+    user.signupStep = 'email-verified';
     await user.save();
 
     sendSuccessResponse(res, 200, {
-      message: 'OTP verified successfully',
-      phoneVerified: true,
+      message: 'Email verified successfully',
+      emailVerified: true,
     });
   })
 );
 
-// Step 3: Complete Signup (with email and address only)
+// Step 3: Complete Signup (with address only, after email is verified)
 router.post(
   '/signup-complete',
   asyncHandler(async (req, res) => {
-    const { phone, email, address } = req.body;
+    const { email, address } = req.body;
 
-    if (!phone) {
-      return sendErrorResponse(res, 400, 'Phone number is required');
+    if (!email) {
+      return sendErrorResponse(res, 400, 'Email is required');
     }
 
-    // Find user by phone
-    const user = await User.findOne({ phone });
+    // Find user by email
+    const user = await User.findOne({ email });
     if (!user) {
-      return sendErrorResponse(res, 404, 'User not found. Please verify OTP first.');
+      return sendErrorResponse(res, 404, 'User not found. Please verify your email first.');
     }
 
-    if (!user.isPhoneVerified) {
-      return sendErrorResponse(res, 400, 'Phone number not verified. Please verify OTP first.');
-    }
-
-    // Check if email is already registered
-    if (email) {
-      const existingEmail = await User.findOne({ email, phone: { $ne: phone } });
-      if (existingEmail) {
-        return sendErrorResponse(res, 409, 'Email already registered');
-      }
-      user.email = email;
+    if (!user.isEmailVerified) {
+      return sendErrorResponse(res, 400, 'Email not verified. Please verify your email first.');
     }
 
     user.signupStep = 'completed';
@@ -173,7 +148,7 @@ router.post(
     if (address && (address.street || address.city || address.state || address.pincode)) {
       user.addresses.push({
         name: address.name || user.name,
-        phone: address.phone || phone,
+        phone: address.phone || user.phone,
         street: address.street,
         city: address.city,
         state: address.state,

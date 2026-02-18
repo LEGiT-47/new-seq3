@@ -1,59 +1,31 @@
-import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { Button } from '../components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
-import { User, Mail, Phone, Lock, UserPlus, MapPin, CheckCircle, Clock, Eye, EyeOff } from 'lucide-react';
+import { User, Mail, Phone, Lock, UserPlus, MapPin, CheckCircle, Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { authAPI } from '../lib/api';
 import { toast } from 'sonner';
 
-/**
- * OTP VERIFICATION TOGGLE
- *
- * Set to true to enable Twilio SMS OTP verification during signup
- * Set to false to skip OTP and directly verify phone number in database
- *
- * USE_TWILIO = false (Current):
- *   - User enters phone number
- *   - Frontend checks if phone exists in database
- *   - If available, proceeds directly to details form (name, email, password)
- *   - Faster signup flow, no SMS wait time
- *   - Good for development/testing
- *
- * USE_TWILIO = true (With Twilio):
- *   - User enters phone number
- *   - OTP is sent via SMS (requires Twilio credentials)
- *   - User must verify with 6-digit code
- *   - Then proceeds to details form
- *   - More secure for production
- *
- * To enable OTP in future:
- *   1. Set USE_TWILIO = true
- *   2. Ensure TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN in .env
- *   3. Update backend environment variables
- */
-const USE_TWILIO = false;
-
-const Signup = () => {
+const Signup = () => { 
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { signup } = useAuth();
   
-  // Step tracking
-  const [step, setStep] = useState('phone'); // 'phone' | 'otp' | 'details'
+  // Step tracking: 'signup-form' | 'verification' | 'address'
+  const [step, setStep] = useState('signup-form');
   const [loading, setLoading] = useState(false);
-  const [phoneNumber, setPhoneNumber] = useState('');
-  const [countryCode, setCountryCode] = useState('+91');
-  const [otp, setOtp] = useState('');
-  const [otpTimer, setOtpTimer] = useState(0);
-  const [showAddressForm, setShowAddressForm] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   
   const [formData, setFormData] = useState({
-    name: '',
     email: '',
+    name: '',
     password: '',
     confirmPassword: '',
+    phone: '',
+    countryCode: '+91',
+    verificationToken: '',
     address: {
       street: '',
       city: '',
@@ -62,92 +34,19 @@ const Signup = () => {
     }
   });
 
-  // Handle phone number change
-  const handlePhoneChange = (e) => {
-    const value = e.target.value.replace(/[^\d]/g, '');
-    setPhoneNumber(value);
-  };
-
-  // Step 1: Send OTP or Check Phone (based on USE_TWILIO flag)
-  const handleSendOTP = async (e) => {
-    e.preventDefault();
-
-    if (!phoneNumber || phoneNumber.length < 10) {
-      toast.error('Please enter a valid 10-digit phone number');
-      return;
+  // Check if we have a verification token in URL
+  useEffect(() => {
+    const token = searchParams.get('token');
+    const email = searchParams.get('email');
+    if (token && email) {
+      setFormData(prev => ({
+        ...prev,
+        email,
+        verificationToken: token
+      }));
+      setStep('verification');
     }
-
-    try {
-      setLoading(true);
-
-      if (USE_TWILIO) {
-        // OTP Flow: Send OTP via Twilio
-        const response = await authAPI.sendOTP({ phone: phoneNumber, countryCode });
-
-        if (response.data.success || response.status === 200) {
-          toast.success('OTP sent to your phone');
-          setStep('otp');
-          // Start OTP timer (10 minutes)
-          setOtpTimer(600);
-          const interval = setInterval(() => {
-            setOtpTimer(prev => {
-              if (prev <= 1) {
-                clearInterval(interval);
-                return 0;
-              }
-              return prev - 1;
-            });
-          }, 1000);
-        }
-      } else {
-        // Non-OTP Flow: Just check if phone exists in DB
-        const response = await authAPI.checkPhone({ phone: phoneNumber });
-
-        if (response.data.success || response.status === 200) {
-          toast.success('Phone number verified. Please complete your details');
-          setStep('details'); // Skip OTP, go directly to details
-        }
-      }
-    } catch (error) {
-      console.error('Error in signup process:', error);
-      if (error.response?.status === 409) {
-        toast.error('This phone number is already registered. Please login instead.');
-      } else {
-        toast.error(
-          USE_TWILIO
-            ? error.response?.data?.message || 'Failed to send OTP'
-            : error.response?.data?.message || 'Phone number not available'
-        );
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Step 2: Verify OTP
-  const handleVerifyOTP = async (e) => {
-    e.preventDefault();
-
-    if (!otp || otp.length !== 6) {
-      toast.error('Please enter a valid 6-digit OTP');
-      return;
-    }
-
-    try {
-      setLoading(true);
-      const response = await authAPI.verifyOTP({ phone: phoneNumber, otp });
-      
-      if (response.data.success || response.status === 200) {
-        toast.success('Phone verified successfully');
-        setStep('details');
-      }
-    } catch (error) {
-      console.error('Error verifying OTP:', error);
-      toast.error(error.response?.data?.message || 'Invalid OTP');
-    } finally {
-      setLoading(false);
-    }
-  };
+  }, [searchParams]);
 
   // Handle form field changes
   const handleChange = (e) => {
@@ -162,6 +61,12 @@ const Signup = () => {
           [addressField]: value
         }
       }));
+    } else if (name === 'phone') {
+      const cleanedValue = value.replace(/[^\d]/g, '');
+      setFormData(prev => ({
+        ...prev,
+        [name]: cleanedValue
+      }));
     } else {
       setFormData(prev => ({
         ...prev,
@@ -170,10 +75,20 @@ const Signup = () => {
     }
   };
 
-  // Validate details form
-  const validateDetailsForm = () => {
-    if (!formData.name || !formData.password || !formData.confirmPassword) {
+  // Validate signup form
+  const validateSignupForm = () => {
+    if (!formData.email || !formData.name || !formData.password || !formData.phone) {
       toast.error('Please fill in all required fields');
+      return false;
+    }
+
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      toast.error('Please enter a valid email address');
+      return false;
+    }
+
+    if (formData.phone.length < 10) {
+      toast.error('Please enter a valid phone number');
       return false;
     }
 
@@ -187,30 +102,87 @@ const Signup = () => {
       return false;
     }
 
-    if (formData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      toast.error('Please enter a valid email address');
+    if (formData.email.includes(formData.phone) || formData.phone.includes(formData.email.split('@')[0])) {
+      toast.error('Email and phone must be different');
       return false;
     }
 
     return true;
   };
 
-  // Step 3: Complete signup
-  const handleCompleteSignup = async (e) => {
+  // Step 1: Send verification email
+  const handleSendVerificationEmail = async (e) => {
     e.preventDefault();
 
-    if (!validateDetailsForm()) {
+    if (!validateSignupForm()) {
       return;
     }
 
     try {
       setLoading(true);
-      const response = await authAPI.signupComplete({
-        phone: phoneNumber,
+      const response = await authAPI.sendVerificationEmail({
+        email: formData.email,
         name: formData.name,
         password: formData.password,
-        email: formData.email || undefined,
+        phone: formData.phone,
+        countryCode: formData.countryCode
+      });
+
+      if (response.data.success || response.status === 200) {
+        toast.success('Verification email sent! Check your inbox.');
+        setStep('verification');
+      }
+    } catch (error) {
+      console.error('Error sending verification email:', error);
+      if (error.response?.status === 409) {
+        toast.error(error.response?.data?.message || 'Email or phone already registered');
+      } else {
+        toast.error(error.response?.data?.message || 'Failed to send verification email');
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Step 2: Verify email
+  const handleVerifyEmail = async (e) => {
+    e.preventDefault();
+
+    if (!formData.verificationToken) {
+      toast.error('Please enter verification token');
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const response = await authAPI.verifyEmail({
+        email: formData.email,
+        token: formData.verificationToken
+      });
+
+      if (response.data.success || response.status === 200) {
+        toast.success('Email verified successfully!');
+        setStep('address');
+      }
+    } catch (error) {
+      console.error('Error verifying email:', error);
+      toast.error(error.response?.data?.message || 'Invalid verification token');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Step 3: Complete signup with optional address
+  const handleCompleteSignup = async (e) => {
+    e.preventDefault();
+
+    try {
+      setLoading(true);
+      const response = await authAPI.signupComplete({
+        email: formData.email,
         address: (formData.address.street || formData.address.city) ? {
+          name: formData.name,
+          phone: formData.phone,
           street: formData.address.street,
           city: formData.address.city,
           state: formData.address.state,
@@ -219,7 +191,6 @@ const Signup = () => {
       });
 
       if (response.data.success || response.status === 201) {
-        // Store user data in localStorage so AuthContext can pick it up
         const { user: userData, token: newToken } = response.data.data || response.data;
         if (newToken && userData) {
           localStorage.setItem('userToken', newToken);
@@ -231,44 +202,29 @@ const Signup = () => {
       }
     } catch (error) {
       console.error('Error completing signup:', error);
-      toast.error(error.response?.data?.message || 'Failed to create account');
+      toast.error(error.response?.data?.message || 'Failed to complete signup');
     } finally {
       setLoading(false);
     }
   };
 
-  // Resend OTP
-  const handleResendOTP = async () => {
-    if (otpTimer > 0) {
-      toast.error(`Please wait ${otpTimer} seconds before resending`);
-      return;
-    }
-
+  // Resend verification email
+  const handleResendEmail = async () => {
     try {
       setLoading(true);
-      await authAPI.sendOTP({ phone: phoneNumber, countryCode });
-      toast.success('OTP resent to your phone');
-      setOtpTimer(600);
-      const interval = setInterval(() => {
-        setOtpTimer(prev => {
-          if (prev <= 1) {
-            clearInterval(interval);
-            return 0;
-          }
-          return prev - 1;
-        });
-      }, 1000);
+      await authAPI.sendVerificationEmail({
+        email: formData.email,
+        name: formData.name,
+        password: formData.password,
+        phone: formData.phone,
+        countryCode: formData.countryCode
+      });
+      toast.success('Verification email resent!');
     } catch (error) {
-      toast.error('Failed to resend OTP');
+      toast.error('Failed to resend verification email');
     } finally {
       setLoading(false);
     }
-  };
-
-  const formatTime = (seconds) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
   };
 
   return (
@@ -282,186 +238,47 @@ const Signup = () => {
 
           {/* Step indicator */}
           <div className="flex items-center justify-center gap-2 mt-4 text-xs">
-            {USE_TWILIO ? (
-              <>
-                <div className={`flex items-center gap-1 ${step === 'phone' || step === 'otp' || step === 'details' ? 'text-primary' : 'text-muted-foreground'}`}>
-                  <Phone className="h-4 w-4" />
-                  <span>Phone</span>
-                </div>
-                <div className="h-1 w-4 bg-muted"></div>
-                <div className={`flex items-center gap-1 ${step === 'otp' || step === 'details' ? 'text-primary' : 'text-muted-foreground'}`}>
-                  <CheckCircle className="h-4 w-4" />
-                  <span>Verify</span>
-                </div>
-                <div className="h-1 w-4 bg-muted"></div>
-                <div className={`flex items-center gap-1 ${step === 'details' ? 'text-primary' : 'text-muted-foreground'}`}>
-                  <User className="h-4 w-4" />
-                  <span>Details</span>
-                </div>
-              </>
-            ) : (
-              <>
-                <div className={`flex items-center gap-1 ${step === 'phone' || step === 'details' ? 'text-primary' : 'text-muted-foreground'}`}>
-                  <Phone className="h-4 w-4" />
-                  <span>Phone</span>
-                </div>
-                <div className="h-1 w-4 bg-muted"></div>
-                <div className={`flex items-center gap-1 ${step === 'details' ? 'text-primary' : 'text-muted-foreground'}`}>
-                  <User className="h-4 w-4" />
-                  <span>Details</span>
-                </div>
-              </>
-            )}
+            <div className={`flex items-center gap-1 ${step === 'signup-form' || step === 'verification' || step === 'address' ? 'text-primary' : 'text-muted-foreground'}`}>
+              <Mail className="h-4 w-4" />
+              <span>Email</span>
+            </div>
+            <div className="h-1 w-4 bg-muted"></div>
+            <div className={`flex items-center gap-1 ${step === 'verification' || step === 'address' ? 'text-primary' : 'text-muted-foreground'}`}>
+              <CheckCircle className="h-4 w-4" />
+              <span>Verify</span>
+            </div>
+            <div className="h-1 w-4 bg-muted"></div>
+            <div className={`flex items-center gap-1 ${step === 'address' ? 'text-primary' : 'text-muted-foreground'}`}>
+              <MapPin className="h-4 w-4" />
+              <span>Address</span>
+            </div>
           </div>
         </CardHeader>
 
         <CardContent>
-          {/* Step 1: Phone Number */}
-          {step === 'phone' && (
-            <form onSubmit={handleSendOTP} className="space-y-4">
-              {/* Country Code */}
+          {/* Step 1: Signup Form */}
+          {step === 'signup-form' && (
+            <form onSubmit={handleSendVerificationEmail} className="space-y-4">
+              {/* Email Field */}
               <div className="space-y-2">
-                <label htmlFor="countryCode" className="text-sm font-medium text-foreground">
-                  Country Code
-                </label>
-                <select
-                  id="countryCode"
-                  value={countryCode}
-                  onChange={(e) => setCountryCode(e.target.value)}
-                  className="w-full px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent bg-background"
-                  disabled={loading}
-                >
-                  <option value="+91">🇮🇳 India (+91)</option>
-                  <option value="+1">🇺🇸 United States (+1)</option>
-                  <option value="+44">🇬🇧 United Kingdom (+44)</option>
-                  <option value="+86">🇨🇳 China (+86)</option>
-                  <option value="+81">🇯🇵 Japan (+81)</option>
-                  <option value="+61">🇦🇺 Australia (+61)</option>
-                  <option value="+33">🇫🇷 France (+33)</option>
-                  <option value="+49">🇩🇪 Germany (+49)</option>
-                  <option value="+39">🇮🇹 Italy (+39)</option>
-                  <option value="+34">🇪🇸 Spain (+34)</option>
-                </select>
-              </div>
-
-              <div className="space-y-2">
-                <label htmlFor="phone" className="text-sm font-medium text-foreground">
-                  Mobile Number
+                <label htmlFor="email" className="text-sm font-medium text-foreground">
+                  Email Address *
                 </label>
                 <div className="relative">
-                  <Phone className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                  <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                   <input
-                    id="phone"
-                    type="tel"
-                    placeholder="9876543210"
-                    value={phoneNumber}
-                    onChange={handlePhoneChange}
-                    maxLength="10"
+                    id="email"
+                    name="email"
+                    type="email"
+                    placeholder="you@example.com"
+                    value={formData.email}
+                    onChange={handleChange}
                     className="w-full pl-10 pr-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
                     disabled={loading}
                   />
                 </div>
-                <p className="text-xs text-muted-foreground">We'll send you a verification code</p>
               </div>
 
-              <Button
-                type="submit"
-                className="w-full bg-primary hover:bg-primary/90 text-white"
-                disabled={loading || phoneNumber.length < 10}
-                size="lg"
-              >
-                {loading 
-                  ? (USE_TWILIO ? 'Sending OTP...' : 'Verifying...') 
-                  : (USE_TWILIO ? 'Send OTP' : 'Continue')
-                }
-              </Button>
-
-              <p className="text-center text-sm text-muted-foreground">
-                Already have an account?{' '}
-                <Link to="/login" className="text-primary hover:underline font-medium">
-                  Login here
-                </Link>
-              </p>
-            </form>
-          )}
-
-          {/* Step 2: OTP Verification */}
-          {step === 'otp' && (
-            <form onSubmit={handleVerifyOTP} className="space-y-4">
-              <div className="space-y-2">
-                <label htmlFor="otp" className="text-sm font-medium text-foreground">
-                  Verification Code
-                </label>
-                <p className="text-xs text-muted-foreground mb-2">
-                  Enter the 6-digit code sent to {phoneNumber}
-                </p>
-                <div className="relative">
-                  <CheckCircle className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                  <input
-                    id="otp"
-                    type="text"
-                    placeholder="000000"
-                    value={otp}
-                    onChange={(e) => setOtp(e.target.value.replace(/[^\d]/g, '').slice(0, 6))}
-                    maxLength="6"
-                    className="w-full pl-10 pr-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-center text-lg tracking-widest"
-                    disabled={loading}
-                  />
-                </div>
-              </div>
-
-              {otpTimer > 0 && (
-                <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
-                  <Clock className="h-4 w-4" />
-                  <span>Code expires in {formatTime(otpTimer)}</span>
-                </div>
-              )}
-
-              <Button
-                type="submit"
-                className="w-full bg-primary hover:bg-primary/90 text-white"
-                disabled={loading || otp.length !== 6}
-                size="lg"
-              >
-                {loading ? 'Verifying...' : 'Verify OTP'}
-              </Button>
-
-              <div className="text-center">
-                {otpTimer > 0 ? (
-                  <p className="text-xs text-muted-foreground">
-                    Resend code in {formatTime(otpTimer)}
-                  </p>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={handleResendOTP}
-                    className="text-xs text-primary hover:underline"
-                    disabled={loading}
-                  >
-                    Resend OTP
-                  </button>
-                )}
-              </div>
-
-              <button
-                type="button"
-                onClick={() => {
-                  setStep('phone');
-                  setOtp('');
-                  setOtpTimer(0);
-                  setPhoneNumber('');
-                  setCountryCode('+91');
-                }}
-                className="w-full text-sm text-muted-foreground hover:underline"
-              >
-                Change phone number
-              </button>
-            </form>
-          )}
-
-          {/* Step 3: Complete Details */}
-          {step === 'details' && (
-            <form onSubmit={handleCompleteSignup} className="space-y-4 max-h-96 overflow-y-auto pr-2">
               {/* Name Field */}
               <div className="space-y-2">
                 <label htmlFor="name" className="text-sm font-medium text-foreground">
@@ -482,20 +299,21 @@ const Signup = () => {
                 </div>
               </div>
 
-              {/* Email Field (Optional) */}
+              {/* Phone Field */}
               <div className="space-y-2">
-                <label htmlFor="email" className="text-sm font-medium text-foreground">
-                  Email Address (Optional)
+                <label htmlFor="phone" className="text-sm font-medium text-foreground">
+                  Mobile Number *
                 </label>
                 <div className="relative">
-                  <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                  <Phone className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                   <input
-                    id="email"
-                    name="email"
-                    type="email"
-                    placeholder="you@example.com"
-                    value={formData.email}
+                    id="phone"
+                    name="phone"
+                    type="tel"
+                    placeholder="9876543210"
+                    value={formData.phone}
                     onChange={handleChange}
+                    maxLength="10"
                     className="w-full pl-10 pr-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
                     disabled={loading}
                   />
@@ -567,97 +385,188 @@ const Signup = () => {
                 </div>
               </div>
 
-              {/* Address Section (Optional) */}
-              <div className="mt-4 pt-4 border-t border-border">
-                <button
-                  type="button"
-                  onClick={() => setShowAddressForm(!showAddressForm)}
-                  className="flex items-center gap-2 text-sm font-medium text-primary hover:underline mb-3"
-                >
-                  <MapPin className="h-4 w-4" />
-                  {showAddressForm ? 'Hide Address' : 'Add Address (Optional)'}
-                </button>
+              <Button
+                type="submit"
+                disabled={loading}
+                size="lg"
+              >
+                {loading ? 'Sending email...' : 'Continue'}
+              </Button>
 
-                {showAddressForm && (
-                  <div className="space-y-3 p-3 bg-muted/30 rounded-lg text-sm">
-                    <div>
-                      <label htmlFor="street" className="text-xs font-medium text-foreground block mb-1">
-                        Street Address
-                      </label>
-                      <input
-                        id="street"
-                        name="address_street"
-                        type="text"
-                        placeholder="House no, Building name"
-                        value={formData.address.street}
-                        onChange={handleChange}
-                        className="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
-                        disabled={loading}
-                      />
-                    </div>
+              <p className="text-center text-sm text-muted-foreground">
+                Already have an account?{' '}
+                <Link to="/login" className="text-primary hover:underline font-medium">
+                  Login here
+                </Link>
+              </p>
+            </form>
+          )}
 
-                    <div className="grid grid-cols-2 gap-2">
-                      <div>
-                        <label htmlFor="city" className="text-xs font-medium text-foreground block mb-1">
-                          City
-                        </label>
-                        <input
-                          id="city"
-                          name="address_city"
-                          type="text"
-                          placeholder="City"
-                          value={formData.address.city}
-                          onChange={handleChange}
-                          className="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
-                          disabled={loading}
-                        />
-                      </div>
-                      <div>
-                        <label htmlFor="state" className="text-xs font-medium text-foreground block mb-1">
-                          State
-                        </label>
-                        <input
-                          id="state"
-                          name="address_state"
-                          type="text"
-                          placeholder="State"
-                          value={formData.address.state}
-                          onChange={handleChange}
-                          className="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
-                          disabled={loading}
-                        />
-                      </div>
-                    </div>
+          {/* Step 2: Email Verification */}
+          {step === 'verification' && (
+            <form onSubmit={handleVerifyEmail} className="space-y-4">
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
+                <p className="text-sm text-blue-800">
+                  We've sent a verification link to <strong>{formData.email}</strong>
+                </p>
+              </div>
 
-                    <div>
-                      <label htmlFor="pincode" className="text-xs font-medium text-foreground block mb-1">
-                        Pincode
-                      </label>
-                      <input
-                        id="pincode"
-                        name="address_pincode"
-                        type="text"
-                        placeholder="6-digit pincode"
-                        value={formData.address.pincode}
-                        onChange={handleChange}
-                        maxLength="6"
-                        className="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
-                        disabled={loading}
-                      />
-                    </div>
-                  </div>
-                )}
+              <div className="space-y-2">
+                <label htmlFor="token" className="text-sm font-medium text-foreground">
+                  Verification Code/Token
+                </label>
+                <p className="text-xs text-muted-foreground mb-2">
+                  Paste the token from the verification email
+                </p>
+                <div className="relative">
+                  <CheckCircle className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                  <input
+                    id="token"
+                    name="verificationToken"
+                    type="text"
+                    placeholder="Paste verification token"
+                    value={formData.verificationToken}
+                    onChange={handleChange}
+                    className="w-full pl-10 pr-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent font-mono text-sm"
+                    disabled={loading}
+                  />
+                </div>
               </div>
 
               <Button
                 type="submit"
-                className="w-full bg-primary hover:bg-primary/90 text-white mt-6"
+                disabled={loading}
+                size="lg"
+              >
+                {loading ? 'Verifying...' : 'Verify Email'}
+              </Button>
+
+              <div className="text-center space-y-2">
+                <p className="text-xs text-muted-foreground">
+                  Didn't receive the email?
+                </p>
+                <button
+                  type="button"
+                  onClick={handleResendEmail}
+                  className="text-xs text-primary hover:underline disabled:opacity-50"
+                  disabled={loading}
+                >
+                  Resend Verification Email
+                </button>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setStep('signup-form');
+                  setFormData(prev => ({ ...prev, verificationToken: '' }));
+                }}
+                className="w-full text-sm text-muted-foreground hover:underline"
+              >
+                Change email address
+              </button>
+            </form>
+          )}
+
+          {/* Step 3: Address Form */}
+          {step === 'address' && (
+            <form onSubmit={handleCompleteSignup} className="space-y-4 max-h-96 overflow-y-auto pr-2">
+              <div className="bg-green-50 border border-green-200 rounded-lg p-3 mb-4">
+                <p className="text-sm text-green-800 flex items-center gap-2">
+                  <CheckCircle className="h-4 w-4" />
+                  Email verified successfully!
+                </p>
+              </div>
+
+              <p className="text-sm text-muted-foreground mb-4">
+                Add your address to complete your account (optional)
+              </p>
+
+              {/* Street Address */}
+              <div className="space-y-2">
+                <label htmlFor="street" className="text-sm font-medium text-foreground">
+                  Street Address
+                </label>
+                <input
+                  id="street"
+                  name="address_street"
+                  type="text"
+                  placeholder="House no, Building name"
+                  value={formData.address.street}
+                  onChange={handleChange}
+                  className="w-full px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                  disabled={loading}
+                />
+              </div>
+
+              {/* City */}
+              <div className="space-y-2">
+                <label htmlFor="city" className="text-sm font-medium text-foreground">
+                  City
+                </label>
+                <input
+                  id="city"
+                  name="address_city"
+                  type="text"
+                  placeholder="City"
+                  value={formData.address.city}
+                  onChange={handleChange}
+                  className="w-full px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                  disabled={loading}
+                />
+              </div>
+
+              {/* State */}
+              <div className="space-y-2">
+                <label htmlFor="state" className="text-sm font-medium text-foreground">
+                  State
+                </label>
+                <input
+                  id="state"
+                  name="address_state"
+                  type="text"
+                  placeholder="State"
+                  value={formData.address.state}
+                  onChange={handleChange}
+                  className="w-full px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                  disabled={loading}
+                />
+              </div>
+
+              {/* Pincode */}
+              <div className="space-y-2">
+                <label htmlFor="pincode" className="text-sm font-medium text-foreground">
+                  Pincode
+                </label>
+                <input
+                  id="pincode"
+                  name="address_pincode"
+                  type="text"
+                  placeholder="6-digit pincode"
+                  value={formData.address.pincode}
+                  onChange={handleChange}
+                  maxLength="6"
+                  className="w-full px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                  disabled={loading}
+                />
+              </div>
+
+              <Button
+                type="submit"
                 disabled={loading}
                 size="lg"
               >
                 <UserPlus className="h-4 w-4 mr-2" />
                 {loading ? 'Creating account...' : 'Create Account'}
               </Button>
+
+              <button
+                type="button"
+                onClick={() => handleCompleteSignup({ preventDefault: () => {} })}
+                className="w-full text-sm text-muted-foreground hover:underline"
+              >
+                Skip and create account now
+              </button>
             </form>
           )}
         </CardContent>
