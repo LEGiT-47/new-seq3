@@ -7,7 +7,7 @@ import { useAuth } from '../context/AuthContext';
 import { authAPI } from '../lib/api';
 import { toast } from 'sonner';
 
-const Signup = () => {
+const Signup = () => { 
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { signup } = useAuth();
