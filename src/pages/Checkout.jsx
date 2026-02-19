@@ -105,7 +105,6 @@ const Checkout = () => {
 
       const response = await orderAPI.create(orderData);
       setOrder(response.data.data.order || response.data.data);
-      setStep('success');
       toast.success('Order created successfully');
     } catch (error) {
       toast.error(error.response?.data?.error || 'Failed to create order');
