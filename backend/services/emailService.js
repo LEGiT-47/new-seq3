@@ -1,20 +1,8 @@
-import nodemailer from 'nodemailer';
+import sgMail from '@sendgrid/mail';
 import crypto from 'crypto';
 
-// Initialize email transporter using SendGrid
-const transporter = nodemailer.createTransport({
-  host: 'smtp.sendgrid.net',
-  port: 587,
-  secure: false, // false for port 587, true for 465
-  auth: {
-    user: 'apikey', // SendGrid SMTP username is always 'apikey'
-    pass: process.env.SENDGRID_API_KEY, // Your SendGrid API Key
-  },
-  connectionTimeout: 15000, // 15 seconds
-  socketTimeout: 15000, // 15 seconds
-  logger: true, // Enable logging for debugging
-  debug: true, // Enable debug output
-});
+// Initialize SendGrid Mail API
+sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
 // Generate email verification token
 export const generateVerificationToken = () => {
@@ -24,9 +12,9 @@ export const generateVerificationToken = () => {
 // Send verification email
 export const sendVerificationEmail = async (email, verificationToken, verificationLink) => {
   try {
-    const mailOptions = {
-      from: process.env.SENDGRID_SENDER_EMAIL, // Must be a verified sender in SendGrid
+    const msg = {
       to: email,
+      from: process.env.SENDGRID_SENDER_EMAIL, // Must be a verified sender in SendGrid
       subject: 'Email Verification - Sequeira Foods',
       html: `
         <h2>Welcome to Sequeira Foods!</h2>
@@ -47,7 +35,7 @@ export const sendVerificationEmail = async (email, verificationToken, verificati
       `,
     };
 
-    await transporter.sendMail(mailOptions);
+    await sgMail.send(msg);
     return { success: true, message: 'Verification email sent successfully' };
   } catch (error) {
     console.error('Email sending error:', error);
