@@ -2,14 +2,21 @@ import nodemailer from 'nodemailer';
 import crypto from 'crypto';
 
 // Initialize email transporter
+// Gmail app passwords have spaces - remove them for nodemailer
+const appPassword = (process.env.EMAIL_PASSWORD || '').replace(/\s/g, '');
+
 const transporter = nodemailer.createTransport({
-  service: process.env.EMAIL_SERVICE || 'gmail',
+  host: process.env.SMTP_HOST || 'smtp.gmail.com',
+  port: process.env.SMTP_PORT || 587,
+  secure: process.env.SMTP_SECURE === 'true' ? true : false, // true for 465, false for 587
   auth: {
     user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASSWORD,
+    pass: appPassword,
   },
-  connectionTimeout: 10000, // 10 seconds
-  socketTimeout: 10000, // 10 seconds
+  connectionTimeout: 15000, // 15 seconds
+  socketTimeout: 15000, // 15 seconds
+  logger: true, // Enable logging for debugging
+  debug: true, // Enable debug output
 });
 
 // Generate email verification token
