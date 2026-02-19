@@ -70,9 +70,8 @@ router.post(
 
       await user.save();
 
-      // Send verification email
-      const verificationLink = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/verify-email?token=${verificationToken}&email=${encodeURIComponent(email)}`;
-      const emailResult = await sendVerificationEmail(email, verificationToken, verificationLink);
+      // Send verification email with OTP
+      const emailResult = await sendVerificationEmail(email, verificationToken);
 
       if (!emailResult.success) {
         return sendErrorResponse(res, 500, 'Failed to send verification email. Please try again.');
