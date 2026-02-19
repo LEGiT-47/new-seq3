@@ -1,17 +1,14 @@
 import nodemailer from 'nodemailer';
 import crypto from 'crypto';
 
-// Initialize email transporter
-// Gmail app passwords have spaces - remove them for nodemailer
-const appPassword = (process.env.EMAIL_PASSWORD || '').replace(/\s/g, '');
-
+// Initialize email transporter using SendGrid
 const transporter = nodemailer.createTransport({
-  host: process.env.SMTP_HOST || 'smtp.gmail.com',
-  port: process.env.SMTP_PORT || 587,
-  secure: process.env.SMTP_SECURE === 'true' ? true : false, // true for 465, false for 587
+  host: 'smtp.sendgrid.net',
+  port: 587,
+  secure: false, // false for port 587, true for 465
   auth: {
-    user: process.env.EMAIL_USER,
-    pass: appPassword,
+    user: 'apikey', // SendGrid SMTP username is always 'apikey'
+    pass: process.env.SENDGRID_API_KEY, // Your SendGrid API Key
   },
   connectionTimeout: 15000, // 15 seconds
   socketTimeout: 15000, // 15 seconds
@@ -28,7 +25,7 @@ export const generateVerificationToken = () => {
 export const sendVerificationEmail = async (email, verificationToken, verificationLink) => {
   try {
     const mailOptions = {
-      from: process.env.EMAIL_USER,
+      from: process.env.SENDGRID_SENDER_EMAIL, // Must be a verified sender in SendGrid
       to: email,
       subject: 'Email Verification - Sequeira Foods',
       html: `
