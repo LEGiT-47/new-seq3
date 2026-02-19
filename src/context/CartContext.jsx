@@ -90,7 +90,7 @@ export const CartProvider = ({ children }) => {
     if (isAuthenticated && user) {
       try {
         await cartAPI.addToCart({
-          productId: product.id,
+          productId: product.productId || product.id,
           quantity,
           selectedCoating: options.coating || null,
           selectedFlavor: options.flavor || null
@@ -109,7 +109,7 @@ export const CartProvider = ({ children }) => {
     if (isAuthenticated && user && itemToRemove) {
       try {
         await cartAPI.removeFromCart(
-          itemToRemove.id,
+          itemToRemove.productId || itemToRemove.id,
           itemToRemove.selectedCoating,
           itemToRemove.selectedFlavor
         );
@@ -137,7 +137,7 @@ export const CartProvider = ({ children }) => {
     // Sync with backend if authenticated
     if (isAuthenticated && user && item) {
       try {
-        await cartAPI.updateCart(item.id, {
+        await cartAPI.updateCart(item.productId || item.id, {
           quantity,
           selectedCoating: item.selectedCoating,
           selectedFlavor: item.selectedFlavor
