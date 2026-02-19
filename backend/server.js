@@ -23,7 +23,19 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 // Security Middleware
-app.use(helmet());
+app.use(
+  helmet({
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        scriptSrc: ["'self'", "'unsafe-inline'", "https://checkout.razorpay.com"],
+        frameSrc: ["'self'", "https://checkout.razorpay.com", "https://api.razorpay.com"],
+        connectSrc: ["'self'", "https://api.razorpay.com", "https://checkout.razorpay.com"],
+        imgSrc: ["'self'", "data:", "https:"],
+      },
+    },
+  })
+);
 
 // CORS Configuration
 const corsOptions = {
