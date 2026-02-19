@@ -14,11 +14,11 @@ const Checkout = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { cartItems, clearCart, getDeliveryItems } = useCart();
-  const { isAuthenticated, user } = useAuth();
+  const { isAuthenticated, user, loading: authLoading } = useAuth();
   const [step, setStep] = useState('confirmation'); // confirmation, payment
   const [loading, setLoading] = useState(false);
   const [selectedAddress, setSelectedAddress] = useState(null);
-  
+
   const [order, setOrder] = useState(null);
   const [razorpayKey, setRazorpayKey] = useState(null);
 
@@ -26,6 +26,11 @@ const Checkout = () => {
   const deliveryItems = getDeliveryItems();
 
   useEffect(() => {
+    // Wait for auth to finish loading
+    if (authLoading) {
+      return;
+    }
+
     if (!isAuthenticated || !user) {
       toast.error('Please log in to continue with checkout');
       navigate('/login');
@@ -53,7 +58,23 @@ const Checkout = () => {
     }).catch(() => {
       console.log('Razorpay key not configured yet');
     });
-  }, [isAuthenticated, user, navigate, deliveryItems, location]);
+  }, [isAuthenticated, user, authLoading, navigate, deliveryItems, location]);
+
+  if (authLoading) {
+    return (
+      <div className="min-h-screen py-6 flex items-center justify-center">
+        <Card className="max-w-md">
+          <CardHeader>
+            <CardTitle>Loading</CardTitle>
+            <CardDescription>Please wait...</CardDescription>
+          </CardHeader>
+          <CardContent className="flex justify-center">
+            <Loader2 className="h-6 w-6 animate-spin" />
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   if (!isAuthenticated || deliveryItems.length === 0) {
     return (
