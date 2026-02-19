@@ -6,7 +6,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from './ui/sheet';
 import { Separator } from './ui/separator';
 import { ScrollArea } from './ui/scroll-area';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
-import { Trash2, ShoppingBag, MessageCircle, Truck } from 'lucide-react';
+import { Trash2, ShoppingBag, MessageCircle, Truck, Plus, Minus } from 'lucide-react';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
@@ -18,6 +18,7 @@ const Cart = () => {
     setIsCartOpen,
     updateCartItemOptions,
     removeFromCart,
+    updateQuantity,
     clearCart,
     getTotalItems,
     generateWhatsAppMessage,
@@ -100,7 +101,27 @@ const Cart = () => {
                   <h4 className="font-medium text-sm truncate">{item.name}</h4>
                   <p className="text-xs text-muted-foreground">{item.category}</p>
                   <p className="text-sm font-bold mt-1">₹{item.price}</p>
-                  <p className="text-xs text-muted-foreground">Qty: {item.quantity}</p>
+
+                  {/* Quantity Controls */}
+                  <div className="flex items-center gap-2 mt-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-6 w-6 p-0"
+                      onClick={() => updateQuantity(item.cartItemId, Math.max(1, item.quantity - 1))}
+                    >
+                      <Minus className="h-3 w-3" />
+                    </Button>
+                    <span className="text-xs font-medium w-4 text-center">{item.quantity}</span>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-6 w-6 p-0"
+                      onClick={() => updateQuantity(item.cartItemId, item.quantity + 1)}
+                    >
+                      <Plus className="h-3 w-3" />
+                    </Button>
+                  </div>
                 </div>
 
                 <div className="flex flex-col items-end space-y-2">
