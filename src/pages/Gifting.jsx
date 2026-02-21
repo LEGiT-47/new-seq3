@@ -1,19 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from '../components/ui/button';
-import { Card, CardContent } from '../components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
 import { Badge } from '../components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
 import { useCart } from '../context/CartContext';
 import { productAPI } from '../lib/api';
-import { MessageCircle, Gift } from 'lucide-react';
+import { MessageCircle, Gift, Heart } from 'lucide-react';
 import { toast } from 'sonner';
 
 const Gifting = () => {
-  const [serviceSelections, setServiceSelections] = useState({});
-  const { addToCart } = useCart();
   const [giftingSolutions, setGiftingSolutions] = useState([]);
-  const [giftingServices, setGiftingServices] = useState([]);
+  const [festiveProducts, setFestiveProducts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const { addToCart } = useCart();
 
   useEffect(() => {
     const fetchGiftingProducts = async () => {
@@ -23,10 +23,11 @@ const Gifting = () => {
         const allProducts = allProductsResponse.data.data || allProductsResponse.data;
 
         const solutions = allProducts.filter(p => p.category === 'gifting');
-        const services = allProducts.filter(p => p.category === 'services');
+        // Filter festive products (those marked as festive or seasonal)
+        const festive = solutions.filter(p => p.isFestive);
 
         setGiftingSolutions(solutions);
-        setGiftingServices(services);
+        setFestiveProducts(festive);
       } catch (error) {
         console.error('Error fetching gifting products:', error);
         toast.error('Failed to load gifting products');
@@ -38,71 +39,84 @@ const Gifting = () => {
     fetchGiftingProducts();
   }, []);
 
-  const festivalOptions = {
-    'Corporate Gifting': [
-      'New Year',
-      'Women\'s Day',
-      'Financial Year Closing / New Financial Year',
-      'Eid-ul-Fitr',
-      'Raksha Bandhan',
-      'Diwali',
-      'Christmas & Year-End',
-      'Corporate Awards / Annual Events',
-      'Other'
-    ],
-    'Festive Gifting': [
-      'Makar Sankranti / Pongal / Lohri',
-      'Holi',
-      'Eid-ul-Fitr',
-      'Raksha Bandhan',
-      'Onam / Ganesh Chaturthi',
-      'Navratri / Dussehra',
-      'Diwali',
-      'Christmas',
-      'Other'
-    ],
-    'Personalized Gifting': [
-      'Valentine\'s Day',
-      'Birthdays',
-      'Work Anniversaries',
-      'Raksha Bandhan',
-      'Mother\'s Day',
-      'Father\'s Day',
-      'Naming Ceremony / Baptism / Naamkaran',
-      'Christmas / New Year',
-      'Other'
-    ],
-    'Event & Wedding Gifting': [
-      'Wedding & Engagement',
-      'Pre-Wedding Functions (Haldi / Mehendi / Sangeet)',
-      'Anniversaries',
-      'Naming Ceremony (Naamkaran / Baptism / Cradle Ceremony)',
-      'Baby Shower (Godh Bharai / Seemantham)',
-      'Housewarming (Griha Pravesh)',
-      'Return Gifts',
-      'Corporate Events & Milestones',
-      'Other'
-    ]
-  };
+  const giftingCategories = [
+    {
+      id: 'corporate',
+      name: 'Corporate Gifting',
+      description: 'Premium gift solutions for your corporate needs and employee appreciation',
+      occasions: [
+        'New Year',
+        'Women\'s Day',
+        'Financial Year Closing / New Financial Year',
+        'Eid-ul-Fitr',
+        'Raksha Bandhan',
+        'Diwali',
+        'Christmas & Year-End',
+        'Corporate Awards / Annual Events',
+      ]
+    },
+    {
+      id: 'personalized',
+      name: 'Personalized Gifting',
+      description: 'Thoughtfully curated gifts perfect for personal celebrations and milestones',
+      occasions: [
+        'Valentine\'s Day',
+        'Birthdays',
+        'Work Anniversaries',
+        'Raksha Bandhan',
+        'Mother\'s Day',
+        'Father\'s Day',
+        'Naming Ceremony / Baptism',
+        'Christmas / New Year',
+      ]
+    },
+    {
+      id: 'events',
+      name: 'Event & Wedding Gifting',
+      description: 'Elegant and memorable gifts for weddings and special life events',
+      occasions: [
+        'Wedding & Engagement',
+        'Pre-Wedding Functions',
+        'Anniversaries',
+        'Naming Ceremony',
+        'Baby Shower',
+        'Housewarming',
+        'Return Gifts',
+        'Corporate Events & Milestones',
+      ]
+    }
+  ];
 
-  const handleServiceSelection = (serviceId, selectionType, value) => {
-    setServiceSelections(prev => ({
-      ...prev,
-      [serviceId]: {
-        ...prev[serviceId],
-        [selectionType]: value
-      }
-    }));
-  };
+  const giftPacks = [
+    {
+      id: 'classic',
+      name: 'Classic Assorted Pack',
+      description: 'A timeless selection of our finest nuts and dry fruits, perfect for any occasion. Includes a variety of premium quality products carefully curated for excellence.',
+      price: '₹999',
+      includes: ['Premium Almonds', 'Cashews', 'Raisins', 'Dates'],
+      icon: '🎁'
+    },
+    {
+      id: 'premium',
+      name: 'Premium Gourmet Pack',
+      description: 'Our most luxurious selection featuring chocolate-coated nuts, specialty flavored items, and premium dry fruits. Perfect for the discerning gift-giver.',
+      price: '₹1,499',
+      includes: ['Chocolate Almonds', 'Chocolate Cashews', 'Assorted Coated Nuts', 'Premium Dry Fruits'],
+      icon: '✨'
+    },
+    {
+      id: 'deluxe',
+      name: 'Deluxe Festive Pack',
+      description: 'An exquisite collection ideal for festival seasons. Beautifully packaged with our finest selections and seasonal specialties.',
+      price: '₹1,999',
+      includes: ['All Premium Items', 'Seasonal Specials', 'Festive Packaging', 'Personalization Option'],
+      icon: '👑'
+    }
+  ];
 
-  const handleAddToCart = (product) => {
-    addToCart(product, 1, {});
-    toast.success(`${product.name} added to cart!`);
-  };
-
-  const handleBuyNow = (product) => {
-    let message = `Hello! I would like to inquire about ${product.name}`;
-    message += '. Please let me know the price, availability, and any customization options. Thank you!';
+  const handleContactSeller = (product) => {
+    let message = `Hello! I would like to inquire about the ${product.name || product.id}`;
+    message += '. Please let me know the availability, pricing, and customization options. Thank you!';
 
     const phoneNumber = '+919930709557';
     const encodedMessage = encodeURIComponent(message);
@@ -110,8 +124,13 @@ const Gifting = () => {
     window.open(whatsappUrl, '_blank');
   };
 
+  const handleAddToCart = (product) => {
+    addToCart(product, 1, {});
+    toast.success(`${product.name} added to cart!`);
+  };
+
   return (
-    <div className="min-h-screen py-6 sm:py-8">
+    <div className="min-h-screen py-6 sm:py-8 bg-background">
       <div className="w-full px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
           {/* Header */}
@@ -121,164 +140,188 @@ const Gifting = () => {
             </div>
             <h1 className="font-display text-2xl sm:text-3xl md:text-4xl font-bold mb-3 sm:mb-4">Gifting Solutions</h1>
             <p className="text-sm sm:text-base md:text-lg text-muted-foreground max-w-2xl mx-auto px-2">
-              Explore our premium gift packs and specialized gifting services for every occasion.
-              Perfect for corporate gifting, festive celebrations, and special events.
+              Explore our curated gift collections for every occasion. From corporate gifting to festive celebrations, we have the perfect gift for everyone.
             </p>
           </div>
 
-          {/* Services with Selection Dropdowns */}
-          <div className="space-y-4 sm:space-y-6 mb-12">
-            {loading ? (
-              <div className="text-center py-12">
-                <p className="text-muted-foreground">Loading gifting services...</p>
-              </div>
-            ) : giftingServices.length > 0 ? (
-              giftingServices.map((service) => {
-                const serviceId = service.id || service._id;
-                return (
-                <div key={serviceId} className="bg-card border border-border rounded-lg p-4 sm:p-6">
-                  {/* Service Header */}
-                  <h2 className="text-lg sm:text-xl font-bold mb-2">{service.name}</h2>
-                  <p className="text-xs sm:text-sm text-muted-foreground mb-6">{service.description}</p>
+          {/* Main Tabs */}
+          <Tabs defaultValue="normal" className="w-full">
+            <TabsList className="grid w-full grid-cols-2 mb-8">
+              <TabsTrigger value="normal">Normal Gifting</TabsTrigger>
+              <TabsTrigger value="festive">Festive Gifting</TabsTrigger>
+            </TabsList>
 
-                  {/* Selection Dropdowns */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-                    {/* Festival/Occasion Dropdown */}
-                    {festivalOptions[service.name] && (
+            {/* Normal Gifting Tab */}
+            <TabsContent value="normal" className="space-y-8">
+              <div className="space-y-6">
+                {giftingCategories.map((category) => (
+                  <Card key={category.id} className="overflow-hidden">
+                    <CardHeader className="bg-gradient-to-r from-primary/10 to-primary/5">
+                      <CardTitle className="flex items-center gap-2">
+                        <Gift className="h-5 w-5 text-primary" />
+                        {category.name}
+                      </CardTitle>
+                      <CardDescription>{category.description}</CardDescription>
+                    </CardHeader>
+                    <CardContent className="pt-6 space-y-6">
+                      {/* Occasions List */}
                       <div>
-                        <label className="text-xs sm:text-sm font-medium text-muted-foreground block mb-2">
-                          {service.name.includes('Festive') ? 'Select Festival' : 'Select Occasion'}
-                        </label>
-                        <Select
-                          value={serviceSelections[serviceId]?.festival || ''}
-                          onValueChange={(value) => handleServiceSelection(serviceId, 'festival', value)}
-                        >
-                          <SelectTrigger className="w-full h-9 sm:h-10 text-xs sm:text-sm">
-                            <SelectValue placeholder={`Choose a ${service.name.includes('Festive') ? 'festival' : 'occasion'}`} />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {festivalOptions[service.name]?.map((festival) => (
-                              <SelectItem key={festival} value={festival}>
-                                {festival}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                        <p className="text-sm font-semibold mb-3">Perfect for:</p>
+                        <div className="flex flex-wrap gap-2">
+                          {category.occasions.map((occasion) => (
+                            <Badge key={occasion} variant="secondary">
+                              {occasion}
+                            </Badge>
+                          ))}
+                        </div>
                       </div>
-                    )}
 
-                    {/* Other Occasion Input */}
-                    {serviceSelections[serviceId]?.festival === 'Other' && (
+                      {/* Gift Packs Grid */}
                       <div>
-                        <label className="text-xs sm:text-sm font-medium text-muted-foreground block mb-2">
-                          Please specify the occasion
-                        </label>
-                        <input
-                          type="text"
-                          value={serviceSelections[serviceId]?.otherOccasion || ''}
-                          onChange={(e) => handleServiceSelection(serviceId, 'otherOccasion', e.target.value)}
-                          placeholder="Enter your occasion"
-                          className="w-full h-9 sm:h-10 px-3 rounded-md border border-input bg-background text-xs sm:text-sm"
-                        />
-                      </div>
-                    )}
-
-                    {/* Pack Type Dropdown */}
-                    <div>
-                      <label className="text-xs sm:text-sm font-medium text-muted-foreground block mb-2">
-                        Select Pack
-                      </label>
-                      <Select
-                        value={serviceSelections[serviceId]?.packType || ''}
-                        onValueChange={(value) => handleServiceSelection(serviceId, 'packType', value)}
-                      >
-                        <SelectTrigger className="w-full h-9 sm:h-10 text-xs sm:text-sm">
-                          <SelectValue placeholder="Choose a pack" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="all">All Packs</SelectItem>
-                          {giftingSolutions.map((pack) => {
-                            const packId = pack.id || pack._id;
-                            return (
-                              <SelectItem key={packId} value={packId.toString()}>
-                                <div className="flex flex-col">
-                                  <span className="font-medium">{pack.name}</span>
+                        <p className="text-sm font-semibold mb-4">Choose your pack:</p>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                          {giftPacks.map((pack) => (
+                            <Card key={pack.id} className="flex flex-col hover:shadow-lg transition-shadow">
+                              <CardHeader className="pb-3">
+                                <div className="flex items-start justify-between mb-2">
+                                  <span className="text-2xl">{pack.icon}</span>
+                                  <Badge className="bg-primary/20 text-primary border-primary/30">{pack.price}</Badge>
                                 </div>
-                              </SelectItem>
-                            );
-                          })}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-
-                  {/* Display Selected Pack Details */}
-                  {serviceSelections[serviceId]?.packType && serviceSelections[serviceId]?.packType !== 'all' && (
-                    <div className="mt-6 p-4 bg-muted/50 rounded-lg border border-border">
-                      {giftingSolutions
-                        .filter(pack => {
-                          const packId = pack.id || pack._id;
-                          return packId.toString() === serviceSelections[serviceId].packType;
-                        })
-                        .map((pack) => {
-                          const packId = pack.id || pack._id;
-                          return (
-                            <div key={packId}>
-                              <h3 className="font-semibold text-sm sm:text-base mb-2">{pack.name}</h3>
-                              <p className="text-xs sm:text-sm text-muted-foreground mb-4">{pack.description}</p>
-                              <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
-                                <Button
-                                  size="sm"
-                                  className="flex-1 bg-[#25D366] hover:bg-[#128C7E] text-white text-xs sm:text-sm h-9 sm:h-10"
-                                  onClick={() => handleBuyNow(pack)}
-                                >
-                                  <MessageCircle className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
-                                  Buy Now
-                                </Button>
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  className="flex-1 text-xs sm:text-sm h-9 sm:h-10"
-                                  onClick={() => handleAddToCart(pack)}
-                                >
-                                  Add to Cart
-                                </Button>
-                              </div>
-                            </div>
-                          );
-                        })}
-                    </div>
-                  )}
-
-                  {serviceSelections[serviceId]?.packType === 'all' && (
-                    <div className="mt-6 p-4 bg-muted/50 rounded-lg border border-border">
-                      <p className="text-xs sm:text-sm text-muted-foreground">Select a specific pack to view details and purchase options.</p>
-                    </div>
-                  )}
-                </div>
-              );
-              })
-            ) : (
-              <div className="text-center py-12 sm:py-16">
-                <Gift className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                <h3 className="text-lg sm:text-xl font-semibold mb-2">No services available</h3>
-                <p className="text-muted-foreground text-sm">Please check back soon for specialized gifting services.</p>
+                                <CardTitle className="text-lg">{pack.name}</CardTitle>
+                              </CardHeader>
+                              <CardContent className="flex-1 flex flex-col gap-4 pb-4">
+                                <p className="text-sm text-muted-foreground">{pack.description}</p>
+                                <div className="flex-1">
+                                  <p className="text-xs font-semibold text-muted-foreground mb-2">Includes:</p>
+                                  <ul className="text-xs space-y-1">
+                                    {pack.includes.map((item) => (
+                                      <li key={item} className="flex items-center gap-2">
+                                        <span className="h-1 w-1 rounded-full bg-primary" />
+                                        {item}
+                                      </li>
+                                    ))}
+                                  </ul>
+                                </div>
+                                <div className="flex flex-col gap-2 pt-4 border-t">
+                                  <Button
+                                    size="sm"
+                                    className="w-full bg-[#25D366] hover:bg-[#128C7E] text-white"
+                                    onClick={() => handleContactSeller(pack)}
+                                  >
+                                    <MessageCircle className="h-4 w-4 mr-2" />
+                                    Contact Seller
+                                  </Button>
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    className="w-full"
+                                    onClick={() => handleAddToCart(pack)}
+                                  >
+                                    Add to Cart
+                                  </Button>
+                                </div>
+                              </CardContent>
+                            </Card>
+                          ))}
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
               </div>
-            )}
-          </div>
+            </TabsContent>
+
+            {/* Festive Gifting Tab */}
+            <TabsContent value="festive" className="space-y-6">
+              {loading ? (
+                <div className="text-center py-12">
+                  <p className="text-muted-foreground">Loading festive collections...</p>
+                </div>
+              ) : festiveProducts && festiveProducts.length > 0 ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {festiveProducts.map((product) => {
+                    const productId = product.id || product._id;
+                    return (
+                      <Card key={productId} className="overflow-hidden hover:shadow-lg transition-shadow">
+                        <CardHeader className="pb-3">
+                          <div className="flex items-start justify-between">
+                            <div>
+                              <CardTitle className="text-lg">{product.name}</CardTitle>
+                              {product.discount && (
+                                <Badge className="bg-red-500 mt-2">Save {product.discount}%</Badge>
+                              )}
+                            </div>
+                          </div>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                          <p className="text-sm text-muted-foreground">{product.description}</p>
+                          {product.price && (
+                            <div className="flex items-baseline gap-2">
+                              <span className="text-2xl font-bold text-primary">₹{product.price}</span>
+                              {product.originalPrice && (
+                                <span className="text-sm text-muted-foreground line-through">₹{product.originalPrice}</span>
+                              )}
+                            </div>
+                          )}
+                          <div className="flex flex-col gap-2 pt-4 border-t">
+                            <Button
+                              size="sm"
+                              className="w-full bg-[#25D366] hover:bg-[#128C7E] text-white"
+                              onClick={() => handleContactSeller(product)}
+                            >
+                              <MessageCircle className="h-4 w-4 mr-2" />
+                              Buy on WhatsApp
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="w-full"
+                              onClick={() => handleAddToCart(product)}
+                            >
+                              <Heart className="h-4 w-4 mr-2" />
+                              Save for Later
+                            </Button>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="text-center py-12 bg-muted/50 rounded-lg border border-dashed">
+                  <Gift className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                  <h3 className="text-lg font-semibold mb-2">No Festive Products Available Yet</h3>
+                  <p className="text-muted-foreground mb-4">Check back soon for our special festive collections!</p>
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      const phoneNumber = '+919930709557';
+                      const message = 'Hello! I am interested in your festive gifting solutions. Please let me know about upcoming collections.';
+                      const encodedMessage = encodeURIComponent(message);
+                      const whatsappUrl = `https://wa.me/${phoneNumber.replace(/\+/g, '')}?text=${encodedMessage}`;
+                      window.open(whatsappUrl, '_blank');
+                    }}
+                  >
+                    <MessageCircle className="h-4 w-4 mr-2" />
+                    Notify Me
+                  </Button>
+                </div>
+              )}
+            </TabsContent>
+          </Tabs>
 
           {/* Bottom CTA */}
-          <div className="mt-12 text-center p-6 sm:p-8 bg-gradient-primary text-primary-foreground rounded-lg">
-            <h3 className="text-lg sm:text-2xl font-semibold mb-2">Ready to Send the Perfect Gift?</h3>
-            <p className="text-xs sm:text-base mb-4 opacity-90 px-2">
-              Contact us for bulk orders, custom packaging, and personalized gifting solutions.
+          <div className="mt-12 text-center p-6 sm:p-8 bg-gradient-to-r from-primary/10 to-primary/5 rounded-lg border border-primary/20">
+            <h3 className="text-lg sm:text-2xl font-semibold mb-2">Need Custom Gifting Solutions?</h3>
+            <p className="text-sm sm:text-base text-muted-foreground mb-4 px-2">
+              We offer personalized packaging, bulk orders, and bespoke gifting solutions for your special needs.
             </p>
             <Button
               size="lg"
-              variant="secondary"
+              className="bg-[#25D366] hover:bg-[#128C7E] text-white"
               onClick={() => {
                 const phoneNumber = '+919930709557';
-                const message = 'Hello! I am interested in your gifting solutions. Please provide more details and pricing.';
+                const message = 'Hello! I am interested in custom gifting solutions for a special occasion. Please provide details and pricing.';
                 const encodedMessage = encodeURIComponent(message);
                 const whatsappUrl = `https://wa.me/${phoneNumber.replace(/\+/g, '')}?text=${encodedMessage}`;
                 window.open(whatsappUrl, '_blank');

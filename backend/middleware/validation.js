@@ -46,6 +46,7 @@ export const schemas = {
         Joi.object({
           productId: Joi.number().required(),
           quantity: Joi.number().min(1).required(),
+          price: Joi.number().optional(),
           selectedOptions: Joi.object({
             coating: Joi.string().allow(null),
             flavor: Joi.string().allow(null),
@@ -62,14 +63,15 @@ export const schemas = {
       state: Joi.string().trim().max(100).required(),
       pincode: Joi.string().pattern(/^[0-9]{6}$/).required(),
     }).required(),
+    totalAmount: Joi.number().optional(),
   }),
 
-  // Razorpay payment verification
+  // Razorpay payment verification (without orderId)
   paymentVerification: Joi.object({
     razorpayOrderId: Joi.string().required(),
     razorpayPaymentId: Joi.string().required(),
     razorpaySignature: Joi.string().required(),
-    orderId: Joi.string().required(),
+    orderId: Joi.string().optional(), // Made optional for new flow
   }),
 };
 
