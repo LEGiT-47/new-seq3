@@ -137,23 +137,17 @@ const Home = () => {
     },
     {
       image: second,
-      badge: '🎁 Gifting Made Elegant',
-      title: 'Elevate Every Occasion',
-      subtitle: 'with Thoughtful Gifting',
-      description: 'Choose from Corporate, Festive, Personalized, or Event & Wedding Gifting options. Curate your perfect pack from classic assortments to bespoke creations.',
+      badge: '💝 Festive & Valentine\'s Special',
+      title: 'Perfect Gifts for Every',
+      subtitle: 'Special Occasion',
+      description: 'Explore our exclusive Valentine\'s Day, Diwali, and festive collections. Beautifully crafted gift boxes with special discounts - limited time offers available now!',
       ctaButton: {
-        label: 'Explore Gifting Solutions',
-        onClick: () => window.location.href = '/gifting'
+        label: 'Shop Festive Collections',
+        onClick: () => window.location.href = '/gifting?tab=festive'
       },
       quoteButton: {
-        label: 'Create Your Pack',
-        onClick: () => {
-          const phoneNumber = '+919930709557';
-          const message = 'Hello! I want to create a custom gift pack. Please provide details about customization options.';
-          const encodedMessage = encodeURIComponent(message);
-          const whatsappUrl = `https://wa.me/${phoneNumber.replace(/\+/g, '')}?text=${encodedMessage}`;
-          window.open(whatsappUrl, '_blank');
-        }
+        label: 'Explore All Gifting',
+        onClick: () => window.location.href = '/gifting'
       }
     },
     {
@@ -408,13 +402,26 @@ const Home = () => {
       {festiveProducts.length > 0 && (
         <section className="py-16 bg-gradient-to-r from-rose-50 to-orange-50 border-y border-rose-200">
           {/* Marquee Discount Banner */}
-          <div className="overflow-hidden bg-rose-500 text-white py-3 mb-8 sm:mb-12">
-            <div className="flex animate-marquee whitespace-nowrap">
-              {[...Array(3)].map((_, i) => (
-                <span key={i} className="mx-8 text-sm sm:text-base font-semibold">
-                  🎉 FESTIVE SPECIALS - UP TO 20% OFF 🎉 | LIMITED TIME OFFERS | CELEBRATE WITH US
-                </span>
-              ))}
+          <div className="bg-rose-500 text-white py-3 mb-8 sm:mb-12 overflow-hidden">
+            <div className="flex whitespace-nowrap" style={{ animation: 'marquee 25s linear infinite' }}>
+              <span className="inline-block px-4 text-sm sm:text-base font-semibold shrink-0">
+                🎉 FESTIVE SPECIALS - UP TO 20% OFF 🎉
+              </span>
+              <span className="inline-block px-4 text-sm sm:text-base font-semibold shrink-0">
+                LIMITED TIME OFFERS | CELEBRATE WITH US
+              </span>
+              <span className="inline-block px-4 text-sm sm:text-base font-semibold shrink-0">
+                🎁 SPECIAL BOXES | VALENTINE'S DAY | DIWALI
+              </span>
+              <span className="inline-block px-4 text-sm sm:text-base font-semibold shrink-0">
+                🎉 FESTIVE SPECIALS - UP TO 20% OFF 🎉
+              </span>
+              <span className="inline-block px-4 text-sm sm:text-base font-semibold shrink-0">
+                LIMITED TIME OFFERS | CELEBRATE WITH US
+              </span>
+              <span className="inline-block px-4 text-sm sm:text-base font-semibold shrink-0">
+                🎁 SPECIAL BOXES | VALENTINE'S DAY | DIWALI
+              </span>
             </div>
           </div>
 
