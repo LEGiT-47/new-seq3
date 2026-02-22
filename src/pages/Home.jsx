@@ -5,7 +5,7 @@ import { Card, CardContent } from '../components/ui/card';
 import { Badge } from '../components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
 import { useCart } from '../context/CartContext';
-import { productAPI, getImageUrl } from '../lib/api';
+import { productAPI, giftingAPI, getImageUrl } from '../lib/api';
 import { ArrowRight, Star, Shield, Gift, Truck, MessageCircle, ShoppingCart } from 'lucide-react';
 import { toast } from 'sonner';
 import HeroCarousel from '../components/HeroCarousel';
@@ -27,14 +27,22 @@ const Home = () => {
     const fetchProducts = async () => {
       try {
         setLoading(true);
+
+        // Fetch bestsellers from products
         const response = await productAPI.getAll();
         const allProducts = response.data.data || response.data;
-
         const bestsellers = allProducts.filter(p => p.bestseller).slice(0, 8);
-        const festive = allProducts.filter(p => p.isFestive);
-
         setBestsellerProducts(bestsellers);
-        setFestiveProducts(festive);
+
+        // Fetch festive products from gifting collection
+        try {
+          const giftingResponse = await giftingAPI.getFestive();
+          const festive = giftingResponse.data.data || [];
+          setFestiveProducts(festive);
+        } catch (err) {
+          console.error('Error fetching festive products:', err);
+          setFestiveProducts([]);
+        }
       } catch (error) {
         console.error('Error fetching products:', error);
         toast.error('Failed to load products');
@@ -402,24 +410,35 @@ const Home = () => {
       {festiveProducts.length > 0 && (
         <section className="py-16 bg-gradient-to-r from-rose-50 to-orange-50 border-y border-rose-200">
           {/* Marquee Discount Banner */}
-          <div className="bg-rose-500 text-white py-3 mb-8 sm:mb-12 overflow-hidden">
-            <div className="flex whitespace-nowrap" style={{ animation: 'marquee 25s linear infinite' }}>
-              <span className="inline-block px-4 text-sm sm:text-base font-semibold shrink-0">
-                🎉 FESTIVE SPECIALS - UP TO 20% OFF 🎉
+          <div className="relative w-full bg-rose-500 text-white py-4 mb-8 sm:mb-12 overflow-x-hidden">
+            <style>{`
+              @keyframes scrollLeft {
+                0% { transform: translateX(0); }
+                100% { transform: translateX(-50%); }
+              }
+              .marquee-content {
+                display: flex;
+                animation: scrollLeft 20s linear infinite;
+                width: max-content;
+              }
+            `}</style>
+            <div className="marquee-content">
+              <span className="inline-block px-6 text-sm sm:text-base font-bold whitespace-nowrap flex-shrink-0">
+                🎉 FESTIVE SPECIALS - UP TO 20% OFF
               </span>
-              <span className="inline-block px-4 text-sm sm:text-base font-semibold shrink-0">
+              <span className="inline-block px-6 text-sm sm:text-base font-bold whitespace-nowrap flex-shrink-0">
                 LIMITED TIME OFFERS | CELEBRATE WITH US
               </span>
-              <span className="inline-block px-4 text-sm sm:text-base font-semibold shrink-0">
+              <span className="inline-block px-6 text-sm sm:text-base font-bold whitespace-nowrap flex-shrink-0">
                 🎁 SPECIAL BOXES | VALENTINE'S DAY | DIWALI
               </span>
-              <span className="inline-block px-4 text-sm sm:text-base font-semibold shrink-0">
-                🎉 FESTIVE SPECIALS - UP TO 20% OFF 🎉
+              <span className="inline-block px-6 text-sm sm:text-base font-bold whitespace-nowrap flex-shrink-0">
+                🎉 FESTIVE SPECIALS - UP TO 20% OFF
               </span>
-              <span className="inline-block px-4 text-sm sm:text-base font-semibold shrink-0">
+              <span className="inline-block px-6 text-sm sm:text-base font-bold whitespace-nowrap flex-shrink-0">
                 LIMITED TIME OFFERS | CELEBRATE WITH US
               </span>
-              <span className="inline-block px-4 text-sm sm:text-base font-semibold shrink-0">
+              <span className="inline-block px-6 text-sm sm:text-base font-bold whitespace-nowrap flex-shrink-0">
                 🎁 SPECIAL BOXES | VALENTINE'S DAY | DIWALI
               </span>
             </div>
