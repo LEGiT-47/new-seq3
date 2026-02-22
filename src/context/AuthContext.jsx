@@ -65,6 +65,17 @@ export const AuthProvider = ({ children }) => {
 
       return { success: true, user: userData };
     } catch (error) {
+      // Handle rate limiting error
+      if (error.response?.status === 429) {
+        const retryAfter = error.response?.headers?.['retry-after'];
+        const minutes = retryAfter ? Math.ceil(parseInt(retryAfter) / 60) : 15;
+        return {
+          success: false,
+          error: `Too many login attempts. Please try again in ${minutes} minute${minutes !== 1 ? 's' : ''}.`,
+          rateLimited: true,
+          retryAfter: minutes,
+        };
+      }
       return {
         success: false,
         error: error.response?.data?.error || 'Login failed',

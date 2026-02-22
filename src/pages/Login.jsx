@@ -5,12 +5,16 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../co
 import { Phone, Lock, LogIn, Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { toast } from 'sonner';
+import ForgotPasswordModal from '../components/ForgotPasswordModal';
 
 const Login = () => {
   const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [rateLimited, setRateLimited] = useState(false);
+  const [retryCountdown, setRetryCountdown] = useState(0);
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
   const navigate = useNavigate();
   const { login } = useAuth();
 
@@ -27,6 +31,11 @@ const Login = () => {
       return;
     }
 
+    if (rateLimited) {
+      toast.error(`Please wait ${retryCountdown} minute${retryCountdown !== 1 ? 's' : ''} before trying again`);
+      return;
+    }
+
     try {
       setLoading(true);
       const response = await login(phone, password);
@@ -35,6 +44,22 @@ const Login = () => {
         toast.success('Logged in successfully!');
         navigate('/');
       } else {
+        // Check if rate limited
+        if (response.rateLimited) {
+          setRateLimited(true);
+          setRetryCountdown(response.retryAfter);
+          // Start countdown timer
+          const interval = setInterval(() => {
+            setRetryCountdown(prev => {
+              if (prev <= 1) {
+                clearInterval(interval);
+                setRateLimited(false);
+                return 0;
+              }
+              return prev - 1;
+            });
+          }, 60000); // Update every minute
+        }
         toast.error(response.error || 'Login failed. Please check your credentials.');
       }
     } catch (error) {
@@ -111,20 +136,33 @@ const Login = () => {
                 <input type="checkbox" className="w-4 h-4 rounded border-border" />
                 <span className="text-muted-foreground">Remember me</span>
               </label>
-              <Link to="#" className="text-primary hover:underline">
+              <button
+                type="button"
+                onClick={() => setShowForgotPassword(true)}
+                className="text-primary hover:underline"
+              >
                 Forgot password?
-              </Link>
+              </button>
             </div>
+
+            {/* Rate Limit Warning */}
+            {rateLimited && (
+              <div className="p-3 bg-destructive/10 border border-destructive/20 rounded-lg">
+                <p className="text-sm text-destructive font-medium">
+                  Too many login attempts. Please try again in {retryCountdown} minute{retryCountdown !== 1 ? 's' : ''}.
+                </p>
+              </div>
+            )}
 
             {/* Login Button */}
             <Button
               type="submit"
               className="w-full bg-primary hover:bg-primary/90 text-white"
-              disabled={loading || phone.length < 10}
+              disabled={loading || phone.length < 10 || rateLimited}
               size="lg"
             >
               <LogIn className="h-4 w-4 mr-2" />
-              {loading ? 'Logging in...' : 'Login'}
+              {loading ? 'Logging in...' : rateLimited ? `Retry in ${retryCountdown}m` : 'Login'}
             </Button>
 
             {/* Signup Link */}
@@ -137,6 +175,12 @@ const Login = () => {
           </form>
         </CardContent>
       </Card>
+
+      {/* Forgot Password Modal */}
+      <ForgotPasswordModal
+        isOpen={showForgotPassword}
+        onClose={() => setShowForgotPassword(false)}
+      />
     </div>
   );
 };

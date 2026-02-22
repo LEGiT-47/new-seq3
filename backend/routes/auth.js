@@ -10,7 +10,7 @@ import {
 import { verifyUserToken } from '../middleware/auth.js';
 import { loginLimiter } from '../middleware/rateLimiter.js';
 import { validateUserSignup, validateUserLogin } from '../middleware/validation.js';
-import { generateVerificationToken, sendVerificationEmail, verifyEmailToken } from '../services/emailService.js';
+import { generateVerificationToken, sendVerificationEmail, sendPasswordResetEmail, verifyEmailToken } from '../services/emailService.js';
 
 const router = express.Router();
 
@@ -300,6 +300,168 @@ router.post(
     await user.save();
 
     sendSuccessResponse(res, 201, { addresses: user.addresses });
+  })
+);
+
+// Forgot Password - Step 1: Initiate password reset with email and phone verification
+router.post(
+  '/forgot-password/initiate',
+  asyncHandler(async (req, res) => {
+    const { email, phone } = req.body;
+
+    if (!email || !phone) {
+      return sendErrorResponse(res, 400, 'Email and phone number are required');
+    }
+
+    // Find user by email and phone
+    const user = await User.findOne({ email, phone });
+    if (!user) {
+      return sendErrorResponse(res, 401, 'No user found with this email and phone combination');
+    }
+
+    // Generate password reset token (6-digit OTP)
+    const resetToken = String(Math.floor(100000 + Math.random() * 900000));
+    const resetExpiresAt = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
+
+    // Store reset token
+    user.passwordResetToken = resetToken;
+    user.passwordResetExpiresAt = resetExpiresAt;
+    await user.save();
+
+    // Send password reset email
+    const emailResult = await sendPasswordResetEmail(email, resetToken);
+    if (!emailResult.success) {
+      return sendErrorResponse(res, 500, 'Failed to send password reset email. Please try again.');
+    }
+
+    sendSuccessResponse(res, 200, {
+      message: 'Password reset OTP sent to your email',
+      expiresIn: 900, // 15 minutes in seconds
+    });
+  })
+);
+
+// Forgot Password - Step 2: Verify OTP
+router.post(
+  '/forgot-password/verify-otp',
+  asyncHandler(async (req, res) => {
+    const { email, phone, otp } = req.body;
+
+    if (!email || !phone || !otp) {
+      return sendErrorResponse(res, 400, 'Email, phone, and OTP are required');
+    }
+
+    const user = await User.findOne({ email, phone });
+    if (!user) {
+      return sendErrorResponse(res, 401, 'No user found with this email and phone combination');
+    }
+
+    // Check if token exists and is not expired
+    if (!user.passwordResetToken || !user.passwordResetExpiresAt) {
+      return sendErrorResponse(res, 400, 'No password reset request found. Please initiate password reset first.');
+    }
+
+    if (new Date() > new Date(user.passwordResetExpiresAt)) {
+      return sendErrorResponse(res, 400, 'OTP has expired. Please request a new one.');
+    }
+
+    // Verify OTP
+    if (user.passwordResetToken !== otp) {
+      return sendErrorResponse(res, 400, 'Invalid OTP');
+    }
+
+    sendSuccessResponse(res, 200, {
+      message: 'OTP verified successfully',
+      verificationToken: user._id.toString(), // Return user ID as verification token for next step
+    });
+  })
+);
+
+// Forgot Password - Step 3: Reset password
+router.post(
+  '/forgot-password/reset',
+  asyncHandler(async (req, res) => {
+    const { email, phone, newPassword, confirmPassword } = req.body;
+
+    if (!email || !phone || !newPassword || !confirmPassword) {
+      return sendErrorResponse(res, 400, 'Email, phone, password, and confirm password are required');
+    }
+
+    if (newPassword !== confirmPassword) {
+      return sendErrorResponse(res, 400, 'Passwords do not match');
+    }
+
+    if (newPassword.length < 6) {
+      return sendErrorResponse(res, 400, 'Password must be at least 6 characters long');
+    }
+
+    const user = await User.findOne({ email, phone });
+    if (!user) {
+      return sendErrorResponse(res, 401, 'No user found with this email and phone combination');
+    }
+
+    // Check if OTP is still valid
+    if (!user.passwordResetToken || !user.passwordResetExpiresAt) {
+      return sendErrorResponse(res, 400, 'No password reset request found. Please initiate password reset first.');
+    }
+
+    if (new Date() > new Date(user.passwordResetExpiresAt)) {
+      return sendErrorResponse(res, 400, 'OTP has expired. Please request a new one.');
+    }
+
+    // Update password
+    user.password = newPassword;
+    user.passwordResetToken = null;
+    user.passwordResetExpiresAt = null;
+    await user.save();
+
+    sendSuccessResponse(res, 200, {
+      message: 'Password reset successfully. You can now login with your new password.',
+    });
+  })
+);
+
+// Change Password - Endpoint for authenticated users
+router.post(
+  '/change-password',
+  verifyUserToken,
+  asyncHandler(async (req, res) => {
+    const { currentPassword, newPassword, confirmPassword } = req.body;
+
+    if (!currentPassword || !newPassword || !confirmPassword) {
+      return sendErrorResponse(res, 400, 'Current password, new password, and confirm password are required');
+    }
+
+    if (newPassword !== confirmPassword) {
+      return sendErrorResponse(res, 400, 'New passwords do not match');
+    }
+
+    if (newPassword.length < 6) {
+      return sendErrorResponse(res, 400, 'Password must be at least 6 characters long');
+    }
+
+    if (currentPassword === newPassword) {
+      return sendErrorResponse(res, 400, 'New password must be different from current password');
+    }
+
+    const user = await User.findById(req.userId);
+    if (!user) {
+      return sendErrorResponse(res, 404, 'User not found');
+    }
+
+    // Verify current password
+    const isPasswordValid = await user.comparePassword(currentPassword);
+    if (!isPasswordValid) {
+      return sendErrorResponse(res, 401, 'Current password is incorrect');
+    }
+
+    // Update password
+    user.password = newPassword;
+    await user.save();
+
+    sendSuccessResponse(res, 200, {
+      message: 'Password changed successfully',
+    });
   })
 );
 
