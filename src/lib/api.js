@@ -193,7 +193,8 @@ export const orderAPI = {
   create: (data) => apiClient.post('/orders/create', data),
   getMyOrders: () => apiClient.get('/orders/my-orders'),
   getOrderById: (orderId) => apiClient.get(`/orders/${orderId}`),
-  initiatePayment: (orderId) => apiClient.post('/orders/payment/initiate', { orderId }),
+  prepareOrder: (data) => apiClient.post('/orders/prepare', data),
+  initiatePayment: (data) => apiClient.post('/orders/payment/initiate', data),
   verifyPayment: (data) => apiClient.post('/orders/payment/verify', data),
 };
 
@@ -201,6 +202,14 @@ export const orderAPI = {
 export const paymentAPI = {
   getRazorpayKey: () => apiClient.get('/payments/config/razorpay-key'),
   getPaymentStatus: (orderId) => apiClient.get(`/payments/status/${orderId}`),
+};
+
+// Gifting API calls
+export const giftingAPI = {
+  getAll: (params = {}) => apiClient.get('/gifting', { params }),
+  getById: (id) => apiClient.get(`/gifting/${id}`),
+  getFestive: () => apiClient.get('/gifting/festive/all'),
+  getByCategory: (category) => apiClient.get(`/gifting/category/${category}`),
 };
 
 // Cart API calls

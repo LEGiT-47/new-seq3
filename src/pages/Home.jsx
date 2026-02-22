@@ -5,7 +5,7 @@ import { Card, CardContent } from '../components/ui/card';
 import { Badge } from '../components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
 import { useCart } from '../context/CartContext';
-import { productAPI, getImageUrl } from '../lib/api';
+import { productAPI, giftingAPI, getImageUrl } from '../lib/api';
 import { ArrowRight, Star, Shield, Gift, Truck, MessageCircle, ShoppingCart } from 'lucide-react';
 import { toast } from 'sonner';
 import HeroCarousel from '../components/HeroCarousel';
@@ -20,23 +20,38 @@ const Home = () => {
   const { addToCart } = useCart();
   const [selectedOptions, setSelectedOptions] = useState({});
   const [bestsellerProducts, setBestsellerProducts] = useState([]);
+  const [festiveProducts, setFestiveProducts] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchBestsellers = async () => {
+    const fetchProducts = async () => {
       try {
         setLoading(true);
-        const response = await productAPI.getBestsellers();
-        setBestsellerProducts(response.data.data || response.data);
+
+        // Fetch bestsellers from products
+        const response = await productAPI.getAll();
+        const allProducts = response.data.data || response.data;
+        const bestsellers = allProducts.filter(p => p.bestseller).slice(0, 8);
+        setBestsellerProducts(bestsellers);
+
+        // Fetch festive products from gifting collection
+        try {
+          const giftingResponse = await giftingAPI.getFestive();
+          const festive = giftingResponse.data.data || [];
+          setFestiveProducts(festive);
+        } catch (err) {
+          console.error('Error fetching festive products:', err);
+          setFestiveProducts([]);
+        }
       } catch (error) {
-        console.error('Error fetching bestsellers:', error);
-        toast.error('Failed to load bestseller products');
+        console.error('Error fetching products:', error);
+        toast.error('Failed to load products');
       } finally {
         setLoading(false);
       }
     };
 
-    fetchBestsellers();
+    fetchProducts();
   }, []);
 
   const handleOptionChange = (productId, option, value) => {
@@ -130,23 +145,17 @@ const Home = () => {
     },
     {
       image: second,
-      badge: '🎁 Gifting Made Elegant',
-      title: 'Elevate Every Occasion',
-      subtitle: 'with Thoughtful Gifting',
-      description: 'Choose from Corporate, Festive, Personalized, or Event & Wedding Gifting options. Curate your perfect pack from classic assortments to bespoke creations.',
+      badge: '💝 Festive & Valentine\'s Special',
+      title: 'Perfect Gifts for Every',
+      subtitle: 'Special Occasion',
+      description: 'Explore our exclusive Valentine\'s Day, Diwali, and festive collections. Beautifully crafted gift boxes with special discounts - limited time offers available now!',
       ctaButton: {
-        label: 'Explore Gifting Solutions',
-        onClick: () => window.location.href = '/gifting'
+        label: 'Shop Festive Collections',
+        onClick: () => window.location.href = '/gifting?tab=festive'
       },
       quoteButton: {
-        label: 'Create Your Pack',
-        onClick: () => {
-          const phoneNumber = '+919930709557';
-          const message = 'Hello! I want to create a custom gift pack. Please provide details about customization options.';
-          const encodedMessage = encodeURIComponent(message);
-          const whatsappUrl = `https://wa.me/${phoneNumber.replace(/\+/g, '')}?text=${encodedMessage}`;
-          window.open(whatsappUrl, '_blank');
-        }
+        label: 'Explore All Gifting',
+        onClick: () => window.location.href = '/gifting'
       }
     },
     {
@@ -396,6 +405,132 @@ const Home = () => {
           </div>
         </div>
       </section>
+
+      {/* Festive Products Section */}
+      {festiveProducts.length > 0 && (
+        <section className="py-16 bg-gradient-to-r from-rose-50 to-orange-50 border-y border-rose-200">
+          {/* Marquee Discount Banner */}
+          <div className="relative w-full bg-rose-500 text-white py-4 mb-8 sm:mb-12 overflow-x-hidden">
+            <style>{`
+              @keyframes scrollLeft {
+                0% { transform: translateX(0); }
+                100% { transform: translateX(-50%); }
+              }
+              .marquee-content {
+                display: flex;
+                animation: scrollLeft 20s linear infinite;
+                width: max-content;
+              }
+            `}</style>
+            <div className="marquee-content">
+              <span className="inline-block px-6 text-sm sm:text-base font-bold whitespace-nowrap flex-shrink-0">
+                🎉 FESTIVE SPECIALS - UP TO 20% OFF
+              </span>
+              <span className="inline-block px-6 text-sm sm:text-base font-bold whitespace-nowrap flex-shrink-0">
+                LIMITED TIME OFFERS | CELEBRATE WITH US
+              </span>
+              <span className="inline-block px-6 text-sm sm:text-base font-bold whitespace-nowrap flex-shrink-0">
+                🎁 SPECIAL BOXES | VALENTINE'S DAY | DIWALI
+              </span>
+              <span className="inline-block px-6 text-sm sm:text-base font-bold whitespace-nowrap flex-shrink-0">
+                🎉 FESTIVE SPECIALS - UP TO 20% OFF
+              </span>
+              <span className="inline-block px-6 text-sm sm:text-base font-bold whitespace-nowrap flex-shrink-0">
+                LIMITED TIME OFFERS | CELEBRATE WITH US
+              </span>
+              <span className="inline-block px-6 text-sm sm:text-base font-bold whitespace-nowrap flex-shrink-0">
+                🎁 SPECIAL BOXES | VALENTINE'S DAY | DIWALI
+              </span>
+            </div>
+          </div>
+
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center mb-8 sm:mb-12">
+              <h2 className="font-display text-3xl sm:text-4xl font-bold mb-3 text-rose-700">Special Occasion Collections</h2>
+              <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+                Perfect gift collections for every celebration - Valentine's Day, Festivals, and more!
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 sm:gap-6">
+              {festiveProducts.map((product) => {
+                const productId = product.id || product._id;
+                return (
+                  <Card key={productId} className="hover-lift bg-card border-border group flex flex-col overflow-hidden">
+                    <CardContent className="p-0 flex flex-col h-full relative">
+                      <div className="relative overflow-hidden block">
+                        <img
+                          src={getImageUrl(product.image)}
+                          alt={product.name}
+                          className="w-full h-40 sm:h-48 object-cover transition-transform duration-300 group-hover:scale-105"
+                        />
+                        {product.discount && (
+                          <Badge className="absolute top-3 right-3 bg-rose-500 text-white text-sm font-bold animate-pulse">
+                            -{product.discount}%
+                          </Badge>
+                        )}
+                        <Badge className="absolute top-3 left-3 bg-gradient-to-r from-rose-400 to-orange-400 text-white text-xs">
+                          Limited Time
+                        </Badge>
+                      </div>
+
+                      <div className="p-3 sm:p-4 flex flex-col flex-grow">
+                        <h3 className="font-semibold mb-1 text-xs sm:text-sm md:text-base line-clamp-2 text-rose-700">{product.name}</h3>
+                        <p className="text-xs text-muted-foreground mb-3 line-clamp-2">{product.description}</p>
+
+                        <div className="flex items-center justify-between mb-3">
+                          <div className="flex items-baseline gap-2">
+                            <p className="text-lg font-bold text-rose-600">₹{product.price}</p>
+                            {product.originalPrice && (
+                              <p className="text-xs text-muted-foreground line-through">₹{product.originalPrice}</p>
+                            )}
+                          </div>
+                          <p className="text-xs text-muted-foreground">{product.weight}</p>
+                        </div>
+
+                        <div className="flex flex-col gap-2 mt-auto">
+                          <Button
+                            size="sm"
+                            className="w-full bg-rose-500 hover:bg-rose-600 text-white text-xs sm:text-sm h-9 sm:h-10"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              handleBuyNow(product);
+                            }}
+                          >
+                            <MessageCircle className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+                            Order Now
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="w-full text-xs sm:text-sm h-9 sm:h-10"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              handleAddToCart(product);
+                            }}
+                          >
+                            <ShoppingCart className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+                            Save for Later
+                          </Button>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+
+            <div className="text-center mt-10">
+              <Link to="/gifting">
+                <Button size="lg" className="bg-rose-500 hover:bg-rose-600 text-white">
+                  Explore All Festive Collections
+                  <ArrowRight className="ml-2 h-5 w-5" />
+                </Button>
+              </Link>
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* CTA Section */}
       <section className="py-12 sm:py-16 bg-gradient-primary text-primary-foreground">

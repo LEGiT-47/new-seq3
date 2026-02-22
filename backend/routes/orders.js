@@ -18,14 +18,13 @@ import axios from 'axios';
 
 const router = express.Router();
 
-// Create Order (Protected)
+// Prepare Order (Validate and calculate total without creating order)
 router.post(
-  '/create',
+  '/prepare',
   verifyUserToken,
   validateOrderCreation,
   asyncHandler(async (req, res) => {
     const { items, deliveryAddress } = req.validatedBody;
-    const userId = req.userId;
 
     // Verify all items are deliverable
     if (!areAllItemsDeliverable(items)) {
@@ -57,12 +56,67 @@ router.post(
     // Calculate total
     const totalAmount = calculateOrderTotal(enrichedItems);
 
+    sendSuccessResponse(
+      res,
+      200,
+      {
+        items: enrichedItems,
+        totalAmount,
+        deliveryAddress,
+      },
+      'Order prepared for payment'
+    );
+  })
+);
+
+// Create Order (Protected) - Called after payment verification
+router.post(
+  '/create',
+  verifyUserToken,
+  asyncHandler(async (req, res) => {
+    const { items, deliveryAddress, razorpayOrderId } = req.body;
+    const userId = req.userId;
+
+    // Verify Razorpay order exists and is paid
+    const paymentTx = await PaymentTransaction.findOne({
+      razorpayOrderId,
+      status: 'success',
+    });
+
+    if (!paymentTx) {
+      return sendErrorResponse(res, 400, 'Payment not verified. Cannot create order.');
+    }
+
+    // Verify this order hasn't been created yet
+    const existingOrder = await Order.findOne({
+      razorpayOrderId,
+    });
+
+    if (existingOrder) {
+      return sendSuccessResponse(
+        res,
+        200,
+        {
+          order: {
+            id: existingOrder._id,
+            orderNumber: existingOrder.orderNumber,
+            totalAmount: existingOrder.totalAmount,
+            items: existingOrder.items,
+          },
+        },
+        'Order already exists'
+      );
+    }
+
+    // Calculate total to verify
+    const totalAmount = calculateOrderTotal(items);
+
     // Create order
     const orderNumber = generateOrderNumber();
     const order = new Order({
       orderNumber,
       userId,
-      items: enrichedItems,
+      items,
       customerDetails: {
         name: deliveryAddress.name,
         email: req.user?.email || '',
@@ -70,11 +124,16 @@ router.post(
       },
       deliveryAddress,
       totalAmount,
-      paymentStatus: 'pending',
+      paymentStatus: 'paid',
       deliveryStatus: 'pending',
+      razorpayOrderId,
     });
 
     await order.save();
+
+    // Update payment transaction with order reference
+    paymentTx.orderId = order._id;
+    await paymentTx.save();
 
     sendSuccessResponse(
       res,
@@ -119,51 +178,60 @@ router.get(
   })
 );
 
-// Initiate Razorpay payment (Protected)
+// Initiate Razorpay payment (Protected) - Without requiring DB order
 router.post(
   '/payment/initiate',
   verifyUserToken,
   paymentInitiateLimiter,
   asyncHandler(async (req, res) => {
-    const { orderId } = req.body;
+    const { items, deliveryAddress, totalAmount } = req.body;
+    const userId = req.userId;
 
-    // Find order
-    const order = await Order.findById(orderId);
-    if (!order || order.userId.toString() !== req.userId) {
-      return sendErrorResponse(res, 404, 'Order not found');
+    if (!items || !items.length || !totalAmount || !deliveryAddress) {
+      return sendErrorResponse(res, 400, 'Missing required order data');
     }
 
-    if (order.paymentStatus === 'paid') {
-      return sendErrorResponse(res, 400, 'This order has already been paid');
+    // Verify all items are deliverable
+    if (!areAllItemsDeliverable(items)) {
+      return sendErrorResponse(res, 400, 'Not all items in this order are deliverable.');
     }
 
-    // Check if there's an active payment attempt
-    const recentAttempt = await PaymentTransaction.findOne({
-      orderId,
-      status: 'pending',
-      createdAt: { $gte: new Date(Date.now() - 5 * 60 * 1000) }, // Last 5 minutes
-    });
+    // Verify prices haven't changed (fetch fresh product prices)
+    const enrichedItems = await Promise.all(
+      items.map(async (item) => {
+        const product = await Product.findOne({ productId: item.productId });
+        if (!product) {
+          throw new Error(`Product ${item.productId} not found`);
+        }
 
-    if (recentAttempt) {
-      return sendErrorResponse(res, 429, 'Payment request already in progress. Please wait or complete the payment.');
+        if (product.price !== item.price) {
+          throw new Error(`Price mismatch for ${product.name}. Please refresh and try again.`);
+        }
+
+        return item;
+      })
+    );
+
+    // Verify total calculation
+    const calculatedTotal = calculateOrderTotal(enrichedItems);
+    if (Math.abs(calculatedTotal - totalAmount) > 0.01) {
+      return sendErrorResponse(res, 400, 'Total amount mismatch. Please refresh and try again.');
     }
 
-    // Update order with payment attempt
-    order.paymentAttempts += 1;
-    order.lastPaymentAttemptAt = new Date();
-    await order.save();
+    // Generate order number for receipt
+    const orderNumber = generateOrderNumber();
 
     // Create Razorpay order
     try {
       const razorpayResponse = await axios.post(
         'https://api.razorpay.com/v1/orders',
         {
-          amount: Math.round(order.totalAmount * 100), // Convert to paise
+          amount: Math.round(totalAmount * 100), // Convert to paise
           currency: 'INR',
-          receipt: order.orderNumber,
+          receipt: orderNumber,
           notes: {
-            orderId: order._id.toString(),
-            customerName: order.customerDetails.name,
+            customerName: deliveryAddress.name,
+            userId: userId,
           },
         },
         {
@@ -174,30 +242,25 @@ router.post(
         }
       );
 
-      // Create payment transaction record
+      // Create payment transaction record (no orderId yet)
       const paymentTx = new PaymentTransaction({
-        orderId,
-        amount: order.totalAmount,
+        amount: totalAmount,
         razorpayOrderId: razorpayResponse.data.id,
         status: 'initiated',
         userIp: req.ip,
-        attemptNumber: order.paymentAttempts,
+        attemptNumber: 1,
       });
 
       await paymentTx.save();
-
-      // Update order with Razorpay order ID
-      order.razorpayOrderId = razorpayResponse.data.id;
-      await order.save();
 
       sendSuccessResponse(
         res,
         200,
         {
           razorpayOrderId: razorpayResponse.data.id,
-          amount: order.totalAmount,
+          amount: totalAmount,
           keyId: process.env.RAZORPAY_KEY_ID,
-          orderNumber: order.orderNumber,
+          orderNumber,
         },
         'Payment request created'
       );
@@ -208,24 +271,14 @@ router.post(
   })
 );
 
-// Verify payment (Protected)
+// Verify payment (Protected) - Verifies signature and prepares order data
 router.post(
   '/payment/verify',
   verifyUserToken,
   paymentLimiter,
   validatePaymentVerification,
   asyncHandler(async (req, res) => {
-    const { razorpayOrderId, razorpayPaymentId, razorpaySignature, orderId } = req.validatedBody;
-
-    // Find order
-    const order = await Order.findById(orderId);
-    if (!order || order.userId.toString() !== req.userId) {
-      return sendErrorResponse(res, 404, 'Order not found');
-    }
-
-    if (order.paymentStatus === 'paid') {
-      return sendErrorResponse(res, 400, 'Order already paid');
-    }
+    const { razorpayOrderId, razorpayPaymentId, razorpaySignature } = req.validatedBody;
 
     // Verify Razorpay signature
     const isSignatureValid = verifyRazorpaySignature(
@@ -235,8 +288,7 @@ router.post(
     );
 
     if (!isSignatureValid) {
-      // Log failed verification attempts for security
-      console.error(`Payment signature verification failed for order ${orderId}`);
+      console.error(`Payment signature verification failed for razorpay order ${razorpayOrderId}`);
 
       // Update payment transaction status to failed
       const paymentTx = await PaymentTransaction.findOne({ razorpayOrderId });
@@ -248,35 +300,32 @@ router.post(
       return sendErrorResponse(res, 400, 'Payment verification failed. Invalid signature.');
     }
 
-    // Signature is valid, mark order as paid
-    order.paymentStatus = 'paid';
-    order.razorpayOrderId = razorpayOrderId;
-    order.razorpayPaymentId = razorpayPaymentId;
-    order.razorpaySignature = razorpaySignature;
-    order.deliveryStatus = 'pending';
-
-    await order.save();
-
-    // Update payment transaction
+    // Signature is valid, update payment transaction
     const paymentTx = await PaymentTransaction.findOne({ razorpayOrderId });
     if (paymentTx) {
       paymentTx.status = 'success';
       paymentTx.razorpayPaymentId = razorpayPaymentId;
       await paymentTx.save();
+    } else {
+      // Create payment transaction if it doesn't exist
+      const newPaymentTx = new PaymentTransaction({
+        razorpayOrderId,
+        razorpayPaymentId,
+        status: 'success',
+        userIp: req.ip,
+        attemptNumber: 1,
+      });
+      await newPaymentTx.save();
     }
 
     sendSuccessResponse(
       res,
       200,
       {
-        order: {
-          id: order._id,
-          orderNumber: order.orderNumber,
-          paymentStatus: order.paymentStatus,
-          deliveryStatus: order.deliveryStatus,
-        },
+        message: 'Payment verified successfully. Order will be created next.',
+        razorpayOrderId,
       },
-      'Payment verified successfully'
+      'Payment verified'
     );
   })
 );

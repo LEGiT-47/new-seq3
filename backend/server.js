@@ -9,6 +9,7 @@ dotenv.config();
 
 // Import models
 import Product from './models/Product.js';
+import Gifting from './models/Gifting.js';
 
 // Import routes
 import authRoutes from './routes/auth.js';
@@ -18,6 +19,7 @@ import orderRoutes from './routes/orders.js';
 import adminOrderRoutes from './routes/adminOrders.js';
 import paymentRoutes from './routes/payments.js';
 import cartRoutes from './routes/cart.js';
+import giftingRoutes from './routes/gifting.js';
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -75,6 +77,109 @@ const connectDB = async () => {
   } catch (error) {
     console.error('✗ MongoDB Connection Error:', error.message);
     process.exit(1);
+  }
+};
+
+// Auto-seed database with gifting products if empty
+const seedGiftingIfEmpty = async () => {
+  try {
+    const giftingCount = await Gifting.countDocuments({ isFestive: true });
+
+    if (giftingCount === 0) {
+      console.log('No festive gifting products found. Seeding database...');
+
+      const giftingProducts = [
+        {
+          name: "Valentine's Day Special Box",
+          description: "A romantic and thoughtful gift collection perfect for your loved one. Features premium chocolate-coated almonds, roasted cashews, and specialty items beautifully packaged in an elegant box for the occasion.",
+          category: 'festive',
+          subcategory: "Valentine's Day",
+          price: 1299,
+          originalPrice: 1499,
+          discount: 13,
+          weight: '600g',
+          image: 'https://images.unsplash.com/photo-1614088685112-0a760b71a3c8?w=500&h=500&fit=crop',
+          includes: [
+            'Premium Chocolate Almonds',
+            'Roasted Cashews',
+            'Specialty Coated Nuts',
+            'Beautiful Gift Packaging'
+          ],
+          occasion: ["Valentine's Day", 'Anniversaries', 'Special Date'],
+          isFestive: true,
+          isActive: true,
+          isPopular: true,
+          customizationOptions: {
+            personalizedMessage: true,
+            customPackaging: true,
+            wrapping: true
+          },
+          contactForCustom: true
+        },
+        {
+          name: 'Diwali Festival Box',
+          description: 'Celebrate the festival of lights with our special Diwali collection. A vibrant selection of premium dry fruits, chocolate-coated nuts, and festive treats packaged in elegant Diwali-themed boxes.',
+          category: 'festive',
+          subcategory: 'Diwali',
+          price: 1499,
+          originalPrice: 1899,
+          discount: 21,
+          weight: '750g',
+          image: 'https://images.unsplash.com/photo-1512820790803-83ca734da794?w=500&h=500&fit=crop',
+          includes: [
+            'Premium Dry Fruits Mix',
+            'Chocolate Coated Almonds',
+            'Roasted Cashews',
+            'Specialty Coated Pistachios',
+            'Diwali-themed Premium Packaging'
+          ],
+          occasion: ['Diwali', 'Festive Celebrations', 'Gifting'],
+          isFestive: true,
+          isActive: true,
+          isPopular: true,
+          customizationOptions: {
+            personalizedMessage: true,
+            customPackaging: true,
+            wrapping: true
+          },
+          contactForCustom: true
+        },
+        {
+          name: 'New Year Celebration Pack',
+          description: 'Ring in the new year with our premium celebration pack. A sophisticated collection of luxury nuts and dry fruits perfect for welcoming the new year with elegance and style.',
+          category: 'festive',
+          subcategory: 'New Year',
+          price: 1699,
+          originalPrice: 1899,
+          discount: 11,
+          weight: '800g',
+          image: 'https://images.unsplash.com/photo-1614088685112-0a760b71a3c8?w=500&h=500&fit=crop',
+          includes: [
+            'Premium California Almonds',
+            'Indian Konkan Cashews',
+            'California Pistachios',
+            'Afghani Raisins',
+            'Premium Walnuts',
+            'Luxury New Year Packaging'
+          ],
+          occasion: ['New Year', 'New Beginnings', 'Celebrations'],
+          isFestive: true,
+          isActive: true,
+          isPopular: false,
+          customizationOptions: {
+            personalizedMessage: true,
+            customPackaging: true,
+            wrapping: true
+          },
+          contactForCustom: true
+        }
+      ];
+
+      await Gifting.insertMany(giftingProducts);
+      console.log(`✓ Database seeded with ${giftingProducts.length} festive gifting products`);
+    }
+  } catch (error) {
+    console.error('Error seeding gifting products:', error.message);
   }
 };
 
@@ -142,6 +247,7 @@ const seedProductsIfEmpty = async () => {
 (async () => {
   await connectDB();
   await seedProductsIfEmpty();
+  await seedGiftingIfEmpty();
 })();
 
 // Health Check Route
@@ -157,6 +263,7 @@ app.get('/api/health', (req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/admin/auth', adminAuthRoutes);
 app.use('/api/products', productRoutes);
+app.use('/api/gifting', giftingRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/admin/orders', adminOrderRoutes);
 app.use('/api/payments', paymentRoutes);

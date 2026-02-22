@@ -96,7 +96,7 @@ const Checkout = () => {
 
   const totalAmount = deliveryItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
-  const handleCreateOrder = async () => {
+  const handlePaymentInitiate = async () => {
     if (!selectedAddress) {
       toast.error('No address selected');
       navigate('/select-address');
@@ -109,6 +109,7 @@ const Checkout = () => {
         items: deliveryItems.map((item) => ({
           productId: item.id || item.productId,
           quantity: item.quantity,
+          price: item.price,
           selectedOptions: {
             coating: item.selectedCoating,
             flavor: item.selectedFlavor
@@ -122,25 +123,10 @@ const Checkout = () => {
           state: selectedAddress.state,
           pincode: selectedAddress.pincode,
         },
+        totalAmount,
       };
 
-      const response = await orderAPI.create(orderData);
-      setOrder(response.data.data.order || response.data.data);
-      toast.success('Order created successfully');
-    } catch (error) {
-      toast.error(error.response?.data?.error || 'Failed to create order');
-      console.error('Order creation error:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handlePaymentInitiate = async () => {
-    if (!order) return;
-
-    setLoading(true);
-    try {
-      const response = await orderAPI.initiatePayment(order.id);
+      const response = await orderAPI.initiatePayment(orderData);
       const { razorpayOrderId, amount, keyId } = response.data.data;
 
       // Initialize Razorpay
@@ -155,27 +141,39 @@ const Checkout = () => {
         amount: Math.round(amount * 100), // Convert to paise
         currency: 'INR',
         name: 'Sequeira Foods',
-        description: `Order ${order.orderNumber}`,
+        description: `Order for ₹${amount}`,
         order_id: razorpayOrderId,
         handler: async (response) => {
           try {
+            // First verify the payment
             const verifyResponse = await orderAPI.verifyPayment({
               razorpayOrderId,
               razorpayPaymentId: response.razorpay_payment_id,
               razorpaySignature: response.razorpay_signature,
-              orderId: order.id,
             });
 
-            toast.success('Payment successful!');
+            // Then create the order
+            const createResponse = await orderAPI.create({
+              items: orderData.items,
+              deliveryAddress: orderData.deliveryAddress,
+              razorpayOrderId,
+            });
+
+            setOrder(createResponse.data.data.order);
             clearCart();
             setStep('success');
+            toast.success('Payment successful!');
           } catch (error) {
             toast.error('Payment verification failed. Please contact support.');
+            console.error('Payment verification error:', error);
+          } finally {
+            setLoading(false);
           }
         },
         prefill: {
           name: selectedAddress?.name || user?.name || '',
           contact: selectedAddress?.phone || user?.phone || '',
+          email: user?.email || '',
         },
         theme: {
           color: '#0066cc',
@@ -192,6 +190,7 @@ const Checkout = () => {
     }
   };
 
+
   return (
     <div className="min-h-screen py-6 sm:py-8 bg-background">
       <div className="w-full px-4 sm:px-6 lg:px-8">
@@ -201,7 +200,7 @@ const Checkout = () => {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Main Checkout Form */}
             <div className="lg:col-span-2">
-              {step === 'confirmation' && !order && (
+              {step === 'confirmation' && (
                 <Card>
                   <CardHeader>
                     <CardTitle>Order Summary</CardTitle>
@@ -247,52 +246,6 @@ const Checkout = () => {
                       <p className="text-sm text-blue-700">
                         Your order will be delivered in 7-8 business days. You will receive updates via WhatsApp.
                       </p>
-                    </div>
-
-                    <Button
-                      className="w-full"
-                      onClick={handleCreateOrder}
-                      disabled={loading}
-                    >
-                      {loading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-                      Proceed to Payment
-                    </Button>
-                  </CardContent>
-                </Card>
-              )}
-
-              {step === 'confirmation' && order && (
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Ready for Payment</CardTitle>
-                    <CardDescription>Complete your payment to confirm the order</CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-6">
-                    <div className="border-b pb-4">
-                      <h3 className="font-semibold mb-3">Delivery Address</h3>
-                      <p className="text-sm text-muted-foreground space-y-1">
-                        <div className="font-medium text-foreground">{selectedAddress.name}</div>
-                        <div>{selectedAddress.street}</div>
-                        <div>{selectedAddress.city}, {selectedAddress.state} {selectedAddress.pincode}</div>
-                        <div>Phone: {selectedAddress.phone}</div>
-                      </p>
-                    </div>
-
-                    <div>
-                      <h3 className="font-semibold mb-3">Order Items</h3>
-                      <div className="space-y-2">
-                        {order.items.map((item) => (
-                          <div key={item.productId} className="flex justify-between text-sm">
-                            <span>{item.productName} x {item.quantity}</span>
-                            <span>₹{item.price * item.quantity}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-
-                    <div className="border-t pt-4 flex justify-between font-semibold">
-                      <span>Total Amount</span>
-                      <span className="text-lg">₹{order.totalAmount}</span>
                     </div>
 
                     <Button

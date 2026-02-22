@@ -60,8 +60,9 @@ export const asyncHandler = (fn) => {
 
 // Check if product is deliverable
 export const isDeliverableProduct = (productId) => {
-  // Products 21, 22, 23, 29 are deliverable (Dry Fruits, Makhana, Almonds, Cashew, etc)
-  const deliverableProductIds = [21, 22, 23, 29];
+  // All dryfruits and selected products are deliverable
+  // 21-30, 52: Dryfruits (Almonds, Cashew, Pistachio, Raisin, Walnut, Dates, Fig, Apricots, Makhana, Cranberry, Blueberry)
+  const deliverableProductIds = [21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 52];
   return deliverableProductIds.includes(productId);
 };
 

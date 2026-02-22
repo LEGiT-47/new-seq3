@@ -716,6 +716,81 @@ export const products = [
     isHidden: true,
     coatings: [],
     flavors: []
+  },
+
+  // FESTIVE GIFTING PRODUCTS
+  {
+    id: 53,
+    name: 'Valentine\'s Day Special Box',
+    category: 'gifting',
+    description: 'A romantic and thoughtful gift collection perfect for your loved one on Valentine\'s Day. Features premium chocolate-coated nuts, roasted almonds, and specialty items beautifully packaged for the occasion.',
+    image: 'https://images.unsplash.com/photo-1614088685112-0a760b71a3c8?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NDk1ODB8MHwxfHNlYXJjaHwxfHxjaG9jb2xhdGVzfGVufDB8fHx8MTc2MTQyMjg3Ynww&ixlib=rb-4.1.0&q=85',
+    price: 1299,
+    weight: '600g',
+    bestseller: true,
+    isFestive: true,
+    discount: 15,
+    originalPrice: 1499,
+    coatings: [],
+    flavors: []
+  },
+  {
+    id: 54,
+    name: 'Diwali Festival Box',
+    category: 'gifting',
+    description: 'Celebrate the festival of lights with our special Diwali collection. A vibrant selection of premium dry fruits, chocolate-coated nuts, and festive treats packaged in elegant Diwali-themed boxes.',
+    image: 'https://images.unsplash.com/photo-1614088685112-0a760b71a3c8?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NDk1ODB8MHwxfHNlYXJjaHwxfHxjaG9jb2xhdGVzfGVufDB8fHx8MTc2MTQyMjg3Ynww&ixlib=rb-4.1.0&q=85',
+    price: 1499,
+    weight: '750g',
+    bestseller: true,
+    isFestive: true,
+    discount: 20,
+    originalPrice: 1899,
+    coatings: [],
+    flavors: []
+  },
+  {
+    id: 55,
+    name: 'New Year Celebration Pack',
+    category: 'gifting',
+    description: 'Ring in the new year with our premium celebration pack. A sophisticated collection of luxury nuts and dry fruits perfect for welcoming the new year with elegance and style.',
+    image: 'https://images.unsplash.com/photo-1614088685112-0a760b71a3c8?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NDk1ODB8MHwxfHNlYXJjaHwxfHxjaG9jb2xhdGVzfGVufDB8fHx8MTc2MTQyMjg3Ynww&ixlib=rb-4.1.0&q=85',
+    price: 1699,
+    weight: '800g',
+    bestseller: true,
+    isFestive: true,
+    discount: 10,
+    originalPrice: 1899,
+    coatings: [],
+    flavors: []
+  },
+  {
+    id: 56,
+    name: 'Holi Colors Special Box',
+    category: 'gifting',
+    description: 'Celebrate the festival of colors with our vibrant Holi special collection. A colorful assortment of premium nuts and treats, perfect for sharing joy with loved ones during Holi.',
+    image: 'https://images.unsplash.com/photo-1614088685112-0a760b71a3c8?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NDk1ODB8MHwxfHNlYXJjaHwxfHxjaG9jb2xhdGVzfGVufDB8fHx8MTc2MTQyMjg3Ynww&ixlib=rb-4.1.0&q=85',
+    price: 1099,
+    weight: '500g',
+    isFestive: true,
+    discount: 12,
+    originalPrice: 1299,
+    coatings: [],
+    flavors: []
+  },
+  {
+    id: 57,
+    name: 'Eid Celebration Box',
+    category: 'gifting',
+    description: 'Share the joy of Eid with our special celebration box. A premium collection of dry fruits and nuts, traditionally favored during Eid celebrations and gatherings.',
+    image: 'https://images.unsplash.com/photo-1614088685112-0a760b71a3c8?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NDk1ODB8MHwxfHNlYXJjaHwxfHxjaG9jb2xhdGVzfGVufDB8fHx8MTc2MTQyMjg3Ynww&ixlib=rb-4.1.0&q=85',
+    price: 1199,
+    weight: '600g',
+    isFestive: true,
+    discount: 15,
+    originalPrice: 1399,
+    coatings: [],
+    flavors: []
   }
 ];
 
