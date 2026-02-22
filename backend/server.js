@@ -18,6 +18,7 @@ import orderRoutes from './routes/orders.js';
 import adminOrderRoutes from './routes/adminOrders.js';
 import paymentRoutes from './routes/payments.js';
 import cartRoutes from './routes/cart.js';
+import giftingRoutes from './routes/gifting.js';
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -157,6 +158,7 @@ app.get('/api/health', (req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/admin/auth', adminAuthRoutes);
 app.use('/api/products', productRoutes);
+app.use('/api/gifting', giftingRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/admin/orders', adminOrderRoutes);
 app.use('/api/payments', paymentRoutes);

@@ -204,6 +204,14 @@ export const paymentAPI = {
   getPaymentStatus: (orderId) => apiClient.get(`/payments/status/${orderId}`),
 };
 
+// Gifting API calls
+export const giftingAPI = {
+  getAll: (params = {}) => apiClient.get('/gifting', { params }),
+  getById: (id) => apiClient.get(`/gifting/${id}`),
+  getFestive: () => apiClient.get('/gifting/festive/all'),
+  getByCategory: (category) => apiClient.get(`/gifting/category/${category}`),
+};
+
 // Cart API calls
 export const cartAPI = {
   getCart: () => apiClient.get('/cart'),

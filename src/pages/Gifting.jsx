@@ -1,43 +1,58 @@
 import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Button } from '../components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
 import { Badge } from '../components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
 import { useCart } from '../context/CartContext';
-import { productAPI } from '../lib/api';
+import { giftingAPI } from '../lib/api';
 import { MessageCircle, Gift, Heart } from 'lucide-react';
 import { toast } from 'sonner';
 
 const Gifting = () => {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [giftingSolutions, setGiftingSolutions] = useState([]);
   const [festiveProducts, setFestiveProducts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [festiveLoading, setFestiveLoading] = useState(true);
   const { addToCart } = useCart();
 
   useEffect(() => {
     const fetchGiftingProducts = async () => {
       try {
         setLoading(true);
-        const allProductsResponse = await productAPI.getAll();
-        const allProducts = allProductsResponse.data.data || allProductsResponse.data;
-
-        const solutions = allProducts.filter(p => p.category === 'gifting');
-        // Filter festive products (those marked as festive or seasonal)
-        const festive = solutions.filter(p => p.isFestive);
-
-        setGiftingSolutions(solutions);
-        setFestiveProducts(festive);
+        // For now, use local gift packs
+        // This would normally fetch from DB for normal gifting
+        setGiftingSolutions([]);
       } catch (error) {
-        console.error('Error fetching gifting products:', error);
-        toast.error('Failed to load gifting products');
+        console.error('Error fetching gifting solutions:', error);
       } finally {
         setLoading(false);
       }
     };
 
+    const fetchFestiveProducts = async () => {
+      try {
+        setFestiveLoading(true);
+        const response = await giftingAPI.getFestive();
+        const festive = response.data.data || [];
+        setFestiveProducts(festive);
+      } catch (error) {
+        console.error('Error fetching festive products:', error);
+        setFestiveProducts([]);
+        // Don't show error toast - gracefully handle missing data
+      } finally {
+        setFestiveLoading(false);
+      }
+    };
+
     fetchGiftingProducts();
+    fetchFestiveProducts();
   }, []);
+
+  // Get tab from URL params, default to 'normal'
+  const activeTab = searchParams.get('tab') || 'normal';
 
   const giftingCategories = [
     {
@@ -145,7 +160,7 @@ const Gifting = () => {
           </div>
 
           {/* Main Tabs */}
-          <Tabs defaultValue="normal" className="w-full">
+          <Tabs value={activeTab} onValueChange={(value) => setSearchParams({ tab: value })} className="w-full">
             <TabsList className="grid w-full grid-cols-2 mb-8">
               <TabsTrigger value="normal">Normal Gifting</TabsTrigger>
               <TabsTrigger value="festive">Festive Gifting</TabsTrigger>
@@ -233,44 +248,72 @@ const Gifting = () => {
 
             {/* Festive Gifting Tab */}
             <TabsContent value="festive" className="space-y-6">
-              {loading ? (
+              {festiveLoading ? (
                 <div className="text-center py-12">
                   <p className="text-muted-foreground">Loading festive collections...</p>
                 </div>
               ) : festiveProducts && festiveProducts.length > 0 ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                   {festiveProducts.map((product) => {
-                    const productId = product.id || product._id;
+                    const productId = product._id || product.id;
                     return (
                       <Card key={productId} className="overflow-hidden hover:shadow-lg transition-shadow">
-                        <CardHeader className="pb-3">
+                        <CardHeader className="pb-3 bg-gradient-to-r from-rose-50 to-orange-50">
                           <div className="flex items-start justify-between">
                             <div>
-                              <CardTitle className="text-lg">{product.name}</CardTitle>
+                              <CardTitle className="text-lg text-rose-700">{product.name}</CardTitle>
                               {product.discount && (
-                                <Badge className="bg-red-500 mt-2">Save {product.discount}%</Badge>
+                                <Badge className="bg-rose-500 text-white mt-2 animate-pulse">
+                                  Save {product.discount}%
+                                </Badge>
                               )}
                             </div>
                           </div>
+                          {product.subcategory && (
+                            <p className="text-xs text-muted-foreground mt-2">{product.subcategory}</p>
+                          )}
                         </CardHeader>
-                        <CardContent className="space-y-4">
+                        <CardContent className="space-y-4 pt-4">
                           <p className="text-sm text-muted-foreground">{product.description}</p>
+
+                          {product.includes && product.includes.length > 0 && (
+                            <div>
+                              <p className="text-xs font-semibold text-muted-foreground mb-2">Includes:</p>
+                              <ul className="text-xs space-y-1">
+                                {product.includes.slice(0, 3).map((item, idx) => (
+                                  <li key={idx} className="flex items-center gap-2">
+                                    <span className="h-1 w-1 rounded-full bg-rose-500" />
+                                    {item}
+                                  </li>
+                                ))}
+                                {product.includes.length > 3 && (
+                                  <li className="text-muted-foreground">+{product.includes.length - 3} more items</li>
+                                )}
+                              </ul>
+                            </div>
+                          )}
+
                           {product.price && (
-                            <div className="flex items-baseline gap-2">
-                              <span className="text-2xl font-bold text-primary">₹{product.price}</span>
+                            <div className="flex items-baseline gap-2 pt-2">
+                              <span className="text-2xl font-bold text-rose-600">₹{product.price}</span>
                               {product.originalPrice && (
                                 <span className="text-sm text-muted-foreground line-through">₹{product.originalPrice}</span>
                               )}
                             </div>
                           )}
+
+                          {product.weight && (
+                            <p className="text-xs text-muted-foreground">{product.weight}</p>
+                          )}
+
                           <div className="flex flex-col gap-2 pt-4 border-t">
                             <Button
                               size="sm"
-                              className="w-full bg-[#25D366] hover:bg-[#128C7E] text-white"
+                              className="w-full bg-rose-500 hover:bg-rose-600 text-white"
                               onClick={() => handleContactSeller(product)}
                             >
                               <MessageCircle className="h-4 w-4 mr-2" />
-                              Buy on WhatsApp
+                              Order on WhatsApp
                             </Button>
                             <Button
                               size="sm"
