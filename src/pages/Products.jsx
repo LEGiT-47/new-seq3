@@ -7,7 +7,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '../components/ui/tabs'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
 import { useCart } from '../context/CartContext';
 import { productAPI, getImageUrl } from '../lib/api';
-import { ShoppingCart, MessageCircle, Filter } from 'lucide-react';
+import { ShoppingCart, MessageCircle, Filter, Plus, Minus } from 'lucide-react';
 import { toast } from 'sonner';
 
 const Products = () => {
@@ -17,7 +17,7 @@ const Products = () => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const { addToCart } = useCart();
+  const { addToCart, cartItems, updateQuantity } = useCart();
 
   // Fetch products from backend
   useEffect(() => {
@@ -78,6 +78,32 @@ const Products = () => {
       ...prev,
       [product.id || product._id]: {}
     }));
+  };
+
+  const handleBuyNowDelivery = (product) => {
+    const options = selectedOptions[product.id || product._id] || {};
+
+    addToCart(product, 1, {
+      coating: options.coating || null,
+      flavor: options.flavor || null
+    });
+
+    toast.success(`${product.name} added to cart!`);
+    setSelectedOptions(prev => ({
+      ...prev,
+      [product.id || product._id]: {}
+    }));
+  };
+
+  const getCartItemQuantity = (product) => {
+    const productId = product.id || product._id;
+    const options = selectedOptions[productId] || {};
+    const cartItem = cartItems.find(item =>
+      (item.id === productId || item._id === productId) &&
+      item.selectedCoating === (options.coating || null) &&
+      item.selectedFlavor === (options.flavor || null)
+    );
+    return cartItem ? cartItem.quantity : 0;
   };
 
   const handleBuyNow = (product) => {
@@ -236,29 +262,79 @@ const Products = () => {
                               </div>
 
                               <div className="flex flex-col gap-2 mt-auto">
-                              <Button
-                                size="sm"
-                                className="w-full bg-[#25D366] hover:bg-[#128C7E] text-white text-xs sm:text-sm h-9 sm:h-10"
-                                onClick={(e) => {
-                                  e.preventDefault();
-                                  handleBuyNow(product);
-                                }}
-                              >
-                                <MessageCircle className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
-                                Buy Now
-                              </Button>
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                className="w-full text-xs sm:text-sm h-9 sm:h-10"
-                                onClick={(e) => {
-                                  e.preventDefault();
-                                  handleAddToCart(product);
-                                }}
-                              >
-                                <ShoppingCart className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
-                                Add to Cart
-                              </Button>
+                              {product.isDeliverable ? (
+                                // For deliverable items
+                                getCartItemQuantity(product) > 0 ? (
+                                  // Show quantity controls if already in cart
+                                  <div className="flex items-center gap-2 justify-center">
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      className="h-9 w-9 p-0"
+                                      onClick={(e) => {
+                                        e.preventDefault();
+                                        const pid = product.id || product._id;
+                                        const cartItemId = `${pid}-${(selectedOptions[pid]?.coating) || ''}-${(selectedOptions[pid]?.flavor) || ''}`;
+                                        updateQuantity(cartItemId, Math.max(0, getCartItemQuantity(product) - 1));
+                                      }}
+                                    >
+                                      <Minus className="h-4 w-4" />
+                                    </Button>
+                                    <span className="text-sm font-medium w-8 text-center">{getCartItemQuantity(product)}</span>
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      className="h-9 w-9 p-0"
+                                      onClick={(e) => {
+                                        e.preventDefault();
+                                        handleAddToCart(product);
+                                      }}
+                                    >
+                                      <Plus className="h-4 w-4" />
+                                    </Button>
+                                  </div>
+                                ) : (
+                                  // Show blue "Buy Now" button for deliverable items
+                                  <Button
+                                    size="sm"
+                                    className="w-full bg-primary hover:bg-primary/90 text-white text-xs sm:text-sm h-9 sm:h-10"
+                                    onClick={(e) => {
+                                      e.preventDefault();
+                                      handleBuyNowDelivery(product);
+                                    }}
+                                  >
+                                    <ShoppingCart className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+                                    Buy Now
+                                  </Button>
+                                )
+                              ) : (
+                                // For non-deliverable items - keep WhatsApp and Add to Cart
+                                <>
+                                  <Button
+                                    size="sm"
+                                    className="w-full bg-[#25D366] hover:bg-[#128C7E] text-white text-xs sm:text-sm h-9 sm:h-10"
+                                    onClick={(e) => {
+                                      e.preventDefault();
+                                      handleBuyNow(product);
+                                    }}
+                                  >
+                                    <MessageCircle className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+                                    Buy Now
+                                  </Button>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="w-full text-xs sm:text-sm h-9 sm:h-10"
+                                    onClick={(e) => {
+                                      e.preventDefault();
+                                      handleAddToCart(product);
+                                    }}
+                                  >
+                                    <ShoppingCart className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+                                    Add to Cart
+                                  </Button>
+                                </>
+                              )}
                               </div>
                             </Link>
                             </CardContent>

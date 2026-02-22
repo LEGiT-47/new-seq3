@@ -108,7 +108,13 @@ const Cart = () => {
                       variant="outline"
                       size="sm"
                       className="h-6 w-6 p-0"
-                      onClick={() => updateQuantity(item.cartItemId, Math.max(1, item.quantity - 1))}
+                      onClick={() => {
+                        if (item.quantity <= 1) {
+                          removeFromCart(item.cartItemId);
+                        } else {
+                          updateQuantity(item.cartItemId, item.quantity - 1);
+                        }
+                      }}
                     >
                       <Minus className="h-3 w-3" />
                     </Button>

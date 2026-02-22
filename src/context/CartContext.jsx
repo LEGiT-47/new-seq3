@@ -64,12 +64,14 @@ export const CartProvider = ({ children }) => {
 
   const addToCart = async (product, quantity = 1, options = {}) => {
     setCartItems(prev => {
-      const cartItemId = `${product.id}-${options.coating || ''}-${options.flavor || ''}`;
-      const existingItem = prev.find(item =>
-        item.id === product.id &&
-        item.selectedCoating === options.coating &&
-        item.selectedFlavor === options.flavor
-      );
+      const productId = product.id || product._id;
+      const cartItemId = `${productId}-${options.coating || ''}-${options.flavor || ''}`;
+      const existingItem = prev.find(item => {
+        const itemId = item.id || item._id;
+        return itemId === productId &&
+          item.selectedCoating === (options.coating || null) &&
+          item.selectedFlavor === (options.flavor || null);
+      });
       if (existingItem) {
         return prev.map(item =>
           item === existingItem
@@ -153,17 +155,19 @@ export const CartProvider = ({ children }) => {
       const item = prev.find(i => i.cartItemId === cartItemId);
       if (!item) return prev;
 
+      const itemId = item.id || item._id;
       const newCoating = options.coating !== undefined ? options.coating : item.selectedCoating;
       const newFlavor = options.flavor !== undefined ? options.flavor : item.selectedFlavor;
-      const newCartItemId = `${item.id}-${newCoating || ''}-${newFlavor || ''}`;
+      const newCartItemId = `${itemId}-${newCoating || ''}-${newFlavor || ''}`;
 
       // Check if an item with these new options already exists
-      const existingItem = prev.find(i =>
-        i.id === item.id &&
-        i.selectedCoating === newCoating &&
-        i.selectedFlavor === newFlavor &&
-        i.cartItemId !== cartItemId
-      );
+      const existingItem = prev.find(i => {
+        const iId = i.id || i._id;
+        return iId === itemId &&
+          i.selectedCoating === newCoating &&
+          i.selectedFlavor === newFlavor &&
+          i.cartItemId !== cartItemId;
+      });
 
       if (existingItem) {
         // Merge quantities if item with same options exists
