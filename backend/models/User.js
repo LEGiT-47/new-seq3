@@ -61,6 +61,8 @@ const userSchema = new mongoose.Schema(
       enum: ['email-pending', 'email-verified', 'completed'],
       default: 'email-pending',
     },
+    passwordResetToken: String,
+    passwordResetExpiresAt: Date,
   },
   { timestamps: true }
 );

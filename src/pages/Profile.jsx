@@ -4,8 +4,9 @@ import { Button } from '../components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
 import { useAuth } from '../context/AuthContext';
 import { authAPI } from '../lib/api';
-import { User, Mail, Phone, MapPin, LogOut, Edit2, Check, X } from 'lucide-react';
+import { User, Mail, Phone, MapPin, LogOut, Edit2, Check, X, Lock } from 'lucide-react';
 import { toast } from 'sonner';
+import ChangePasswordModal from '../components/ChangePasswordModal';
 
 const Profile = () => {
   const navigate = useNavigate();
@@ -13,6 +14,7 @@ const Profile = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [profile, setProfile] = useState(null);
+  const [showChangePassword, setShowChangePassword] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     phone: '',
@@ -215,6 +217,35 @@ const Profile = () => {
           </CardContent>
         </Card>
 
+        {/* Change Password Card */}
+        <Card className="mb-6">
+          <CardHeader className="flex flex-row items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
+                <Lock className="h-6 w-6 text-primary" />
+              </div>
+              <div>
+                <CardTitle>Security</CardTitle>
+                <CardDescription>Manage your password</CardDescription>
+              </div>
+            </div>
+          </CardHeader>
+
+          <CardContent>
+            <p className="text-sm text-muted-foreground mb-4">
+              Keep your account secure by changing your password regularly.
+            </p>
+            <Button
+              variant="outline"
+              className="w-full sm:w-auto"
+              onClick={() => setShowChangePassword(true)}
+            >
+              <Lock className="h-4 w-4 mr-2" />
+              Change Password
+            </Button>
+          </CardContent>
+        </Card>
+
         {/* Addresses Card */}
         {addresses.length > 0 && (
           <Card className="mb-6">
@@ -271,6 +302,16 @@ const Profile = () => {
           Log Out
         </Button>
       </div>
+
+      {/* Change Password Modal */}
+      <ChangePasswordModal
+        isOpen={showChangePassword}
+        onClose={() => setShowChangePassword(false)}
+        onSuccess={() => {
+          // Optionally refresh profile or just close the modal
+          toast.success('Password updated successfully!');
+        }}
+      />
     </div>
   );
 };

@@ -67,6 +67,12 @@ export const authAPI = {
   getProfile: () => apiClient.get('/auth/profile'),
   updateProfile: (data) => apiClient.put('/auth/profile', data),
   addAddress: (data) => apiClient.post('/auth/addresses', data),
+  // Forgot password endpoints
+  forgotPasswordInitiate: (data) => apiClient.post('/auth/forgot-password/initiate', data),
+  forgotPasswordVerifyOtp: (data) => apiClient.post('/auth/forgot-password/verify-otp', data),
+  forgotPasswordReset: (data) => apiClient.post('/auth/forgot-password/reset', data),
+  // Change password endpoint
+  changePassword: (data) => apiClient.post('/auth/change-password', data),
 };
 
 // Admin Auth API calls (will use adminApiClient after it's defined below)
