@@ -288,38 +288,48 @@ const ProductDetail = () => {
 
               {/* CTAs */}
               <div className="flex flex-col gap-3 sticky bottom-0 pt-4 bg-background">
-                <Button
-                  size="lg"
-                  className={`w-full ${
-                    product.isDeliverable
-                      ? 'bg-blue-600 hover:bg-blue-700'
-                      : 'bg-[#25D366] hover:bg-[#128C7E]'
-                  } text-white`}
-                  onClick={handleBuyNow}
-                >
-                  {product.isDeliverable ? (
-                    <>
+                {product.isDeliverable ? (
+                  // For deliverable items - Buy Now (blue) and Add to Cart
+                  <>
+                    <Button
+                      size="lg"
+                      className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+                      onClick={handleBuyNow}
+                    >
                       <ShoppingCart className="h-5 w-5 mr-2" />
                       Buy Now
-                    </>
-                  ) : (
-                    <>
+                    </Button>
+                    <Button
+                      size="lg"
+                      variant="outline"
+                      className="w-full"
+                      onClick={handleAddToCart}
+                    >
+                      <ShoppingCart className="h-5 w-5 mr-2" />
+                      Add to Cart
+                    </Button>
+                  </>
+                ) : (
+                  // For non-deliverable items - Add to Cart and Enquire on WhatsApp
+                  <>
+                    <Button
+                      size="lg"
+                      variant="outline"
+                      className="w-full"
+                      onClick={handleAddToCart}
+                    >
+                      <ShoppingCart className="h-5 w-5 mr-2" />
+                      Add to Cart
+                    </Button>
+                    <Button
+                      size="lg"
+                      className="w-full bg-[#25D366] hover:bg-[#128C7E] text-white"
+                      onClick={handleWhatsAppEnquiry}
+                    >
                       <MessageCircle className="h-5 w-5 mr-2" />
                       Enquire on WhatsApp
-                    </>
-                  )}
-                </Button>
-
-                {product.isDeliverable && (
-                  <Button
-                    size="lg"
-                    variant="outline"
-                    className="w-full"
-                    onClick={handleAddToCart}
-                  >
-                    <ShoppingCart className="h-5 w-5 mr-2" />
-                    Add to Cart
-                  </Button>
+                    </Button>
+                  </>
                 )}
               </div>
             </div>
