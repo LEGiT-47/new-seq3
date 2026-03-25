@@ -39,27 +39,6 @@ const reviewCards = [
   },
 ];
 
-const updateCards = [
-  {
-    title: 'Valentine Specials Live',
-    description: 'Curated festive gift packs and premium snack boxes now available for quick enquiry.',
-    cta: 'Explore Gifting',
-    path: '/gifting?tab=festive',
-  },
-  {
-    title: 'Corporate Gifting Slots Open',
-    description: 'Book custom hampers for teams and clients with personalized branding options.',
-    cta: 'View Gifting Solutions',
-    path: '/gifting',
-  },
-  {
-    title: 'Hero SKUs Deliverable',
-    description: 'Gud Chana and all 5 Crunchy Chana flavours are available for direct online order.',
-    cta: 'Order Hero Products',
-    path: '/products?tab=order',
-  },
-];
-
 const Home = () => {
   const navigate = useNavigate();
   const { addToCart } = useCart();
@@ -150,16 +129,16 @@ const Home = () => {
       },
       {
         image: heroTwo,
-        badge: 'Seasonal Campaign',
-        title: 'Valentine and Festive',
-        subtitle: 'Special Collections',
-        description: 'Limited-edition gift packs and festive assortments crafted for celebrations and premium gifting.',
+        badge: 'Festive and Gifting Update',
+        title: 'Premium Gift Packs',
+        subtitle: 'Now Live',
+        description: 'Explore curated gifting collections for festivals, milestones, and premium celebrations.',
         ctaButton: {
-          label: 'Shop Festive',
-          onClick: () => navigate('/gifting?tab=festive'),
+          label: 'Explore Gifting',
+          onClick: () => navigate('/gifting'),
         },
         quoteButton: {
-          label: 'View Gifting',
+          label: 'Enquire Gifts',
           onClick: () => navigate('/gifting'),
         },
       },
@@ -193,26 +172,6 @@ const Home = () => {
       <section className="py-8 sm:py-10 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
           <OccasionBanner />
-        </div>
-      </section>
-
-      <section className="mx-auto max-w-7xl px-4 py-2 sm:px-6 lg:px-8">
-        <div className="rounded-2xl bg-card border border-border p-5 shadow-soft">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="font-display text-2xl font-bold text-[#1A0A00]">Latest Updates</h2>
-            <Badge className="bg-[#E8762A] text-white">News and Campaigns</Badge>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {updateCards.map((item) => (
-              <div key={item.title} className="rounded-xl border border-border p-4 bg-muted/20">
-                <h3 className="font-semibold text-[#1A0A00]">{item.title}</h3>
-                <p className="text-sm text-muted-foreground mt-1 mb-3">{item.description}</p>
-                <Button size="sm" variant="outline" onClick={() => navigate(item.path)}>
-                  {item.cta}
-                </Button>
-              </div>
-            ))}
-          </div>
         </div>
       </section>
 
