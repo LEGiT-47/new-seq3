@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '../components/ui/button';
 import { Badge } from '../components/ui/badge';
 import { Card, CardContent } from '../components/ui/card';
@@ -8,6 +8,11 @@ import { getDisplayProductName, openWhatsAppEnquiry } from '../lib/productUtils'
 import { useCart } from '../context/CartContext';
 import { toast } from 'sonner';
 import { ArrowRight, Star, Truck, Gift, Leaf, Factory, MessageCircle } from 'lucide-react';
+import HeroCarousel from '../components/HeroCarousel';
+import OccasionBanner from '../components/OccasionBanner';
+import heroOne from '../assets/first.jpg';
+import heroTwo from '../assets/second.jpg';
+import heroThree from '../assets/partner.jpg';
 
 const categoryTabs = [
   { id: 'snacks', label: 'Snacks', icon: 'SNK', categories: ['nuts', 'jaggery', 'chocolates'] },
@@ -34,7 +39,29 @@ const reviewCards = [
   },
 ];
 
+const updateCards = [
+  {
+    title: 'Valentine Specials Live',
+    description: 'Curated festive gift packs and premium snack boxes now available for quick enquiry.',
+    cta: 'Explore Gifting',
+    path: '/gifting?tab=festive',
+  },
+  {
+    title: 'Corporate Gifting Slots Open',
+    description: 'Book custom hampers for teams and clients with personalized branding options.',
+    cta: 'View Gifting Solutions',
+    path: '/gifting',
+  },
+  {
+    title: 'Hero SKUs Deliverable',
+    description: 'Gud Chana and all 5 Crunchy Chana flavours are available for direct online order.',
+    cta: 'Order Hero Products',
+    path: '/products?tab=order',
+  },
+];
+
 const Home = () => {
+  const navigate = useNavigate();
   const { addToCart } = useCart();
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -104,47 +131,87 @@ const Home = () => {
   };
 
   const heroVisual = heroProducts[0] ? getImageUrl(heroProducts[0].image) : '';
+  const heroSlides = useMemo(
+    () => [
+      {
+        image: heroOne,
+        badge: "Mumbai's Favourite Crunchy Chana",
+        title: 'Snack Bold.',
+        subtitle: 'Snack Real.',
+        description: 'Handcrafted snacks, real flavours, and a premium crunch delivered straight to your door.',
+        ctaButton: {
+          label: 'Order Now',
+          onClick: () => navigate('/products?tab=order'),
+        },
+        quoteButton: {
+          label: 'Explore All Products',
+          onClick: () => navigate('/products'),
+        },
+      },
+      {
+        image: heroTwo,
+        badge: 'Seasonal Campaign',
+        title: 'Valentine and Festive',
+        subtitle: 'Special Collections',
+        description: 'Limited-edition gift packs and festive assortments crafted for celebrations and premium gifting.',
+        ctaButton: {
+          label: 'Shop Festive',
+          onClick: () => navigate('/gifting?tab=festive'),
+        },
+        quoteButton: {
+          label: 'View Gifting',
+          onClick: () => navigate('/gifting'),
+        },
+      },
+      {
+        image: heroThree,
+        badge: 'Business Updates',
+        title: 'Bulk Orders and',
+        subtitle: 'Private Label Support',
+        description: 'Partner with Sequeira Foods for custom production, premium packaging, and B2B scale programs.',
+        ctaButton: {
+          label: 'Contract Manufacturing',
+          onClick: () => navigate('/contract-manufacturing'),
+        },
+        quoteButton: {
+          label: 'Enquire on WhatsApp',
+          onClick: () => {
+            if (enquiryProducts[0]) {
+              openWhatsAppEnquiry(enquiryProducts[0]);
+            }
+          },
+        },
+      },
+    ],
+    [navigate, enquiryProducts]
+  );
 
   return (
     <div className="min-h-screen bg-background">
-      <section className="relative overflow-hidden border-b border-border">
-        <div className="absolute inset-0 bg-gradient-warm" />
-        <div className="relative mx-auto grid max-w-7xl grid-cols-1 items-center gap-8 px-4 py-16 sm:px-6 lg:grid-cols-2 lg:py-20 lg:px-8">
-          <div>
-            <p className="mb-4 inline-flex rounded-full bg-[#E8762A]/15 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-[#E8762A]">
-              Mumbai's Favourite Crunchy Chana
-            </p>
-            <h1 className="font-display text-4xl font-extrabold leading-tight text-[#1A0A00] sm:text-5xl lg:text-6xl">
-              Snack Bold. Snack Real.
-            </h1>
-            <p className="mt-5 max-w-xl text-base text-muted-foreground sm:text-lg">
-              Handcrafted snacks, real flavours, and a premium crunch delivered straight to your door.
-            </p>
-            <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-              <Button size="lg" className="bg-[#E8762A] hover:bg-[#d76b20]" asChild>
-                <Link to="/products?tab=order">
-                  Order Now
-                  <ArrowRight className="ml-2 h-4 w-4" />
-                </Link>
-              </Button>
-              <Button size="lg" variant="outline" asChild>
-                <Link to="/products">Explore All Products</Link>
-              </Button>
-            </div>
+      <HeroCarousel slides={heroSlides} />
+
+      <section className="py-8 sm:py-10 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto">
+          <OccasionBanner />
+        </div>
+      </section>
+
+      <section className="mx-auto max-w-7xl px-4 py-2 sm:px-6 lg:px-8">
+        <div className="rounded-2xl bg-card border border-border p-5 shadow-soft">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="font-display text-2xl font-bold text-[#1A0A00]">Latest Updates</h2>
+            <Badge className="bg-[#E8762A] text-white">News and Campaigns</Badge>
           </div>
-          <div className="relative">
-            <div className="absolute -inset-4 rounded-3xl bg-[#E8762A]/15 blur-3xl" />
-            {heroVisual ? (
-              <img
-                src={heroVisual}
-                alt="Sequeira Foods hero"
-                className="relative h-[360px] w-full rounded-3xl object-cover shadow-large"
-              />
-            ) : (
-              <div className="relative flex h-[360px] items-center justify-center rounded-3xl bg-card shadow-large">
-                <p className="text-muted-foreground">Premium snack visuals loading...</p>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {updateCards.map((item) => (
+              <div key={item.title} className="rounded-xl border border-border p-4 bg-muted/20">
+                <h3 className="font-semibold text-[#1A0A00]">{item.title}</h3>
+                <p className="text-sm text-muted-foreground mt-1 mb-3">{item.description}</p>
+                <Button size="sm" variant="outline" onClick={() => navigate(item.path)}>
+                  {item.cta}
+                </Button>
               </div>
-            )}
+            ))}
           </div>
         </div>
       </section>
