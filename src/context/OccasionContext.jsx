@@ -53,17 +53,14 @@ export const OCCASIONS = {
 // Determine active occasion based on current date
 const getActiveOccasion = () => {
   const now = new Date();
-  
-  // For demo purposes, always show Valentine's Day
-  // In production, you would check against actual dates
+
   for (const occasion of Object.values(OCCASIONS)) {
     if (now >= occasion.startDate && now <= occasion.endDate) {
       return occasion;
     }
   }
 
-  // Default to Valentine's if no active occasion
-  return OCCASIONS.valentine;
+  return null;
 };
 
 export const OccasionProvider = ({ children }) => {
