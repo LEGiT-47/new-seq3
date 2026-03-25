@@ -28,7 +28,6 @@ const ProductDetail = () => {
   const [loading, setLoading] = useState(true);
   const [qty, setQty] = useState(1);
   const [selectedWeight, setSelectedWeight] = useState('');
-  const [activeImage, setActiveImage] = useState('');
   const [activeImageIndex, setActiveImageIndex] = useState(0);
 
   useEffect(() => {
@@ -78,6 +77,28 @@ const ProductDetail = () => {
       }));
   }, [allProducts]);
 
+  const safeImageGallery = useMemo(() => {
+    if (!product) return [];
+
+    const imageGallery = (product.images && product.images.length > 0 ? product.images : [product.image])
+      .map((img) => getImageUrl(img))
+      .filter(Boolean);
+
+    return imageGallery;
+  }, [product]);
+
+  useEffect(() => {
+    if (!safeImageGallery.length) {
+      setActiveImageIndex(0);
+      return;
+    }
+
+    setActiveImageIndex((prev) => {
+      if (prev >= safeImageGallery.length) return 0;
+      return prev;
+    });
+  }, [safeImageGallery]);
+
   if (loading) {
     return <div className="py-20 text-center text-muted-foreground">Loading product details...</div>;
   }
@@ -93,31 +114,14 @@ const ProductDetail = () => {
 
   const displayName = getDisplayProductName(product);
   const whatsappLink = buildWhatsAppEnquiryLink(product);
-  const imageGallery = (product.images && product.images.length > 0 ? product.images : [product.image])
-    .map((img) => getImageUrl(img))
-    .filter(Boolean);
-
-  const safeImageGallery = imageGallery.length > 0 ? imageGallery : [getImageUrl(product.image)];
-  const activeSliderImage = safeImageGallery[activeImageIndex] || safeImageGallery[0];
+  const activeSliderImage = safeImageGallery[activeImageIndex] || safeImageGallery[0] || '';
 
   const goToImage = (index) => {
     if (!safeImageGallery.length) return;
     const total = safeImageGallery.length;
     const next = (index + total) % total;
     setActiveImageIndex(next);
-    setActiveImage(safeImageGallery[next]);
   };
-
-  useEffect(() => {
-    if (!safeImageGallery.length) return;
-    if (activeImage && safeImageGallery.includes(activeImage)) {
-      setActiveImageIndex(safeImageGallery.indexOf(activeImage));
-      return;
-    }
-
-    setActiveImageIndex(0);
-    setActiveImage(safeImageGallery[0]);
-  }, [product?._id, product?.id, safeImageGallery.length]);
 
   const onAddToCart = () => {
     addToCart(product, qty, { flavor: product.flavour || null });
