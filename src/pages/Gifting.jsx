@@ -1,99 +1,255 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Button } from '../components/ui/button';
 import { Card, CardContent } from '../components/ui/card';
-import { MessageCircle, Gift, Building2, Sparkles } from 'lucide-react';
-
-const giftingTiers = [
-  {
-    id: 'starter',
-    title: 'Starter Hamper',
-    priceRange: 'Rs. 999 - Rs. 1,499',
-    includes: 'Best for personal gifting with premium snack essentials and festive wrap.',
-    icon: <Gift className="h-6 w-6" />,
-  },
-  {
-    id: 'premium',
-    title: 'Premium Hamper',
-    priceRange: 'Rs. 1,500 - Rs. 2,499',
-    includes: 'Luxury hamper with curated flavour assortments and elegant box styling.',
-    icon: <Sparkles className="h-6 w-6" />,
-  },
-  {
-    id: 'corporate',
-    title: 'Corporate Gifting',
-    priceRange: 'Rs. 2,500+',
-    includes: 'High-volume packs with branding, custom inserts, and delivery coordination.',
-    icon: <Building2 className="h-6 w-6" />,
-  },
-];
-
-const openWhatsApp = (message) => {
-  const phone = '919930709557';
-  window.open(`https://wa.me/${phone}?text=${encodeURIComponent(message)}`, '_blank');
-};
+import { Badge } from '../components/ui/badge';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
+import { useCart } from '../context/CartContext';
+import { getProductsByCategory } from '../data/products';
+import { MessageCircle, Gift } from 'lucide-react';
+import { toast } from 'sonner';
 
 const Gifting = () => {
+  const [serviceSelections, setServiceSelections] = useState({});
+  const { addToCart } = useCart();
+
+  const giftingSolutions = getProductsByCategory('gifting');
+  const giftingServices = getProductsByCategory('services');
+
+  const festivalOptions = {
+    'Corporate Gifting': [
+      'New Year',
+      'Women\'s Day',
+      'Financial Year Closing / New Financial Year',
+      'Eid-ul-Fitr',
+      'Raksha Bandhan',
+      'Diwali',
+      'Christmas & Year-End',
+      'Corporate Awards / Annual Events',
+      'Other'
+    ],
+    'Festive Gifting': [
+      'Makar Sankranti / Pongal / Lohri',
+      'Holi',
+      'Eid-ul-Fitr',
+      'Raksha Bandhan',
+      'Onam / Ganesh Chaturthi',
+      'Navratri / Dussehra',
+      'Diwali',
+      'Christmas',
+      'Other'
+    ],
+    'Personalized Gifting': [
+      'Valentine\'s Day',
+      'Birthdays',
+      'Work Anniversaries',
+      'Raksha Bandhan',
+      'Mother\'s Day',
+      'Father\'s Day',
+      'Naming Ceremony / Baptism / Naamkaran',
+      'Christmas / New Year',
+      'Other'
+    ],
+    'Event & Wedding Gifting': [
+      'Wedding & Engagement',
+      'Pre-Wedding Functions (Haldi / Mehendi / Sangeet)',
+      'Anniversaries',
+      'Naming Ceremony (Naamkaran / Baptism / Cradle Ceremony)',
+      'Baby Shower (Godh Bharai / Seemantham)',
+      'Housewarming (Griha Pravesh)',
+      'Return Gifts',
+      'Corporate Events & Milestones',
+      'Other'
+    ]
+  };
+
+  const handleServiceSelection = (serviceId, selectionType, value) => {
+    setServiceSelections(prev => ({
+      ...prev,
+      [serviceId]: {
+        ...prev[serviceId],
+        [selectionType]: value
+      }
+    }));
+  };
+
+  const handleAddToCart = (product) => {
+    addToCart(product, 1, {});
+    toast.success(`${product.name} added to cart!`);
+  };
+
+  const handleBuyNow = (product) => {
+    let message = `Hello! I would like to inquire about ${product.name}`;
+    message += '. Please let me know the price, availability, and any customization options. Thank you!';
+
+    const phoneNumber = '+919930709557';
+    const encodedMessage = encodeURIComponent(message);
+    const whatsappUrl = `https://wa.me/${phoneNumber.replace(/\+/g, '')}?text=${encodedMessage}`;
+    window.open(whatsappUrl, '_blank');
+  };
+
   return (
-    <div className="min-h-screen bg-background py-10">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <section className="rounded-3xl bg-gradient-primary px-6 py-14 text-white shadow-medium sm:px-10">
-          <p className="text-sm uppercase tracking-[0.18em] text-white/80">Sequeira Foods Gifting</p>
-          <h1 className="mt-2 font-display text-4xl font-bold sm:text-5xl">The Gift That Always Hits Right</h1>
-          <p className="mt-3 max-w-2xl text-white/90">
-            Premium snack hampers for festive moments, weddings, and corporate appreciation programs.
-          </p>
-          <Button className="mt-6 bg-[#25D366] hover:bg-[#1fa959]" onClick={() => openWhatsApp('Hi Sequeira Foods! I want to explore gifting options for an upcoming event.') }>
-            <MessageCircle className="mr-2 h-4 w-4" />
-            Enquire on WhatsApp
-          </Button>
-        </section>
-
-        <section className="mt-10 grid grid-cols-1 gap-5 lg:grid-cols-3">
-          {giftingTiers.map((tier) => (
-            <Card key={tier.id} className="rounded-2xl border-border/80 shadow-soft">
-              <CardContent className="p-6">
-                <div className="mb-4 inline-flex rounded-full bg-[#E8762A]/15 p-3 text-[#E8762A]">{tier.icon}</div>
-                <h2 className="text-2xl font-bold text-[#1A0A00]">{tier.title}</h2>
-                <p className="mt-2 text-sm font-semibold text-[#2D5016]">{tier.priceRange}</p>
-                <p className="mt-3 text-sm text-muted-foreground">{tier.includes}</p>
-                <Button
-                  className="mt-6 w-full bg-[#25D366] hover:bg-[#1fa959]"
-                  onClick={() => openWhatsApp(`Hi Sequeira Foods! I am interested in the ${tier.title}. Please share options.`)}
-                >
-                  <MessageCircle className="mr-2 h-4 w-4" />
-                  Enquire
-                </Button>
-              </CardContent>
-            </Card>
-          ))}
-        </section>
-
-        <section className="mt-12 grid grid-cols-1 gap-8 rounded-3xl border border-border bg-card p-8 lg:grid-cols-2">
-          <div>
-            <h3 className="font-display text-3xl font-bold text-[#1A0A00]">Personalisation That Feels Premium</h3>
-            <ul className="mt-4 space-y-3 text-sm text-muted-foreground">
-              <li>Custom labels with names, wishes, and festival messaging.</li>
-              <li>Brand-packaging support for corporate gifting campaigns.</li>
-              <li>Choice of flavour themes and gift card inserts.</li>
-              <li>Pan-India dispatch planning for team gifting.</li>
-            </ul>
+    <div className="min-h-screen py-6 sm:py-8">
+      <div className="w-full px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto">
+          {/* Header */}
+          <div className="text-center mb-8 sm:mb-12">
+            <div className="inline-block mb-4">
+              <Gift className="h-10 w-10 sm:h-12 sm:w-12 text-primary" />
+            </div>
+            <h1 className="font-display text-2xl sm:text-3xl md:text-4xl font-bold mb-3 sm:mb-4">Gifting Solutions</h1>
+            <p className="text-sm sm:text-base md:text-lg text-muted-foreground max-w-2xl mx-auto px-2">
+              Explore our premium gift packs and specialized gifting services for every occasion.
+              Perfect for corporate gifting, festive celebrations, and special events.
+            </p>
           </div>
-          <div className="rounded-2xl bg-muted p-6">
-            <h4 className="text-xl font-bold text-[#1A0A00]">Bulk and Corporate Enquiry</h4>
-            <p className="mt-3 text-sm text-muted-foreground">
-              Share your event timeline, headcount, and budget. Our team will propose a curated gifting plan.
+
+          {/* Services with Selection Dropdowns */}
+          <div className="space-y-4 sm:space-y-6 mb-12">
+            {giftingServices.length > 0 ? (
+              giftingServices.map((service) => (
+                <div key={service.id} className="bg-card border border-border rounded-lg p-4 sm:p-6">
+                  {/* Service Header */}
+                  <h2 className="text-lg sm:text-xl font-bold mb-2">{service.name}</h2>
+                  <p className="text-xs sm:text-sm text-muted-foreground mb-6">{service.description}</p>
+
+                  {/* Selection Dropdowns */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                    {/* Festival/Occasion Dropdown */}
+                    {festivalOptions[service.name] && (
+                      <div>
+                        <label className="text-xs sm:text-sm font-medium text-muted-foreground block mb-2">
+                          {service.name.includes('Festive') ? 'Select Festival' : 'Select Occasion'}
+                        </label>
+                        <Select
+                          value={serviceSelections[service.id]?.festival || ''}
+                          onValueChange={(value) => handleServiceSelection(service.id, 'festival', value)}
+                        >
+                          <SelectTrigger className="w-full h-9 sm:h-10 text-xs sm:text-sm">
+                            <SelectValue placeholder={`Choose a ${service.name.includes('Festive') ? 'festival' : 'occasion'}`} />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {festivalOptions[service.name]?.map((festival) => (
+                              <SelectItem key={festival} value={festival}>
+                                {festival}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    )}
+
+                    {/* Other Occasion Input */}
+                    {serviceSelections[service.id]?.festival === 'Other' && (
+                      <div>
+                        <label className="text-xs sm:text-sm font-medium text-muted-foreground block mb-2">
+                          Please specify the occasion
+                        </label>
+                        <input
+                          type="text"
+                          value={serviceSelections[service.id]?.otherOccasion || ''}
+                          onChange={(e) => handleServiceSelection(service.id, 'otherOccasion', e.target.value)}
+                          placeholder="Enter your occasion"
+                          className="w-full h-9 sm:h-10 px-3 rounded-md border border-input bg-background text-xs sm:text-sm"
+                        />
+                      </div>
+                    )}
+
+                    {/* Pack Type Dropdown */}
+                    <div>
+                      <label className="text-xs sm:text-sm font-medium text-muted-foreground block mb-2">
+                        Select Pack
+                      </label>
+                      <Select
+                        value={serviceSelections[service.id]?.packType || ''}
+                        onValueChange={(value) => handleServiceSelection(service.id, 'packType', value)}
+                      >
+                        <SelectTrigger className="w-full h-9 sm:h-10 text-xs sm:text-sm">
+                          <SelectValue placeholder="Choose a pack" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">All Packs</SelectItem>
+                          {giftingSolutions.map((pack) => (
+                            <SelectItem key={pack.id} value={pack.id.toString()}>
+                              <div className="flex flex-col">
+                                <span className="font-medium">{pack.name}</span>
+                              </div>
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+
+                  {/* Display Selected Pack Details */}
+                  {serviceSelections[service.id]?.packType && serviceSelections[service.id]?.packType !== 'all' && (
+                    <div className="mt-6 p-4 bg-muted/50 rounded-lg border border-border">
+                      {giftingSolutions
+                        .filter(pack => pack.id.toString() === serviceSelections[service.id].packType)
+                        .map((pack) => (
+                          <div key={pack.id}>
+                            <h3 className="font-semibold text-sm sm:text-base mb-2">{pack.name}</h3>
+                            <p className="text-xs sm:text-sm text-muted-foreground mb-4">{pack.description}</p>
+                            <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
+                              <Button
+                                size="sm"
+                                className="flex-1 bg-[#25D366] hover:bg-[#128C7E] text-white text-xs sm:text-sm h-9 sm:h-10"
+                                onClick={() => handleBuyNow(pack)}
+                              >
+                                <MessageCircle className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+                                Buy Now
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="flex-1 text-xs sm:text-sm h-9 sm:h-10"
+                                onClick={() => handleAddToCart(pack)}
+                              >
+                                Add to Cart
+                              </Button>
+                            </div>
+                          </div>
+                        ))}
+                    </div>
+                  )}
+
+                  {serviceSelections[service.id]?.packType === 'all' && (
+                    <div className="mt-6 p-4 bg-muted/50 rounded-lg border border-border">
+                      <p className="text-xs sm:text-sm text-muted-foreground">Select a specific pack to view details and purchase options.</p>
+                    </div>
+                  )}
+                </div>
+              ))
+            ) : (
+              <div className="text-center py-12 sm:py-16">
+                <Gift className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                <h3 className="text-lg sm:text-xl font-semibold mb-2">No services available</h3>
+                <p className="text-muted-foreground text-sm">Please check back soon for specialized gifting services.</p>
+              </div>
+            )}
+          </div>
+
+          {/* Bottom CTA */}
+          <div className="mt-12 text-center p-6 sm:p-8 bg-gradient-primary text-primary-foreground rounded-lg">
+            <h3 className="text-lg sm:text-2xl font-semibold mb-2">Ready to Send the Perfect Gift?</h3>
+            <p className="text-xs sm:text-base mb-4 opacity-90 px-2">
+              Contact us for bulk orders, custom packaging, and personalized gifting solutions.
             </p>
             <Button
-              className="mt-5 w-full bg-[#2D5016] hover:bg-[#243f12]"
-              onClick={() =>
-                openWhatsApp('Hi Sequeira Foods! I need a corporate gifting proposal with customized packaging and branding.')
-              }
+              size="lg"
+              variant="secondary"
+              onClick={() => {
+                const phoneNumber = '+919930709557';
+                const message = 'Hello! I am interested in your gifting solutions. Please provide more details and pricing.';
+                const encodedMessage = encodeURIComponent(message);
+                const whatsappUrl = `https://wa.me/${phoneNumber.replace(/\+/g, '')}?text=${encodedMessage}`;
+                window.open(whatsappUrl, '_blank');
+              }}
             >
-              <MessageCircle className="mr-2 h-4 w-4" />
-              Start Bulk Enquiry
+              <MessageCircle className="h-4 w-4 mr-2" />
+              Get in Touch via WhatsApp
             </Button>
           </div>
-        </section>
+        </div>
       </div>
     </div>
   );
