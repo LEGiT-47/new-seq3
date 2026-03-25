@@ -1,385 +1,320 @@
-import React, { useState, useMemo, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import React, { useEffect, useMemo, useState } from 'react';
+import { Link, useParams, useSearchParams } from 'react-router-dom';
 import { Button } from '../components/ui/button';
-import { Card, CardContent } from '../components/ui/card';
 import { Badge } from '../components/ui/badge';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '../components/ui/tabs';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
-import { useCart } from '../context/CartContext';
+import { Card, CardContent } from '../components/ui/card';
 import { productAPI, getImageUrl } from '../lib/api';
-import { ShoppingCart, MessageCircle, Filter, Plus, Minus } from 'lucide-react';
+import { useCart } from '../context/CartContext';
+import { buildWhatsAppEnquiryLink, getDisplayProductName } from '../lib/productUtils';
 import { toast } from 'sonner';
+import { Filter, MessageCircle, ShoppingCart } from 'lucide-react';
+
+const categoryNameMap = {
+  chocolates: 'Chocolates',
+  nuts: 'Flavoured Nuts',
+  jaggery: 'Jaggery Coated',
+  dryfruits: 'Dry Fruits',
+  seeds: 'Seeds',
+};
 
 const Products = () => {
   const { category: urlCategory } = useParams();
-  const [activeCategory, setActiveCategory] = useState(urlCategory || 'chocolates');
-  const [selectedOptions, setSelectedOptions] = useState({});
+  const [searchParams, setSearchParams] = useSearchParams();
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const { addToCart, cartItems, updateQuantity } = useCart();
+  const [error, setError] = useState('');
+  const [activeMainTab, setActiveMainTab] = useState(searchParams.get('tab') === 'enquire' ? 'enquire' : 'order');
+  const [orderFilter, setOrderFilter] = useState('all');
+  const [enquiryFilter, setEnquiryFilter] = useState('all');
+  const [selectedFlavorByParent, setSelectedFlavorByParent] = useState({});
+  const { addToCart } = useCart();
 
-  // Fetch products from backend
   useEffect(() => {
-    const fetchProducts = async () => {
+    const load = async () => {
       try {
         setLoading(true);
-        setError(null);
         const response = await productAPI.getAll();
-        setProducts(response.data.data || response.data);
+        const list = response.data.data || [];
+        setProducts(list.filter((p) => !p.isHidden && p.category !== 'gifting' && p.category !== 'services'));
       } catch (err) {
-        console.error('Error fetching products:', err);
-        setError('Failed to load products. Please try again later.');
-        toast.error('Failed to load products');
+        setError('Failed to load products. Please try again.');
       } finally {
         setLoading(false);
       }
     };
 
-    fetchProducts();
+    load();
   }, []);
 
-  
-
-  const handleOptionChange = (productId, option, value) => {
-    setSelectedOptions(prev => ({
-      ...prev,
-      [productId]: {
-        ...prev[productId],
-        [option]: value
-      }
-    }));
-  };
-
-  const getProductImage = (product) => {
-    return getImageUrl(product.image);
-  };
-
-  // Get filtered products based on active category
-  const getProductsByCategory = (categoryId) => {
-    if (!categoryId || categoryId === 'all') {
-      return products.filter(p => p.category !== 'gifting' && p.category !== 'services' && !p.isHidden);
+  useEffect(() => {
+    if (urlCategory) {
+      setEnquiryFilter(urlCategory);
     }
-    return products.filter(p => p.category === categoryId && p.category !== 'gifting' && p.category !== 'services' && !p.isHidden);
-  };
+  }, [urlCategory]);
 
-  const categoryProducts = getProductsByCategory(activeCategory);
+  useEffect(() => {
+    const next = new URLSearchParams(searchParams);
+    next.set('tab', activeMainTab);
+    setSearchParams(next, { replace: true });
+  }, [activeMainTab]);
 
-  const handleAddToCart = (product) => {
-    const options = selectedOptions[product.id || product._id] || {};
+  const orderProducts = useMemo(() => products.filter((p) => p.productType === 'deliverable'), [products]);
+  const enquiryProducts = useMemo(() => products.filter((p) => p.productType === 'enquiry'), [products]);
 
-    addToCart(product, 1, {
-      coating: options.coating || null,
-      flavor: options.flavor || null
+  const orderGroups = useMemo(() => {
+    const groups = new Map();
+
+    orderProducts.forEach((product) => {
+      const key = product.parentProduct || product.name;
+      if (!groups.has(key)) groups.set(key, []);
+      groups.get(key).push(product);
     });
 
-    toast.success(`${product.name} added to cart!`);
-    setSelectedOptions(prev => ({
-      ...prev,
-      [product.id || product._id]: {}
-    }));
-  };
-
-  const handleBuyNowDelivery = (product) => {
-    const options = selectedOptions[product.id || product._id] || {};
-
-    addToCart(product, 1, {
-      coating: options.coating || null,
-      flavor: options.flavor || null
+    return Array.from(groups.entries()).map(([key, list]) => {
+      const sorted = [...list].sort((a, b) => getDisplayProductName(a).localeCompare(getDisplayProductName(b)));
+      return { key, products: sorted };
     });
+  }, [orderProducts]);
 
-    toast.success(`${product.name} added to cart!`);
-    setSelectedOptions(prev => ({
-      ...prev,
-      [product.id || product._id]: {}
-    }));
+  const orderCards = useMemo(() => {
+    return orderGroups
+      .map((group) => {
+        if (group.products.length === 1) return group.products[0];
+
+        const selectedFlavor = selectedFlavorByParent[group.key] || group.products[0].flavour;
+        return group.products.find((p) => p.flavour === selectedFlavor) || group.products[0];
+      })
+      .filter((product) => {
+        if (orderFilter === 'all') return true;
+        if (orderFilter === 'gud') return product.parentProduct === 'gud-chana';
+        return product.parentProduct === 'crunchy-chana';
+      });
+  }, [orderGroups, orderFilter, selectedFlavorByParent]);
+
+  const enquiryCategories = useMemo(() => {
+    const categorySet = new Set(enquiryProducts.map((p) => p.category));
+    return ['all', ...Array.from(categorySet)];
+  }, [enquiryProducts]);
+
+  const filteredEnquiryProducts = useMemo(() => {
+    return enquiryProducts.filter((p) => (enquiryFilter === 'all' ? true : p.category === enquiryFilter));
+  }, [enquiryFilter, enquiryProducts]);
+
+  const heroSpotlight = useMemo(
+    () => orderProducts.filter((p) => p.parentProduct === 'crunchy-chana').slice(0, 5),
+    [orderProducts]
+  );
+
+  const onAddToCart = (product) => {
+    addToCart(product, 1, { flavor: product.flavour || null });
+    toast.success(`${getDisplayProductName(product)} added to cart`);
   };
 
-  const getCartItemQuantity = (product) => {
-    const productId = product.id || product._id;
-    const options = selectedOptions[productId] || {};
-    const cartItem = cartItems.find(item =>
-      (item.id === productId || item._id === productId) &&
-      item.selectedCoating === (options.coating || null) &&
-      item.selectedFlavor === (options.flavor || null)
-    );
-    return cartItem ? cartItem.quantity : 0;
-  };
+  const renderOrderCard = (product) => {
+    const groupKey = product.parentProduct || product.name;
+    const group = orderGroups.find((item) => item.key === groupKey);
+    const hasFlavorGroup = Boolean(group && group.products.length > 1);
 
-  const handleBuyNow = (product) => {
-    const options = selectedOptions[product.id || product._id] || {};
-
-    let message = `Hello! I would like to order ${product.name}`;
-
-    if (options.coating || options.flavor) {
-      const details = [];
-      if (options.coating) details.push(`Coating: ${options.coating}`);
-      if (options.flavor) details.push(`Flavor: ${options.flavor}`);
-      message += ` (${details.join(', ')})`;
-    }
-
-    message += '. Please let me know the price and availability. Thank you!';
-
-    const phoneNumber = '+919930709557';
-    const encodedMessage = encodeURIComponent(message);
-    const whatsappUrl = `https://wa.me/${phoneNumber.replace(/\+/g, '')}?text=${encodedMessage}`;
-    window.open(whatsappUrl, '_blank');
-  };
-
-  // Build categories from fetched products
-  const allCategories = useMemo(() => {
-    const categoriesSet = new Set();
-    products.forEach(p => {
-      if (p.category !== 'gifting' && p.category !== 'services' && !p.isHidden) {
-        categoriesSet.add(p.category);
-      }
-    });
-
-    const categoryMap = {
-      'chocolates': { id: 'chocolates', name: 'Chocolates', description: 'Premium chocolate-coated nuts and delicacies', icon: '🤎' },
-      'nuts': { id: 'nuts', name: 'Flavoured Nuts', description: 'Deliciously seasoned and roasted nuts', icon: '🥜' },
-      'jaggery': { id: 'jaggery', name: 'Jaggery Coated', description: 'Natural sweetness with sesame and poppy seeds', icon: '🍯' },
-      'dryfruits': { id: 'dryfruits', name: 'Dry Fruits', description: 'Premium quality dried fruits and nuts', icon: '🌰' },
-      'seeds': { id: 'seeds', name: 'Seeds', description: 'Premium quality seeds rich in nutrition', icon: '🌻' },
-    };
-
-    const validCategories = Array.from(categoriesSet).map(cat => categoryMap[cat] || { id: cat, name: cat, description: '', icon: '📦' });
-
-    // Add "All Products" at the beginning
-    return [{ id: 'all', name: 'All Products', description: '', icon: '🛍️' }, ...validCategories];
-  }, [products]);
-
-  return (
-    <div className="min-h-screen py-6 sm:py-8">
-      <div className="w-full px-4 sm:px-6 lg:px-8">
-        <div className="max-w-7xl mx-auto">
-          {/* Header */}
-          <div className="text-center mb-8 sm:mb-12">
-            <h1 className="font-display text-2xl sm:text-3xl md:text-4xl font-bold mb-3 sm:mb-4">Our Products</h1>
-            <p className="text-sm sm:text-base md:text-lg text-muted-foreground max-w-2xl mx-auto px-2">
-              Discover our complete range of premium nuts, dry fruits, and delicacies
-            </p>
+    return (
+      <Card key={product._id || product.id} className="group overflow-hidden rounded-2xl border-border/70 shadow-soft">
+        <div className="relative overflow-hidden">
+          <Link to={`/product/${product._id || product.id}`}>
+            <img
+              src={getImageUrl(product.image)}
+              alt={getDisplayProductName(product)}
+              className="h-56 w-full object-cover transition-transform duration-300 group-hover:scale-105"
+            />
+          </Link>
+          <Badge className="absolute left-3 top-3 bg-[#2D5016] text-white">Deliverable</Badge>
+        </div>
+        <CardContent className="space-y-4 p-5">
+          <div>
+            <h3 className="text-lg font-bold text-[#1A0A00]">{getDisplayProductName(product)}</h3>
+            <p className="text-sm text-muted-foreground">{product.description}</p>
           </div>
 
-          {/* Category Navigation */}
-          <Tabs value={activeCategory} onValueChange={setActiveCategory} className="mb-8">
-            {/* Mobile Category Dropdown */}
-            <div className="md:hidden mb-6 flex justify-center">
-              <Select value={activeCategory} onValueChange={setActiveCategory}>
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Select Category" />
-                </SelectTrigger>
-                <SelectContent>
-                  {allCategories.map((cat) => (
-                    <SelectItem key={cat.id} value={cat.id}>
-                      {cat.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Desktop Category Tabs */}
-            <div className="hidden md:block mb-8">
-              <div className="flex justify-center overflow-x-auto">
-                <TabsList className="flex gap-1 bg-muted p-2 rounded-lg">
-                  {allCategories.map((cat) => (
-                    <TabsTrigger key={cat.id} value={cat.id} className="text-xs sm:text-sm whitespace-nowrap h-9 px-3 py-1.5">
-                      {cat.name}
-                    </TabsTrigger>
-                  ))}
-                </TabsList>
-              </div>
-            </div>
-
-            {/* Products Grid */}
-            {loading ? (
-              <div className="text-center py-12 sm:py-16">
-                <p className="text-muted-foreground">Loading products...</p>
-              </div>
-            ) : error ? (
-              <div className="text-center py-12 sm:py-16">
-                <p className="text-destructive">{error}</p>
-                <Button className="mt-4" onClick={() => window.location.reload()}>
-                  Try Again
-                </Button>
-              </div>
-            ) : (
-              allCategories.map((cat) => {
-                const tabProducts = getProductsByCategory(cat.id);
-
-                return (
-                  <TabsContent key={cat.id} value={cat.id}>
-                    <div className="mb-6 flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <Filter className="h-4 w-4" />
-                        <span className="text-xs sm:text-sm text-muted-foreground">
-                          Showing {tabProducts.length} products
-                        </span>
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
-                      {tabProducts.map((product) => {
-                        const productId = product.id || product._id;
-                        const hasCoatings = product.coatings && product.coatings.length > 0;
-                        const hasFlavors = product.flavors && product.flavors.length > 0;
-                        const categoryName = allCategories.find(c => c.id === product.category)?.name || product.category;
-
-                          return (
-                          <Card key={productId} className="hover-lift bg-card border-border group flex flex-col">
-                            <CardContent className="p-0 flex flex-col h-full">
-                            <div className="relative cursor-zoom-in">
-                              <Link to={`/product/${productId}`} className="overflow-hidden rounded-t-lg block">
-                                <img
-                                  src={getProductImage(product)}
-                                  alt={product.name}
-                                  className="w-full h-40 sm:h-48 object-cover transition-transform duration-300 transform hover:scale-110 group-hover:scale-105"
-                                />
-                              </Link>
-                              {product.bestseller && (
-                              <Badge className="absolute top-3 left-3 bg-destructive text-destructive-foreground text-xs sm:text-sm">
-                                Bestseller
-                              </Badge>
-                              )}
-                            </div>
-
-                            <Link to={`/product/${productId}`} className="p-3 sm:p-4 flex flex-col flex-grow cursor-pointer hover:bg-muted/30 transition-colors rounded-b-lg">
-                              <div className="mb-2">
-                              <Badge variant="secondary" className="text-xs">
-                                {categoryName}
-                              </Badge>
-                              </div>
-
-                              <h3 className="font-semibold mb-1 text-xs sm:text-sm md:text-base line-clamp-2">{product.name}</h3>
-                              <p className="text-xs text-muted-foreground mb-3 line-clamp-2">
-                              {product.description}
-                              </p>
-
-                              <div className="flex items-baseline justify-between mb-4">
-                                <p className="text-lg font-bold">₹{product.price}</p>
-                                <p className="text-xs text-muted-foreground">{product.weight}</p>
-                              </div>
-
-                              <div className="flex flex-col gap-2 mt-auto">
-                              {product.isDeliverable ? (
-                                // For deliverable items
-                                getCartItemQuantity(product) > 0 ? (
-                                  // Show quantity controls if already in cart
-                                  <div className="flex items-center gap-2 justify-center">
-                                    <Button
-                                      variant="outline"
-                                      size="sm"
-                                      className="h-9 w-9 p-0"
-                                      onClick={(e) => {
-                                        e.preventDefault();
-                                        const pid = product.id || product._id;
-                                        const cartItemId = `${pid}-${(selectedOptions[pid]?.coating) || ''}-${(selectedOptions[pid]?.flavor) || ''}`;
-                                        updateQuantity(cartItemId, Math.max(0, getCartItemQuantity(product) - 1));
-                                      }}
-                                    >
-                                      <Minus className="h-4 w-4" />
-                                    </Button>
-                                    <span className="text-sm font-medium w-8 text-center">{getCartItemQuantity(product)}</span>
-                                    <Button
-                                      variant="outline"
-                                      size="sm"
-                                      className="h-9 w-9 p-0"
-                                      onClick={(e) => {
-                                        e.preventDefault();
-                                        handleAddToCart(product);
-                                      }}
-                                    >
-                                      <Plus className="h-4 w-4" />
-                                    </Button>
-                                  </div>
-                                ) : (
-                                  // Show blue "Buy Now" button for deliverable items
-                                  <Button
-                                    size="sm"
-                                    className="w-full bg-primary hover:bg-primary/90 text-white text-xs sm:text-sm h-9 sm:h-10"
-                                    onClick={(e) => {
-                                      e.preventDefault();
-                                      handleBuyNowDelivery(product);
-                                    }}
-                                  >
-                                    <ShoppingCart className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
-                                    Buy Now
-                                  </Button>
-                                )
-                              ) : (
-                                // For non-deliverable items - keep WhatsApp and Add to Cart
-                                <>
-                                  <Button
-                                    size="sm"
-                                    className="w-full bg-[#25D366] hover:bg-[#128C7E] text-white text-xs sm:text-sm h-9 sm:h-10"
-                                    onClick={(e) => {
-                                      e.preventDefault();
-                                      handleBuyNow(product);
-                                    }}
-                                  >
-                                    <MessageCircle className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
-                                    Buy Now
-                                  </Button>
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    className="w-full text-xs sm:text-sm h-9 sm:h-10"
-                                    onClick={(e) => {
-                                      e.preventDefault();
-                                      handleAddToCart(product);
-                                    }}
-                                  >
-                                    <ShoppingCart className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
-                                    Add to Cart
-                                  </Button>
-                                </>
-                              )}
-                              </div>
-                            </Link>
-                            </CardContent>
-                          </Card>
-                          );
-                      })}
-                    </div>
-
-                    {tabProducts.length === 0 && (
-                      <div className="text-center py-12 sm:py-16">
-                        <ShoppingCart className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                        <h3 className="text-lg sm:text-xl font-semibold mb-2">No products found</h3>
-                        <p className="text-xs sm:text-sm text-muted-foreground">
-                          We couldn't find any products in this category.
-                        </p>
-                      </div>
-                    )}
-                  </TabsContent>
-                );
-              })
-            )}
-          </Tabs>
-
-          {/* Bottom CTA */}
-          {categoryProducts.length > 0 && (
-            <div className="mt-8 sm:mt-12 text-center p-6 sm:p-8 bg-muted/30 rounded-lg">
-              <h3 className="text-lg sm:text-xl font-semibold mb-2">Need Something Custom?</h3>
-              <p className="text-xs sm:text-base text-muted-foreground mb-4 px-2">
-                We offer custom packaging and bulk orders for corporate gifting and special occasions.
-              </p>
-              <Button
-                onClick={() => {
-                  const phoneNumber = '+919930709557';
-                  const message = 'Hello! I am interested in custom packaging and bulk orders. Please provide more details.';
-                  const encodedMessage = encodeURIComponent(message);
-                  const whatsappUrl = `https://wa.me/${phoneNumber.replace(/\+/g, '')}?text=${encodedMessage}`;
-                  window.open(whatsappUrl, '_blank');
-                }}
-              >
-                <MessageCircle className="h-4 w-4 mr-2" />
-                Get Custom Quote
-              </Button>
+          {hasFlavorGroup && (
+            <div className="flex flex-wrap gap-2">
+              {group.products.map((flavorProduct) => (
+                <button
+                  key={flavorProduct._id || flavorProduct.id}
+                  className={`rounded-full border px-3 py-1 text-xs font-medium transition ${
+                    (selectedFlavorByParent[groupKey] || group.products[0].flavour) === flavorProduct.flavour
+                      ? 'border-[#E8762A] bg-[#E8762A] text-white'
+                      : 'border-border text-muted-foreground'
+                  }`}
+                  onClick={() =>
+                    setSelectedFlavorByParent((prev) => ({
+                      ...prev,
+                      [groupKey]: flavorProduct.flavour,
+                    }))
+                  }
+                >
+                  {flavorProduct.flavour}
+                </button>
+              ))}
             </div>
           )}
+
+          <div className="flex items-center justify-between">
+            <p className="text-xl font-bold text-[#1A0A00]">Rs. {product.price}</p>
+            <p className="text-xs text-muted-foreground">{product.weight}</p>
+          </div>
+
+          <Button className="w-full bg-[#E8762A] hover:bg-[#d76b20]" onClick={() => onAddToCart(product)}>
+            <ShoppingCart className="mr-2 h-4 w-4" />
+            Add to Cart
+          </Button>
+        </CardContent>
+      </Card>
+    );
+  };
+
+  const renderEnquiryCard = (product) => {
+    const link = buildWhatsAppEnquiryLink(product);
+    return (
+      <Card key={product._id || product.id} className="group overflow-hidden rounded-2xl border-border/70 bg-stone-50 shadow-soft">
+        <div className="relative overflow-hidden">
+          <Link to={`/product/${product._id || product.id}`}>
+            <img
+              src={getImageUrl(product.image)}
+              alt={product.name}
+              className="h-56 w-full object-cover transition-transform duration-300 group-hover:scale-105"
+            />
+          </Link>
+          <Badge className="absolute left-3 top-3 bg-stone-500 text-white">Enquiry Only</Badge>
         </div>
+        <CardContent className="space-y-4 p-5">
+          <div>
+            <h3 className="text-lg font-bold text-[#1A0A00]">{product.name}</h3>
+            <p className="text-sm text-muted-foreground">{product.description}</p>
+          </div>
+
+          {product.coatings?.length > 0 && (
+            <p className="text-xs text-muted-foreground">Coatings: {product.coatings.slice(0, 3).join(', ')}</p>
+          )}
+          {product.flavors?.length > 0 && (
+            <p className="text-xs text-muted-foreground">Flavours: {product.flavors.slice(0, 4).join(', ')}</p>
+          )}
+
+          <div className="flex items-center justify-between">
+            <p className="text-xl font-bold text-[#1A0A00]">Rs. {product.price}</p>
+            <p className="text-xs text-muted-foreground">{product.weight}</p>
+          </div>
+
+          <Button className="w-full bg-[#25D366] hover:bg-[#1fa959]" asChild>
+            <a href={link} target="_blank" rel="noreferrer">
+              <MessageCircle className="mr-2 h-4 w-4" />
+              Enquire on WhatsApp
+            </a>
+          </Button>
+        </CardContent>
+      </Card>
+    );
+  };
+
+  return (
+    <div className="min-h-screen py-10">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="text-center">
+          <h1 className="font-display text-4xl font-bold text-[#1A0A00] sm:text-5xl">Our Products</h1>
+          <p className="mt-3 text-muted-foreground">Choose between ready-to-ship hero snacks and premium enquiry-only collections.</p>
+        </div>
+
+        <div className="mt-8 rounded-2xl border border-border bg-card p-3 shadow-soft">
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+            <button
+              className={`rounded-xl px-4 py-4 text-left transition ${
+                activeMainTab === 'order' ? 'bg-[#E8762A] text-white' : 'bg-muted text-muted-foreground'
+              }`}
+              onClick={() => setActiveMainTab('order')}
+            >
+              <p className="text-lg font-bold">Order Now</p>
+              <p className="text-xs">Ready to ship. Add to cart and checkout.</p>
+            </button>
+            <button
+              className={`rounded-xl px-4 py-4 text-left transition ${
+                activeMainTab === 'enquire' ? 'bg-[#E8762A] text-white' : 'bg-muted text-muted-foreground'
+              }`}
+              onClick={() => setActiveMainTab('enquire')}
+            >
+              <p className="text-lg font-bold">Enquire via WhatsApp</p>
+              <p className="text-xs">Premium products available on request. Click to enquire.</p>
+            </button>
+          </div>
+        </div>
+
+        {loading ? (
+          <p className="py-12 text-center text-muted-foreground">Loading products...</p>
+        ) : error ? (
+          <p className="py-12 text-center text-red-600">{error}</p>
+        ) : (
+          <>
+            {activeMainTab === 'order' && (
+              <div className="space-y-8 pt-8">
+                {heroSpotlight.length > 0 && (
+                  <section>
+                    <h2 className="mb-3 text-2xl font-bold text-[#1A0A00]">Hero Flavour Spotlight</h2>
+                    <div className="grid grid-flow-col auto-cols-[78%] gap-4 overflow-x-auto pb-2 sm:grid-flow-row sm:auto-cols-auto sm:grid-cols-2 lg:grid-cols-5">
+                      {heroSpotlight.map((product) => (
+                        <Link
+                          key={product._id || product.id}
+                          to={`/product/${product._id || product.id}`}
+                          className="rounded-2xl border border-border bg-card p-3 shadow-soft transition hover:-translate-y-1"
+                        >
+                          <img src={getImageUrl(product.image)} alt={getDisplayProductName(product)} className="h-36 w-full rounded-xl object-cover" />
+                          <p className="mt-2 text-sm font-semibold text-[#1A0A00]">{getDisplayProductName(product)}</p>
+                        </Link>
+                      ))}
+                    </div>
+                  </section>
+                )}
+
+                <div className="flex items-center gap-3">
+                  <Filter className="h-4 w-4" />
+                  {[
+                    { id: 'all', label: 'All' },
+                    { id: 'gud', label: 'Gud Chana' },
+                    { id: 'crunchy', label: 'Crunchy Chana' },
+                  ].map((item) => (
+                    <button
+                      key={item.id}
+                      className={`rounded-full px-3 py-1 text-sm font-medium ${
+                        orderFilter === item.id ? 'bg-[#E8762A] text-white' : 'bg-muted text-muted-foreground'
+                      }`}
+                      onClick={() => setOrderFilter(item.id)}
+                    >
+                      {item.label}
+                    </button>
+                  ))}
+                </div>
+
+                <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">{orderCards.map(renderOrderCard)}</div>
+              </div>
+            )}
+
+            {activeMainTab === 'enquire' && (
+              <div className="space-y-8 pt-8">
+                <div className="flex flex-wrap items-center gap-3">
+                  <Filter className="h-4 w-4" />
+                  {enquiryCategories.map((categoryId) => (
+                    <button
+                      key={categoryId}
+                      className={`rounded-full px-3 py-1 text-sm font-medium ${
+                        enquiryFilter === categoryId ? 'bg-[#E8762A] text-white' : 'bg-muted text-muted-foreground'
+                      }`}
+                      onClick={() => setEnquiryFilter(categoryId)}
+                    >
+                      {categoryId === 'all' ? 'All' : categoryNameMap[categoryId] || categoryId}
+                    </button>
+                  ))}
+                </div>
+
+                <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">{filteredEnquiryProducts.map(renderEnquiryCard)}</div>
+              </div>
+            )}
+          </>
+        )}
       </div>
     </div>
   );

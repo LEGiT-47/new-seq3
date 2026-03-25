@@ -32,7 +32,7 @@ router.get(
   '/deliverable/list',
   asyncHandler(async (req, res) => {
     const products = await Product.find({
-      isDeliverable: true,
+      $or: [{ productType: 'deliverable' }, { isHeroProduct: true }],
       isHidden: false,
     });
 

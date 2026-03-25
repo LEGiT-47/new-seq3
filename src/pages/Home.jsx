@@ -1,51 +1,54 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '../components/ui/button';
-import { Card, CardContent } from '../components/ui/card';
 import { Badge } from '../components/ui/badge';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
+import { Card, CardContent } from '../components/ui/card';
+import { productAPI, getImageUrl } from '../lib/api';
+import { getDisplayProductName, openWhatsAppEnquiry } from '../lib/productUtils';
 import { useCart } from '../context/CartContext';
-import { productAPI, giftingAPI, getImageUrl } from '../lib/api';
-import { ArrowRight, Star, Shield, Gift, Truck, MessageCircle, ShoppingCart } from 'lucide-react';
 import { toast } from 'sonner';
-import HeroCarousel from '../components/HeroCarousel';
-import OccasionBanner from '../components/OccasionBanner';
-import partner from '../assets/partner.jpg';
-import first from '../assets/first.jpg';
-import second from '../assets/second.jpg';
-import fifth from '../assets/fifth.png';
-import fourth from '../assets/fourth.png';
+import { ArrowRight, Star, Truck, Gift, Leaf, Factory, MessageCircle } from 'lucide-react';
+
+const categoryTabs = [
+  { id: 'snacks', label: 'Snacks', icon: 'SNK', categories: ['nuts', 'jaggery', 'chocolates'] },
+  { id: 'dryfruits', label: 'Dry Fruits', icon: 'DRF', categories: ['dryfruits', 'seeds'] },
+  { id: 'gifting', label: 'Gifting', icon: 'GFT', categories: ['gifting', 'services'] },
+];
+
+const reviewCards = [
+  {
+    name: 'Aarav M.',
+    quote: 'Crunchy Chana Peri Peri is addictive. Clean ingredients and super fresh every time.',
+  },
+  {
+    name: 'Shivani R.',
+    quote: 'The gifting hampers looked premium and the team handled customization smoothly.',
+  },
+  {
+    name: 'Rohan D.',
+    quote: 'Loved that the site clearly shows what can be ordered instantly and what is enquiry based.',
+  },
+  {
+    name: 'Neha S.',
+    quote: 'Great flavour variety and very responsive support on WhatsApp for bulk orders.',
+  },
+];
 
 const Home = () => {
   const { addToCart } = useCart();
-  const [selectedOptions, setSelectedOptions] = useState({});
-  const [bestsellerProducts, setBestsellerProducts] = useState([]);
-  const [festiveProducts, setFestiveProducts] = useState([]);
+  const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [activeCategoryTab, setActiveCategoryTab] = useState('snacks');
 
   useEffect(() => {
     const fetchProducts = async () => {
       try {
         setLoading(true);
-
-        // Fetch bestsellers from products
         const response = await productAPI.getAll();
-        const allProducts = response.data.data || response.data;
-        const bestsellers = allProducts.filter(p => p.bestseller).slice(0, 8);
-        setBestsellerProducts(bestsellers);
-
-        // Fetch festive products from gifting collection
-        try {
-          const giftingResponse = await giftingAPI.getFestive();
-          const festive = giftingResponse.data.data || [];
-          setFestiveProducts(festive);
-        } catch (err) {
-          console.error('Error fetching festive products:', err);
-          setFestiveProducts([]);
-        }
+        const list = response.data.data || [];
+        setProducts(list.filter((p) => !p.isHidden));
       } catch (error) {
-        console.error('Error fetching products:', error);
-        toast.error('Failed to load products');
+        toast.error('Could not load products right now.');
       } finally {
         setLoading(false);
       }
@@ -54,519 +57,240 @@ const Home = () => {
     fetchProducts();
   }, []);
 
-  const handleOptionChange = (productId, option, value) => {
-    setSelectedOptions(prev => ({
-      ...prev,
-      [productId]: {
-        ...prev[productId],
-        [option]: value
-      }
-    }));
+  const heroProducts = useMemo(() => {
+    return products
+      .filter((p) => p.productType === 'deliverable' || p.isHeroProduct)
+      .sort((a, b) => Number(b.isHeroProduct) - Number(a.isHeroProduct));
+  }, [products]);
+
+  const enquiryProducts = useMemo(() => {
+    return products.filter((p) => p.productType === 'enquiry');
+  }, [products]);
+
+  const categoryTiles = useMemo(() => {
+    const selected = categoryTabs.find((tab) => tab.id === activeCategoryTab);
+    if (!selected) return [];
+
+    const grouped = selected.categories
+      .map((categoryId) => {
+        const product = products.find((p) => p.category === categoryId);
+        if (!product) return null;
+
+        const prettyName =
+          categoryId === 'dryfruits'
+            ? 'Dry Fruits'
+            : categoryId === 'nuts'
+              ? 'Flavoured Nuts'
+              : categoryId === 'jaggery'
+                ? 'Jaggery Coated'
+                : categoryId === 'services'
+                  ? 'Gifting Services'
+                  : categoryId.charAt(0).toUpperCase() + categoryId.slice(1);
+
+        return {
+          id: categoryId,
+          name: prettyName,
+          image: getImageUrl(product.image),
+        };
+      })
+      .filter(Boolean);
+
+    return grouped;
+  }, [activeCategoryTab, products]);
+
+  const onAddHeroToCart = (product) => {
+    addToCart(product, 1, { flavor: product.flavour || null });
+    toast.success(`${getDisplayProductName(product)} added to cart`);
   };
 
-  const handleAddToCart = (product) => {
-    const productId = product.id || product._id;
-    const options = selectedOptions[productId] || {};
-    addToCart(product, 1, {
-      coating: options.coating || null,
-      flavor: options.flavor || null
-    });
-    toast.success(`${product.name} added to cart!`);
-    setSelectedOptions(prev => ({
-      ...prev,
-      [productId]: {}
-    }));
-  };
-
-  const handleBuyNow = (product) => {
-    const productId = product.id || product._id;
-    const options = selectedOptions[productId] || {};
-    let message = `Hello! I would like to order ${product.name}`;
-
-    if (options.coating || options.flavor) {
-      const details = [];
-      if (options.coating) details.push(`Coating: ${options.coating}`);
-      if (options.flavor) details.push(`Flavor: ${options.flavor}`);
-      message += ` (${details.join(', ')})`;
-    }
-
-    message += '. Please let me know the price and availability. Thank you!';
-
-    const phoneNumber = '+919930709557';
-    const encodedMessage = encodeURIComponent(message);
-    const whatsappUrl = `https://wa.me/${phoneNumber.replace(/\+/g, '')}?text=${encodedMessage}`;
-    window.open(whatsappUrl, '_blank');
-  };
-
-  const highlights = [
-    {
-      icon: <Shield className="h-6 w-6" />,
-      title: 'Premium Quality',
-      description: 'Sourced from the finest producers worldwide'
-    },
-    {
-      icon: <Gift className="h-6 w-6" />,
-      title: 'Custom Packaging',
-      description: 'Beautiful packaging perfect for gifting'
-    },
-    {
-      icon: <Truck className="h-6 w-6" />,
-      title: 'Fast Delivery',
-      description: 'Quick and reliable delivery across India'
-    },
-    {
-      icon: <Star className="h-6 w-6" />,
-      title: 'Trusted Brand',
-      description: 'Serving customers with excellence'
-    }
-  ];
-
-  const heroSlides = [
-    {
-      image: first,
-      badge: '🤎 Premium Delicacies',
-      title: 'Taste the Finest',
-      subtitle: 'Premium Delicacies',
-      description: 'Discover our exquisite collection of chocolates, flavored nuts, and handpicked dry fruits crafted to perfection for indulgence and gifting.',
-      ctaButton: {
-        label: 'Shop Now',
-        onClick: () => document.getElementById('products')?.scrollIntoView({ behavior: 'smooth' })
-      },
-      quoteButton: {
-        label: 'Get a Quote',
-        onClick: () => {
-          const phoneNumber = '+919930709557';
-          const message = 'Hello! I would like to get a quote for bulk orders. Please share your catalog and pricing.';
-          const encodedMessage = encodeURIComponent(message);
-          const whatsappUrl = `https://wa.me/${phoneNumber.replace(/\+/g, '')}?text=${encodedMessage}`;
-          window.open(whatsappUrl, '_blank');
-        }
-      }
-    },
-    {
-      image: second,
-      badge: '💝 Festive & Valentine\'s Special',
-      title: 'Perfect Gifts for Every',
-      subtitle: 'Special Occasion',
-      description: 'Explore our exclusive Valentine\'s Day, Diwali, and festive collections. Beautifully crafted gift boxes with special discounts - limited time offers available now!',
-      ctaButton: {
-        label: 'Shop Festive Collections',
-        onClick: () => window.location.href = '/gifting?tab=festive'
-      },
-      quoteButton: {
-        label: 'Explore All Gifting',
-        onClick: () => window.location.href = '/gifting'
-      }
-    },
-    {
-      image: partner,
-      badge: '📦 Bulk Orders & Job Work',
-      title: 'Partner with Us for ',
-      subtitle: 'Premium Bulk Orders',
-      description: 'Whether you\'re a retailer, distributor, or brand, we offer custom bulk production and packaging solutions for nuts, chocolates, and festive treats.',
-      ctaButton: {
-        label: 'Enquire for Bulk Orders',
-        onClick: () => {
-          const phoneNumber = '+919930709557';
-          const message = 'Hello! I am interested in bulk orders and custom production. Please provide details about MOQ and pricing.';
-          const encodedMessage = encodeURIComponent(message);
-          const whatsappUrl = `https://wa.me/${phoneNumber.replace(/\+/g, '')}?text=${encodedMessage}`;
-          window.open(whatsappUrl, '_blank');
-        }
-      },
-      quoteButton: {
-        label: 'Get a Quote',
-        onClick: () => {
-          const phoneNumber = '+919930709557';
-          const message = 'Hello! I would like to get a quote for bulk orders. Please share your catalog and pricing.';
-          const encodedMessage = encodeURIComponent(message);
-          const whatsappUrl = `https://wa.me/${phoneNumber.replace(/\+/g, '')}?text=${encodedMessage}`;
-          window.open(whatsappUrl, '_blank');
-        }
-      }
-    },
-    // {
-    //   image: fourth,
-    //   badge: '🎄 Christmas Kuswar Collection',
-    //   title: 'Celebrate Christmas with',
-    //   subtitle: 'Sweet Traditions',
-    //   description: 'Explore our festive Kuswar range from classic delights to curated small, medium, and large Kuswar boxes. Perfect for sharing the joy this season.',
-    //   ctaButton: {
-    //     label: 'Shop Kuswar',
-    //     onClick: () => window.location.href = '/products/specials'
-    //   },
-    //   quoteButton: {
-    //     label: 'Pre-Order Now',
-    //     onClick: () => {
-    //       const phoneNumber = '+919930709557';
-    //       const message = 'Hello! I would like to pre-order your Christmas Kuswar collection. Please share available options and pricing.';
-    //       const encodedMessage = encodeURIComponent(message);
-    //       const whatsappUrl = `https://wa.me/${phoneNumber.replace(/\+/g, '')}?text=${encodedMessage}`;
-    //       window.open(whatsappUrl, '_blank');
-    //     }
-    //   }
-    // },
-    // {
-    //   image: fifth,
-    //   badge: '🎉 New Year Specials',
-    //   title: 'Ring in the New Year with',
-    //   subtitle: 'Premium Goodness',
-    //   description: 'Welcome the new year with indulgent dry fruits, gourmet nuts, and exclusive gifting hampers crafted to make celebrations memorable.',
-    //   ctaButton: {
-    //     label: 'Shop Now',
-    //     onClick: () => document.getElementById('products')?.scrollIntoView({ behavior: 'smooth' })
-    //   },
-    //   quoteButton: {
-    //     label: 'Pre-Order Now',
-    //     onClick: () => {
-    //       const phoneNumber = '+919930709557';
-    //       const message = 'Hello! I would like to pre-order for New Year celebrations. Please share available options.';
-    //       const encodedMessage = encodeURIComponent(message);
-    //       const whatsappUrl = `https://wa.me/${phoneNumber.replace(/\+/g, '')}?text=${encodedMessage}`;
-    //       window.open(whatsappUrl, '_blank');
-    //     }
-    //   }
-    // }
-  ];
+  const heroVisual = heroProducts[0] ? getImageUrl(heroProducts[0].image) : '';
 
   return (
-    <div className="min-h-screen">
-      <HeroCarousel slides={heroSlides} />
-
-      {/* Occasion Banner */}
-      <section className="py-8 sm:py-12 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-7xl mx-auto">
-          <OccasionBanner />
-        </div>
-      </section>
-
-      {/* Key Highlights */}
-      <section className="py-12 sm:py-16 bg-gradient-warm">
-        <div className="w-full px-4 sm:px-6 lg:px-8">
-          <div className="max-w-7xl mx-auto">
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 md:gap-8">
-              {highlights.map((highlight, index) => (
-                <div
-                  key={index}
-                  className="text-center animate-fade-in"
-                  style={{ animationDelay: `${index * 0.1}s` }}
-                >
-                  <div className="w-14 h-14 sm:w-16 sm:h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4 sm:mb-6 text-primary">
-                    {highlight.icon}
-                  </div>
-                  <h3 className="font-semibold text-base sm:text-lg md:text-xl mb-3 sm:mb-4">{highlight.title}</h3>
-                  <p className="text-sm sm:text-base md:text-lg text-muted-foreground">{highlight.description}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
-
-     {} {/* Featured Categories */}
-      <section id="products" className="py-12 sm:py-16">
-        <div className="w-full px-4 sm:px-6 lg:px-8">
-          <div className="max-w-7xl mx-auto">
-            <div className="text-center mb-8 sm:mb-12">
-              <h2 className="font-display text-2xl sm:text-3xl md:text-4xl font-bold mb-3 sm:mb-4">Shop by Categories</h2>
-              <p className="text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto px-2">
-                Explore our premium collection across different categories
-              </p>
-            </div>
-
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4 md:gap-6">
-              {[
-                { id: 'chocolates', name: 'Chocolates', description: 'Premium chocolate-coated nuts', icon: '🤎' },
-                { id: 'nuts', name: 'Flavoured Nuts', description: 'Seasoned and roasted nuts', icon: '🥜' },
-                { id: 'jaggery', name: 'Jaggery Coated', description: 'Natural sweetness with seeds', icon: '🍯' },
-                { id: 'dryfruits', name: 'Dry Fruits', description: 'Premium dried fruits and nuts', icon: '🌰' },
-                { id: 'seeds', name: 'Seeds', description: 'Nutritious seeds collection', icon: '🌻' },
-              ].map((category, index) => (
-                <Link
-                  key={category.id}
-                  to={`/products/${category.id}`}
-                  className="group"
-                >
-                  <Card className="hover-lift bg-card border-border h-full">
-                    <CardContent className="p-3 sm:p-4 md:p-6 text-center flex flex-col h-full">
-                      <div className="text-2xl sm:text-2xl md:text-4xl mb-2 sm:mb-2 md:mb-3">{category.icon}</div>
-                      <h3 className="font-semibold mb-2 text-xs sm:text-sm md:text-lg line-clamp-2">{category.name}</h3>
-                      <p className="text-xs sm:text-xs md:text-sm text-muted-foreground mb-3 sm:mb-4 md:mb-6 flex-grow line-clamp-2">{category.description}</p>
-                      <Button variant="outline" size="sm" className="group-hover:bg-primary group-hover:text-primary-foreground transition-colors w-full text-xs md:text-sm md:h-10">
-                        Browse
-                      </Button>
-                    </CardContent>
-                  </Card>
+    <div className="min-h-screen bg-background">
+      <section className="relative overflow-hidden border-b border-border">
+        <div className="absolute inset-0 bg-gradient-warm" />
+        <div className="relative mx-auto grid max-w-7xl grid-cols-1 items-center gap-8 px-4 py-16 sm:px-6 lg:grid-cols-2 lg:py-20 lg:px-8">
+          <div>
+            <p className="mb-4 inline-flex rounded-full bg-[#E8762A]/15 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-[#E8762A]">
+              Mumbai's Favourite Crunchy Chana
+            </p>
+            <h1 className="font-display text-4xl font-extrabold leading-tight text-[#1A0A00] sm:text-5xl lg:text-6xl">
+              Snack Bold. Snack Real.
+            </h1>
+            <p className="mt-5 max-w-xl text-base text-muted-foreground sm:text-lg">
+              Handcrafted snacks, real flavours, and a premium crunch delivered straight to your door.
+            </p>
+            <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+              <Button size="lg" className="bg-[#E8762A] hover:bg-[#d76b20]" asChild>
+                <Link to="/products?tab=order">
+                  Order Now
+                  <ArrowRight className="ml-2 h-4 w-4" />
                 </Link>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Bestseller Products */}
-      <section className="py-16 bg-muted/30">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h2 className="font-display text-3xl sm:text-4xl font-bold mb-4">Bestsellers</h2>
-            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              Our most loved products that customers can't get enough of
-            </p>
-          </div>
-          
-          {loading ? (
-            <div className="text-center py-12">
-              <p className="text-muted-foreground">Loading bestsellers...</p>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
-              {bestsellerProducts.map((product) => {
-                const productId = product.id || product._id;
-                const hasCoatings = product.coatings && product.coatings.length > 0;
-                const hasFlavors = product.flavors && product.flavors.length > 0;
-                const categoryMap = {
-                  'chocolates': 'Chocolates',
-                  'nuts': 'Flavoured Nuts',
-                  'jaggery': 'Jaggery Coated',
-                  'dryfruits': 'Dry Fruits',
-                  'seeds': 'Seeds',
-                };
-
-                return (
-                  <Card key={productId} className="hover-lift bg-card border-border group flex flex-col">
-                    <CardContent className="p-0 flex flex-col h-full">
-                      <div className="relative overflow-hidden rounded-t-lg block">
-                        <Link to={`/product/${productId}`}>
-                          <img
-                            src={getImageUrl(product.image)}
-                            alt={product.name}
-                            className="w-full h-40 sm:h-48 object-cover transition-transform duration-300 group-hover:scale-105"
-                          />
-                        </Link>
-                        <Badge className="absolute top-3 left-3 bg-destructive text-destructive-foreground text-xs sm:text-sm">
-                          Bestseller
-                        </Badge>
-                      </div>
-
-                      <Link to={`/product/${productId}`} className="p-3 sm:p-4 flex flex-col flex-grow cursor-pointer hover:bg-muted/30 transition-colors rounded-b-lg">
-                        <div className="mb-2">
-                          <Badge variant="secondary" className="text-xs">
-                            {categoryMap[product.category] || product.category}
-                          </Badge>
-                        </div>
-                        <h3 className="font-semibold mb-1 text-xs sm:text-sm md:text-base line-clamp-2">{product.name}</h3>
-                        <p className="text-xs text-muted-foreground mb-3 line-clamp-2">{product.description}</p>
-
-                        <div className="flex items-baseline justify-between mb-3">
-                          <p className="text-lg font-bold">₹{product.price}</p>
-                          <p className="text-xs text-muted-foreground">{product.weight}</p>
-                        </div>
-
-                        <div className="flex flex-col gap-2 mt-auto">
-                          <Button
-                            size="sm"
-                            className="w-full bg-[#25D366] hover:bg-[#128C7E] text-white text-xs sm:text-sm h-9 sm:h-10"
-                            onClick={(e) => {
-                              e.preventDefault();
-                              handleBuyNow(product);
-                            }}
-                          >
-                            <MessageCircle className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
-                            Buy Now
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="w-full text-xs sm:text-sm h-9 sm:h-10"
-                            onClick={(e) => {
-                              e.preventDefault();
-                              handleAddToCart(product);
-                            }}
-                          >
-                            <ShoppingCart className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
-                            Add to Cart
-                          </Button>
-                        </div>
-                      </Link>
-                    </CardContent>
-                  </Card>
-                );
-              })}
-            </div>
-          )}
-          
-          <div className="text-center mt-10">
-            <Link to="/products">
-              <Button size="lg" variant="outline">
-                View All Products
-                <ArrowRight className="ml-2 h-5 w-5" />
               </Button>
-            </Link>
+              <Button size="lg" variant="outline" asChild>
+                <Link to="/products">Explore All Products</Link>
+              </Button>
+            </div>
+          </div>
+          <div className="relative">
+            <div className="absolute -inset-4 rounded-3xl bg-[#E8762A]/15 blur-3xl" />
+            {heroVisual ? (
+              <img
+                src={heroVisual}
+                alt="Sequeira Foods hero"
+                className="relative h-[360px] w-full rounded-3xl object-cover shadow-large"
+              />
+            ) : (
+              <div className="relative flex h-[360px] items-center justify-center rounded-3xl bg-card shadow-large">
+                <p className="text-muted-foreground">Premium snack visuals loading...</p>
+              </div>
+            )}
           </div>
         </div>
       </section>
 
-      {/* Festive Products Section */}
-      {festiveProducts.length > 0 && (
-        <section className="py-16 bg-gradient-to-r from-rose-50 to-orange-50 border-y border-rose-200">
-          {/* Marquee Discount Banner */}
-          <div className="relative w-full bg-rose-500 text-white py-4 mb-8 sm:mb-12 overflow-x-hidden">
-            <style>{`
-              @keyframes scrollLeft {
-                0% { transform: translateX(0); }
-                100% { transform: translateX(-50%); }
-              }
-              .marquee-content {
-                display: flex;
-                animation: scrollLeft 20s linear infinite;
-                width: max-content;
-              }
-            `}</style>
-            <div className="marquee-content">
-              <span className="inline-block px-6 text-sm sm:text-base font-bold whitespace-nowrap flex-shrink-0">
-                🎉 FESTIVE SPECIALS - UP TO 20% OFF
-              </span>
-              <span className="inline-block px-6 text-sm sm:text-base font-bold whitespace-nowrap flex-shrink-0">
-                LIMITED TIME OFFERS | CELEBRATE WITH US
-              </span>
-              <span className="inline-block px-6 text-sm sm:text-base font-bold whitespace-nowrap flex-shrink-0">
-                🎁 SPECIAL BOXES | VALENTINE'S DAY | DIWALI
-              </span>
-              <span className="inline-block px-6 text-sm sm:text-base font-bold whitespace-nowrap flex-shrink-0">
-                🎉 FESTIVE SPECIALS - UP TO 20% OFF
-              </span>
-              <span className="inline-block px-6 text-sm sm:text-base font-bold whitespace-nowrap flex-shrink-0">
-                LIMITED TIME OFFERS | CELEBRATE WITH US
-              </span>
-              <span className="inline-block px-6 text-sm sm:text-base font-bold whitespace-nowrap flex-shrink-0">
-                🎁 SPECIAL BOXES | VALENTINE'S DAY | DIWALI
-              </span>
-            </div>
+      <section className="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
+        <div className="mb-8 text-center">
+          <h2 className="font-display text-3xl font-bold sm:text-4xl text-[#1A0A00]">Order Online - Delivered Fresh</h2>
+          <p className="mt-2 text-muted-foreground">Our signature snacks, ready to ship straight to you.</p>
+        </div>
+
+        {loading ? (
+          <p className="py-10 text-center text-muted-foreground">Loading hero products...</p>
+        ) : (
+          <div className="grid grid-flow-col auto-cols-[78%] gap-4 overflow-x-auto pb-2 sm:grid-flow-row sm:auto-cols-auto sm:grid-cols-2 lg:grid-cols-3">
+            {heroProducts.map((product) => {
+              const displayName = getDisplayProductName(product);
+              return (
+                <Card key={product._id || product.id} className="group overflow-hidden rounded-2xl border-border/80 shadow-soft">
+                  <div className="relative overflow-hidden">
+                    <img
+                      src={getImageUrl(product.image)}
+                      alt={displayName}
+                      className="h-64 w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                    />
+                    <Badge className="absolute left-3 top-3 bg-[#2D5016] text-white">Deliverable</Badge>
+                  </div>
+                  <CardContent className="space-y-4 p-5">
+                    <div>
+                      <h3 className="text-xl font-bold text-[#1A0A00]">{displayName}</h3>
+                      <p className="mt-1 text-sm text-muted-foreground">{product.flavour ? `${product.flavour} flavour` : 'Signature variant'}</p>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {['100g', '200g', '500g'].map((size) => (
+                        <span key={size} className="rounded-full border border-border px-3 py-1 text-xs font-medium">
+                          {size}
+                        </span>
+                      ))}
+                    </div>
+                    <Button className="w-full bg-[#E8762A] hover:bg-[#d76b20]" onClick={() => onAddHeroToCart(product)}>
+                      Add to Cart
+                    </Button>
+                  </CardContent>
+                </Card>
+              );
+            })}
           </div>
+        )}
+      </section>
 
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="text-center mb-8 sm:mb-12">
-              <h2 className="font-display text-3xl sm:text-4xl font-bold mb-3 text-rose-700">Special Occasion Collections</h2>
-              <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-                Perfect gift collections for every celebration - Valentine's Day, Festivals, and more!
-              </p>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 sm:gap-6">
-              {festiveProducts.map((product) => {
-                const productId = product.id || product._id;
-                return (
-                  <Card key={productId} className="hover-lift bg-card border-border group flex flex-col overflow-hidden">
-                    <CardContent className="p-0 flex flex-col h-full relative">
-                      <div className="relative overflow-hidden block">
-                        <img
-                          src={getImageUrl(product.image)}
-                          alt={product.name}
-                          className="w-full h-40 sm:h-48 object-cover transition-transform duration-300 group-hover:scale-105"
-                        />
-                        {product.discount && (
-                          <Badge className="absolute top-3 right-3 bg-rose-500 text-white text-sm font-bold animate-pulse">
-                            -{product.discount}%
-                          </Badge>
-                        )}
-                        <Badge className="absolute top-3 left-3 bg-gradient-to-r from-rose-400 to-orange-400 text-white text-xs">
-                          Limited Time
-                        </Badge>
-                      </div>
-
-                      <div className="p-3 sm:p-4 flex flex-col flex-grow">
-                        <h3 className="font-semibold mb-1 text-xs sm:text-sm md:text-base line-clamp-2 text-rose-700">{product.name}</h3>
-                        <p className="text-xs text-muted-foreground mb-3 line-clamp-2">{product.description}</p>
-
-                        <div className="flex items-center justify-between mb-3">
-                          <div className="flex items-baseline gap-2">
-                            <p className="text-lg font-bold text-rose-600">₹{product.price}</p>
-                            {product.originalPrice && (
-                              <p className="text-xs text-muted-foreground line-through">₹{product.originalPrice}</p>
-                            )}
-                          </div>
-                          <p className="text-xs text-muted-foreground">{product.weight}</p>
-                        </div>
-
-                        <div className="flex flex-col gap-2 mt-auto">
-                          <Button
-                            size="sm"
-                            className="w-full bg-rose-500 hover:bg-rose-600 text-white text-xs sm:text-sm h-9 sm:h-10"
-                            onClick={(e) => {
-                              e.preventDefault();
-                              handleBuyNow(product);
-                            }}
-                          >
-                            <MessageCircle className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
-                            Order Now
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="w-full text-xs sm:text-sm h-9 sm:h-10"
-                            onClick={(e) => {
-                              e.preventDefault();
-                              handleAddToCart(product);
-                            }}
-                          >
-                            <ShoppingCart className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
-                            Save for Later
-                          </Button>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                );
-              })}
-            </div>
-
-            <div className="text-center mt-10">
-              <Link to="/gifting">
-                <Button size="lg" className="bg-rose-500 hover:bg-rose-600 text-white">
-                  Explore All Festive Collections
-                  <ArrowRight className="ml-2 h-5 w-5" />
-                </Button>
-              </Link>
-            </div>
-          </div>
-        </section>
-      )}
-
-      {/* CTA Section */}
-      <section className="py-12 sm:py-16 bg-gradient-primary text-primary-foreground">
-        <div className="w-full px-4 sm:px-6 lg:px-8">
-          <div className="max-w-4xl mx-auto text-center">
-            <h2 className="font-display text-2xl sm:text-3xl md:text-4xl font-bold mb-3 sm:mb-4">
-              Ready to Place Your Order?
-            </h2>
-            <p className="text-base sm:text-lg mb-6 sm:mb-8 opacity-90 px-2">
-              Get in touch with us for bulk orders, custom packaging, or any special requirements.
-            </p>
-
-            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center">
-              <Button
-                size="lg"
-                variant="secondary"
-                onClick={() => {
-                  const phoneNumber = '+919930709557';
-                  const message = 'Hello! I am interested in your products. Please share more details.';
-                  const encodedMessage = encodeURIComponent(message);
-                  const whatsappUrl = `https://wa.me/${phoneNumber.replace(/\+/g, '')}?text=${encodedMessage}`;
-                  window.open(whatsappUrl, '_blank');
-                }}
+      <section className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+        <div className="rounded-2xl bg-white/80 p-6 shadow-soft">
+          <div className="mb-6 flex flex-wrap items-center justify-center gap-2">
+            {categoryTabs.map((tab) => (
+              <button
+                key={tab.id}
+                className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
+                  tab.id === activeCategoryTab ? 'bg-[#E8762A] text-white' : 'bg-muted text-muted-foreground hover:text-foreground'
+                }`}
+                onClick={() => setActiveCategoryTab(tab.id)}
               >
-                <MessageCircle className="mr-2 h-5 w-5" />
-                Contact on WhatsApp
-              </Button>
-
-              <Link to="/contact">
-                <Button size="lg" variant="outline" className="border-white/20 bg-white/10 text-white hover:bg-white/20">
-                  Get in Touch
-                  <ArrowRight className="ml-2 h-5 w-5" />
-                </Button>
-              </Link>
-            </div>
+                {tab.icon} {tab.label}
+              </button>
+            ))}
           </div>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {categoryTiles.map((tile) => (
+              <Link key={tile.id} to={`/products/${tile.id}`} className="group relative block h-48 overflow-hidden rounded-2xl">
+                <img src={tile.image} alt={tile.name} className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/65 to-transparent" />
+                <span className="absolute bottom-3 left-3 text-lg font-semibold text-white">{tile.name}</span>
+              </Link>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="mx-auto my-10 grid max-w-7xl grid-cols-2 gap-3 px-4 sm:grid-cols-4 sm:px-6 lg:px-8">
+        {[
+          { icon: <Leaf className="h-5 w-5" />, label: '100% Natural' },
+          { icon: <Factory className="h-5 w-5" />, label: 'Made in India' },
+          { icon: <Gift className="h-5 w-5" />, label: 'Custom Gifting' },
+          { icon: <Truck className="h-5 w-5" />, label: 'Pan-India Delivery' },
+        ].map((item) => (
+          <div key={item.label} className="flex items-center justify-center gap-2 rounded-xl border border-border bg-card px-3 py-4 text-center text-sm font-semibold text-[#1A0A00] shadow-soft">
+            <span className="text-[#2D5016]">{item.icon}</span>
+            <span>{item.label}</span>
+          </div>
+        ))}
+      </section>
+
+      <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="rounded-3xl bg-gradient-primary px-6 py-10 text-white shadow-medium sm:px-10">
+          <p className="text-sm uppercase tracking-[0.2em] text-white/80">Premium Enquiry Collection</p>
+          <h3 className="mt-2 text-2xl font-bold sm:text-3xl">
+            Looking for premium dry fruits, cashews, or custom bulk orders?
+          </h3>
+          <p className="mt-2 max-w-3xl text-white/90">
+            Our premium range is available on enquiry so we can share fresh pricing, stock, and packaging options.
+          </p>
+          <Button
+            className="mt-6 bg-[#25D366] text-white hover:bg-[#1fa959]"
+            onClick={() => {
+              if (enquiryProducts[0]) {
+                openWhatsAppEnquiry(enquiryProducts[0]);
+              }
+            }}
+          >
+            <MessageCircle className="mr-2 h-4 w-4" />
+            Enquire on WhatsApp
+          </Button>
+        </div>
+      </section>
+
+      <section className="mx-auto grid max-w-7xl grid-cols-1 items-center gap-8 px-4 py-16 sm:px-6 lg:grid-cols-2 lg:px-8">
+        <img
+          src={heroVisual}
+          alt="Gifting teaser"
+          className="h-72 w-full rounded-3xl object-cover shadow-soft"
+        />
+        <div>
+          <h3 className="font-display text-3xl font-bold text-[#1A0A00]">Gift Something Real</h3>
+          <p className="mt-3 text-muted-foreground">
+            Curated hampers for family, festive moments, and corporate teams with premium packaging and personalization.
+          </p>
+          <Button className="mt-6 bg-[#2D5016] hover:bg-[#243f12]" asChild>
+            <Link to="/gifting">Explore Gifting</Link>
+          </Button>
+        </div>
+      </section>
+
+      <section className="mx-auto max-w-7xl px-4 pb-16 sm:px-6 lg:px-8">
+        <h3 className="mb-6 text-center font-display text-3xl font-bold text-[#1A0A00]">Loved by Snack Fans</h3>
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {reviewCards.map((review) => (
+            <Card key={review.name} className="rounded-2xl border-border/70 shadow-soft">
+              <CardContent className="p-5">
+                <div className="mb-3 flex items-center gap-1 text-[#E8762A]">
+                  {[...Array(5)].map((_, index) => (
+                    <Star key={index} className="h-4 w-4 fill-current" />
+                  ))}
+                </div>
+                <p className="text-sm text-muted-foreground">"{review.quote}"</p>
+                <p className="mt-4 text-sm font-semibold text-[#1A0A00]">{review.name}</p>
+              </CardContent>
+            </Card>
+          ))}
         </div>
       </section>
     </div>

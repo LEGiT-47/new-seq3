@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700;800&family=DM+Sans:wght@300;400;500;700&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -7,37 +7,33 @@
 
 @layer base {
     :root {
-        /* Core Colors - Warm Earth Tones */
-        --background: 43 96% 97%; /* Warm cream */
-        --foreground: 25 30% 20%; /* Deep brown */
-        
-        /* Primary - Rich Terracotta */
-        --primary: 15 65% 50%; /* Terracotta */
+        --background: 36 73% 96%;
+        --foreground: 18 100% 5%;
+
+        --primary: 23 80% 54%;
         --primary-foreground: 43 96% 97%;
-        --primary-glow: 15 65% 70%; /* Lighter terracotta for gradients */
-        
-        /* Secondary - Warm Brown */
-        --secondary: 25 30% 35%; /* Warm brown */
+        --primary-glow: 23 84% 63%;
+
+        --secondary: 93 56% 20%;
         --secondary-foreground: 43 96% 97%;
-        
-        /* Accent - Muted Gold */
-        --accent: 40 55% 65%; /* Muted gold */
-        --accent-foreground: 25 30% 20%;
+
+        --accent: 38 76% 90%;
+        --accent-foreground: 18 100% 5%;
         
         /* Card & UI Elements */
-        --card: 43 96% 99%; /* Slightly warmer white */
-        --card-foreground: 25 30% 20%;
-        --popover: 43 96% 99%;
-        --popover-foreground: 25 30% 20%;
+        --card: 40 100% 99%;
+        --card-foreground: 18 100% 5%;
+        --popover: 40 100% 99%;
+        --popover-foreground: 18 100% 5%;
         
         /* Muted Elements */
-        --muted: 25 15% 88%; /* Warm gray */
-        --muted-foreground: 25 20% 45%;
+        --muted: 36 35% 90%;
+        --muted-foreground: 25 20% 35%;
         
         /* Interactive Elements */
-        --border: 25 15% 85%;
-        --input: 25 15% 85%;
-        --ring: 15 65% 50%;
+        --border: 30 35% 84%;
+        --input: 30 35% 84%;
+        --ring: 23 80% 54%;
         
         /* Status Colors */
         --destructive: 0 84% 60%;
@@ -46,15 +42,15 @@
         --success-foreground: 43 96% 97%;
         
         /* Custom Gradients */
-        --gradient-primary: linear-gradient(135deg, hsl(15 65% 50%), hsl(15 65% 70%));
-        --gradient-warm: linear-gradient(135deg, hsl(40 55% 85%), hsl(43 96% 97%));
+        --gradient-primary: linear-gradient(125deg, hsl(23 80% 54%), hsl(31 89% 58%));
+        --gradient-warm: radial-gradient(circle at top right, hsl(23 90% 92%), hsl(36 73% 96%));
         --gradient-overlay: linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0.3) 100%);
         
         /* Shadows */
-        --shadow-soft: 0 2px 8px -2px hsl(25 30% 20% / 0.1);
-        --shadow-medium: 0 8px 25px -5px hsl(25 30% 20% / 0.15);
-        --shadow-large: 0 20px 40px -10px hsl(25 30% 20% / 0.2);
-        --shadow-glow: 0 0 30px hsl(15 65% 70% / 0.3);
+        --shadow-soft: 0 3px 12px -3px hsl(18 100% 5% / 0.08);
+        --shadow-medium: 0 14px 28px -8px hsl(18 100% 5% / 0.16);
+        --shadow-large: 0 26px 48px -16px hsl(18 100% 5% / 0.18);
+        --shadow-glow: 0 0 30px hsl(23 84% 63% / 0.28);
         
         /* Animation */
         --transition-smooth: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -116,7 +112,7 @@
     }
     
     .font-sans {
-        font-family: 'Inter', sans-serif;
+        font-family: 'DM Sans', sans-serif;
     }
 }
 

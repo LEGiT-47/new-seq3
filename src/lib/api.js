@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { normalizeProduct, normalizeProducts } from './productUtils';
 
 // Set API base URL
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
@@ -109,10 +110,10 @@ const enrichProductsWithImages = async (products) => {
       const filename = product.image.split('/').pop().toLowerCase();
       // If we have a local image, use that instead of backend URL
       if (imageMap[filename]) {
-        return { ...product, image: imageMap[filename] };
+        return normalizeProduct({ ...product, image: imageMap[filename] });
       }
     }
-    return product;
+    return normalizeProduct(product);
   });
 };
 
@@ -129,7 +130,7 @@ export const productAPI = {
       console.warn('Backend API unavailable, using local data', error.message);
       // Fallback to local products data
       const { products } = await import('../data/products.jsx');
-      return { data: { data: products } };
+      return { data: { data: normalizeProducts(products) } };
     }
   },
 
@@ -143,7 +144,7 @@ export const productAPI = {
       console.warn('Backend API unavailable, using local data', error.message);
       const { getProductsByCategory } = await import('../data/products.jsx');
       const products = getProductsByCategory(category);
-      return { data: { data: products } };
+      return { data: { data: normalizeProducts(products) } };
     }
   },
 
@@ -160,7 +161,7 @@ export const productAPI = {
       if (!product) {
         throw new Error('Product not found');
       }
-      return { data: { data: product } };
+      return { data: { data: normalizeProduct(product) } };
     }
   },
 
@@ -174,7 +175,7 @@ export const productAPI = {
       console.warn('Backend API unavailable, using local data', error.message);
       const { getBestsellerProducts } = await import('../data/products.jsx');
       const products = getBestsellerProducts();
-      return { data: { data: products } };
+      return { data: { data: normalizeProducts(products) } };
     }
   },
 
@@ -188,7 +189,7 @@ export const productAPI = {
       console.warn('Backend API unavailable, using local data', error.message);
       const { getProductsByCategory } = await import('../data/products.jsx');
       const allProducts = getProductsByCategory('all');
-      const deliverable = allProducts.filter(p => p.isDeliverable);
+      const deliverable = normalizeProducts(allProducts).filter((p) => p.productType === 'deliverable');
       return { data: { data: deliverable } };
     }
   },

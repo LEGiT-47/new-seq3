@@ -22,6 +22,7 @@ const productSchema = new mongoose.Schema(
     image: {
       type: String,
     },
+    images: [String],
     price: {
       type: Number,
       required: true,
@@ -38,6 +39,29 @@ const productSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
       description: 'True for Gud Chana, Makhana, Dry Fruits; False for Chocolates and Coated items',
+    },
+    productType: {
+      type: String,
+      enum: ['deliverable', 'enquiry'],
+      default: 'enquiry',
+      index: true,
+    },
+    isHeroProduct: {
+      type: Boolean,
+      default: false,
+      index: true,
+    },
+    flavour: {
+      type: String,
+      default: '',
+    },
+    parentProduct: {
+      type: String,
+      default: '',
+    },
+    whatsappEnquiryText: {
+      type: String,
+      default: '',
     },
     coatings: [String],
     flavors: [String],

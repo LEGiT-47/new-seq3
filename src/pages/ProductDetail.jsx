@@ -1,451 +1,340 @@
-import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import React, { useEffect, useMemo, useState } from 'react';
+import { useNavigate, useParams, Link } from 'react-router-dom';
 import { Button } from '../components/ui/button';
 import { Badge } from '../components/ui/badge';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
+import { Card, CardContent } from '../components/ui/card';
 import { useCart } from '../context/CartContext';
 import { productAPI, getImageUrl } from '../lib/api';
-import { ShoppingCart, MessageCircle, Heart, Share2, Truck, Shield, Star } from 'lucide-react';
+import { buildWhatsAppEnquiryLink, getDisplayProductName } from '../lib/productUtils';
 import { toast } from 'sonner';
+import { ShoppingCart, Truck, ShieldCheck, PackageCheck, Plus, Minus, Star, MessageCircle, ChevronLeft, ChevronRight } from 'lucide-react';
+
+const flavorColorMap = {
+  BBQ: 'bg-red-500 text-white border-red-500',
+  Cheese: 'bg-yellow-400 text-black border-yellow-400',
+  'Cream & Onion': 'bg-lime-300 text-black border-lime-300',
+  'Peri Peri': 'bg-orange-500 text-white border-orange-500',
+  Pudina: 'bg-green-500 text-white border-green-500',
+};
 
 const ProductDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const [product, setProduct] = useState(null);
-  const [selectedCoating, setSelectedCoating] = useState('');
-  const [selectedFlavor, setSelectedFlavor] = useState('');
-  const [quantity, setQuantity] = useState(1);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
   const { addToCart } = useCart();
 
+  const [product, setProduct] = useState(null);
+  const [allProducts, setAllProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [qty, setQty] = useState(1);
+  const [selectedWeight, setSelectedWeight] = useState('');
+  const [activeImage, setActiveImage] = useState('');
+  const [activeImageIndex, setActiveImageIndex] = useState(0);
+
   useEffect(() => {
-    const fetchProduct = async () => {
+    const load = async () => {
       try {
         setLoading(true);
-        setError(null);
-        const response = await productAPI.getById(id);
-        const productData = response.data.data || response.data;
+        const [productResponse, allResponse] = await Promise.all([productAPI.getById(id), productAPI.getAll()]);
+        const item = productResponse.data.data;
+        const list = allResponse.data.data || [];
 
-        if (productData) {
-          setProduct(productData);
-          if (productData.defaultCoating) {
-            setSelectedCoating(productData.defaultCoating);
-          }
-        } else {
-          setError('Product not found');
-        }
-      } catch (err) {
-        console.error('Error fetching product:', err);
-        setError('Failed to load product details');
-        toast.error('Failed to load product');
+        setProduct(item);
+        setAllProducts(list.filter((p) => !p.isHidden));
+        setSelectedWeight(item.weight || '');
+      } catch (error) {
+        toast.error('Unable to load product details.');
       } finally {
         setLoading(false);
       }
     };
 
-    fetchProduct();
+    load();
   }, [id]);
 
+  const relatedProducts = useMemo(() => {
+    if (!product) return [];
+    return allProducts
+      .filter((p) => p.category === product.category && (p._id || p.id) !== (product._id || product.id))
+      .slice(0, 4);
+  }, [allProducts, product]);
+
+  const flavourStoryItems = useMemo(() => {
+    return allProducts
+      .filter((p) => p.parentProduct === 'crunchy-chana')
+      .slice(0, 5)
+      .map((p) => ({
+        ...p,
+        story:
+          p.flavour === 'BBQ'
+            ? 'Smoky and bold with grill-style notes.'
+            : p.flavour === 'Cheese'
+              ? 'Creamy cheesy crunch for comfort snacking.'
+              : p.flavour === 'Cream & Onion'
+                ? 'Tangy and savoury with a smooth finish.'
+                : p.flavour === 'Peri Peri'
+                  ? 'Spicy kick that builds with every bite.'
+                  : 'Cool minty profile with masala depth.',
+      }));
+  }, [allProducts]);
+
   if (loading) {
+    return <div className="py-20 text-center text-muted-foreground">Loading product details...</div>;
+  }
+
+  if (!product) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <p className="text-muted-foreground">Loading product details...</p>
+      <div className="py-20 text-center">
+        <p className="mb-4 text-lg font-semibold">Product not found.</p>
+        <Button onClick={() => navigate('/products')}>Back to Products</Button>
       </div>
     );
   }
 
-  if (error || !product) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold mb-4">{error || 'Product Not Found'}</h1>
-          <p className="text-muted-foreground mb-6">The product you're looking for doesn't exist or couldn't be loaded.</p>
-          <Button onClick={() => navigate('/products')}>Back to Products</Button>
-        </div>
-      </div>
-    );
-  }
+  const displayName = getDisplayProductName(product);
+  const whatsappLink = buildWhatsAppEnquiryLink(product);
+  const imageGallery = (product.images && product.images.length > 0 ? product.images : [product.image])
+    .map((img) => getImageUrl(img))
+    .filter(Boolean);
 
-  const handleAddToCart = () => {
-    addToCart(product, quantity, {
-      coating: selectedCoating || null,
-      flavor: selectedFlavor || null,
-    });
-    toast.success(`${product.name} added to cart!`);
+  const safeImageGallery = imageGallery.length > 0 ? imageGallery : [getImageUrl(product.image)];
+  const activeSliderImage = safeImageGallery[activeImageIndex] || safeImageGallery[0];
+
+  const goToImage = (index) => {
+    if (!safeImageGallery.length) return;
+    const total = safeImageGallery.length;
+    const next = (index + total) % total;
+    setActiveImageIndex(next);
+    setActiveImage(safeImageGallery[next]);
   };
 
-  const handleBuyNow = () => {
-    if (!product.isDeliverable) {
-      handleWhatsAppEnquiry();
+  useEffect(() => {
+    if (!safeImageGallery.length) return;
+    if (activeImage && safeImageGallery.includes(activeImage)) {
+      setActiveImageIndex(safeImageGallery.indexOf(activeImage));
       return;
     }
 
-    handleAddToCart();
-    navigate('/cart');
+    setActiveImageIndex(0);
+    setActiveImage(safeImageGallery[0]);
+  }, [product?._id, product?.id, safeImageGallery.length]);
+
+  const onAddToCart = () => {
+    addToCart(product, qty, { flavor: product.flavour || null });
+    toast.success(`${displayName} added to cart`);
   };
-
-  const handleWhatsAppEnquiry = () => {
-    const phoneNumber = '+919930709557';
-    let message = `Hello! I would like to enquire about ${product.name}`;
-
-    if (selectedCoating || selectedFlavor) {
-      const details = [];
-      if (selectedCoating) details.push(`Coating: ${selectedCoating}`);
-      if (selectedFlavor) details.push(`Flavor: ${selectedFlavor}`);
-      message += ` (${details.join(', ')})`;
-    }
-
-    message += '. Please let me know the availability and details. Thank you!';
-
-    const encodedMessage = encodeURIComponent(message);
-    const whatsappUrl = `https://wa.me/${phoneNumber.replace(/\+/g, '')}?text=${encodedMessage}`;
-    window.open(whatsappUrl, '_blank');
-  };
-
-  // Product details from database or defaults
-  const benefits = product.benefits && product.benefits.length > 0 ? product.benefits : [
-    'Rich in antioxidants',
-    'High in protein and fiber',
-    'Helps improve digestion',
-    'Good source of healthy fats',
-    'Enhances immune system',
-  ];
-
-  const qualityHighlights = product.qualityHighlights && product.qualityHighlights.length > 0 ? product.qualityHighlights : [
-    'Premium quality sourced directly',
-    'No artificial additives',
-    'Carefully roasted for maximum flavor',
-    'Hygienically processed',
-    'Packed in food-grade materials',
-  ];
-
-  const testimonials = product.testimonials && product.testimonials.length > 0 ? product.testimonials : [
-    {
-      author: 'Rahul K.',
-      text: 'Excellent quality and taste. Best product I have tried. Highly recommended!',
-      rating: 5,
-    },
-    {
-      author: 'Priya M.',
-      text: 'Fresh and perfectly roasted. The taste is incredible. Will order again!',
-      rating: 5,
-    },
-    {
-      author: 'Amit P.',
-      text: 'Great value for money. Loved the packaging and freshness.',
-      rating: 4,
-    },
-  ];
 
   return (
-    <div className="min-h-screen py-6 sm:py-8 bg-background">
-      <div className="w-full px-4 sm:px-6 lg:px-8">
-        <div className="max-w-6xl mx-auto">
-          {/* Breadcrumb */}
-          <div className="mb-6 text-sm text-muted-foreground">
-            <button onClick={() => navigate('/products')} className="hover:underline">
-              Products
-            </button>
-            <span className="mx-2">/</span>
-            <button onClick={() => navigate(`/products/${product.category}`)} className="hover:underline">
-              {product.category}
-            </button>
-            <span className="mx-2">/</span>
-            <span>{product.name}</span>
-          </div>
+    <div className="min-h-screen bg-background py-8">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="mb-6 text-sm text-muted-foreground">
+          <button onClick={() => navigate('/products')} className="hover:text-foreground">Products</button>
+          <span className="mx-2">/</span>
+          <span>{displayName}</span>
+        </div>
 
-          {/* Main Product Section */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
-            {/* Product Image */}
-            <div className="flex flex-col gap-4">
-              <Card className="overflow-hidden">
-                <CardContent className="p-0">
-                  <img
-                    src={getImageUrl(product.image)}
-                    alt={product.name}
-                    className="w-full aspect-square object-cover hover:scale-105 transition-transform duration-300"
-                  />
-                </CardContent>
-              </Card>
-
-              {/* Product Actions */}
-              <div className="flex gap-2">
-                <Button variant="outline" size="sm" className="flex-1">
-                  <Heart className="h-4 w-4 mr-2" />
-                  Save
-                </Button>
-                <Button variant="outline" size="sm" className="flex-1">
-                  <Share2 className="h-4 w-4 mr-2" />
-                  Share
-                </Button>
-              </div>
+        <div className="grid grid-cols-1 gap-10 lg:grid-cols-2">
+          <div>
+            <div className="relative overflow-hidden rounded-3xl border border-border bg-card">
+              <img src={activeSliderImage} alt={displayName} className="h-[420px] w-full object-cover transition duration-300 hover:scale-105" />
+              {safeImageGallery.length > 1 && (
+                <>
+                  <button
+                    type="button"
+                    className="absolute left-3 top-1/2 -translate-y-1/2 rounded-full bg-black/40 p-2 text-white transition hover:bg-black/60"
+                    onClick={() => goToImage(activeImageIndex - 1)}
+                    aria-label="Previous image"
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                  </button>
+                  <button
+                    type="button"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full bg-black/40 p-2 text-white transition hover:bg-black/60"
+                    onClick={() => goToImage(activeImageIndex + 1)}
+                    aria-label="Next image"
+                  >
+                    <ChevronRight className="h-4 w-4" />
+                  </button>
+                </>
+              )}
             </div>
-
-            {/* Product Info */}
-            <div className="flex flex-col gap-6">
-              {/* Header */}
-              <div>
-                <div className="flex items-start gap-3 mb-3">
-                  <h1 className="font-display text-2xl sm:text-3xl font-bold">{product.name}</h1>
-                  {product.bestseller && <Badge className="bg-destructive">Bestseller</Badge>}
-                  {product.isDeliverable && <Badge className="bg-green-600">Deliverable</Badge>}
-                </div>
-                <p className="text-base text-muted-foreground mb-4">{product.description}</p>
-
-                {/* Price */}
-                <div className="flex items-baseline gap-2 mb-6">
-                  <span className="text-4xl font-bold">₹{product.price}</span>
-                  <span className="text-muted-foreground">per {product.weight}</span>
-                </div>
-
-                {/* Rating */}
-                <div className="flex items-center gap-2 mb-4">
-                  <div className="flex gap-1">
-                    {[...Array(5)].map((_, i) => (
-                      <Star key={i} className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                    ))}
-                  </div>
-                  <span className="text-sm text-muted-foreground">(127 reviews)</span>
-                </div>
-              </div>
-
-              {/* Options */}
-              {(product.coatings?.length > 0 || product.flavors?.length > 0) && (
-                <div className="space-y-4 border-t border-b py-4">
-                  {product.coatings?.length > 0 && (
-                    <div>
-                      <label className="text-sm font-medium block mb-2">Coating</label>
-                      <Select value={selectedCoating} onValueChange={setSelectedCoating}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select coating" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {product.coatings.map((coating) => (
-                            <SelectItem key={coating} value={coating}>
-                              {coating}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  )}
-
-                  {product.flavors?.length > 0 && (
-                    <div>
-                      <label className="text-sm font-medium block mb-2">Flavor</label>
-                      <Select value={selectedFlavor} onValueChange={setSelectedFlavor}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select flavor" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {product.flavors.map((flavor) => (
-                            <SelectItem key={flavor} value={flavor}>
-                              {flavor}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {/* Quantity */}
-              <div>
-                <label className="text-sm font-medium block mb-2">Quantity</label>
-                <div className="flex items-center gap-3 border rounded-lg w-fit">
-                  <button
-                    className="px-3 py-2 hover:bg-muted"
-                    onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                  >
-                    −
-                  </button>
-                  <span className="w-8 text-center">{quantity}</span>
-                  <button
-                    className="px-3 py-2 hover:bg-muted"
-                    onClick={() => setQuantity(quantity + 1)}
-                  >
-                    +
-                  </button>
-                </div>
-              </div>
-
-              {/* Delivery Info */}
-              {product.isDeliverable && (
-                <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
-                  <div className="flex gap-2 items-start">
-                    <Truck className="h-5 w-5 text-green-600 flex-shrink-0 mt-0.5" />
-                    <div>
-                      <p className="font-semibold text-green-900 text-sm">Fast Delivery</p>
-                      <p className="text-xs text-green-700 mt-1">Delivered in 7-8 business days</p>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* CTAs */}
-              <div className="flex flex-col gap-3 sticky bottom-0 pt-4 bg-background">
-                {product.isDeliverable ? (
-                  // For deliverable items - Buy Now (blue) and Add to Cart
-                  <>
-                    <Button
-                      size="lg"
-                      className="w-full bg-blue-600 hover:bg-blue-700 text-white"
-                      onClick={handleBuyNow}
-                    >
-                      <ShoppingCart className="h-5 w-5 mr-2" />
-                      Buy Now
-                    </Button>
-                    <Button
-                      size="lg"
-                      variant="outline"
-                      className="w-full"
-                      onClick={handleAddToCart}
-                    >
-                      <ShoppingCart className="h-5 w-5 mr-2" />
-                      Add to Cart
-                    </Button>
-                  </>
-                ) : (
-                  // For non-deliverable items - Add to Cart and Enquire on WhatsApp
-                  <>
-                    <Button
-                      size="lg"
-                      variant="outline"
-                      className="w-full"
-                      onClick={handleAddToCart}
-                    >
-                      <ShoppingCart className="h-5 w-5 mr-2" />
-                      Add to Cart
-                    </Button>
-                    <Button
-                      size="lg"
-                      className="w-full bg-[#25D366] hover:bg-[#128C7E] text-white"
-                      onClick={handleWhatsAppEnquiry}
-                    >
-                      <MessageCircle className="h-5 w-5 mr-2" />
-                      Enquire on WhatsApp
-                    </Button>
-                  </>
-                )}
-              </div>
+            <div className="mt-4 grid grid-cols-4 gap-3">
+              {safeImageGallery.map((image, index) => (
+                <button
+                  key={`${image}-${index}`}
+                  className={`overflow-hidden rounded-xl border ${activeImageIndex === index ? 'border-[#E8762A]' : 'border-border'}`}
+                  onClick={() => goToImage(index)}
+                >
+                  <img src={image} alt={`${displayName}-${index}`} className="h-20 w-full object-cover" />
+                </button>
+              ))}
             </div>
           </div>
 
-          {/* Tabs Section */}
-          <Tabs defaultValue="details" className="w-full mb-12">
-            <TabsList className="w-full justify-start border-b rounded-none bg-transparent h-auto">
-              <TabsTrigger value="details" className="rounded-none border-b-2 border-transparent data-[state=active]:border-b-2 data-[state=active]:border-primary">
-                Details
-              </TabsTrigger>
-              <TabsTrigger value="benefits" className="rounded-none border-b-2 border-transparent data-[state=active]:border-b-2 data-[state=active]:border-primary">
-                Health Benefits
-              </TabsTrigger>
-              <TabsTrigger value="reviews" className="rounded-none border-b-2 border-transparent data-[state=active]:border-b-2 data-[state=active]:border-primary">
-                Reviews
-              </TabsTrigger>
-            </TabsList>
+          <div>
+            <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#2D5016]">Sequeira Foods</p>
+            <h1 className="mt-2 font-display text-4xl font-bold text-[#1A0A00]">{displayName}</h1>
+            <p className="mt-2 text-muted-foreground">Bold, crunchy, addictive. The snack that started it all.</p>
 
-            {/* Details Tab */}
-            <TabsContent value="details" className="mt-6 space-y-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Product Details</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <p className="text-sm text-muted-foreground">Weight</p>
-                      <p className="font-semibold">{product.weight}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-muted-foreground">Category</p>
-                      <p className="font-semibold">{product.category}</p>
-                    </div>
-                  </div>
+            <div className="mt-4 flex items-center gap-2 text-[#E8762A]">
+              {[...Array(5)].map((_, i) => (
+                <Star key={i} className="h-4 w-4 fill-current" />
+              ))}
+              <span className="text-sm text-muted-foreground">(128 ratings)</span>
+            </div>
 
-                  <div>
-                    <h4 className="font-semibold mb-2">Description</h4>
-                    <p className="text-muted-foreground">{product.description}</p>
-                  </div>
+            <div className="mt-6 flex flex-wrap gap-2">
+              {['100g', '250g', '500g'].map((size) => (
+                <button
+                  key={size}
+                  className={`rounded-full border px-4 py-1.5 text-sm font-medium ${
+                    selectedWeight === size ? 'border-[#E8762A] bg-[#E8762A] text-white' : 'border-border text-muted-foreground'
+                  }`}
+                  onClick={() => setSelectedWeight(size)}
+                >
+                  {size}
+                </button>
+              ))}
+            </div>
 
-                  <div>
-                    <h4 className="font-semibold mb-2">Quality Highlights</h4>
-                    <ul className="space-y-2">
-                      {qualityHighlights.map((highlight, idx) => (
-                        <li key={idx} className="flex gap-2 text-sm">
-                          <Shield className="h-4 w-4 text-green-600 flex-shrink-0 mt-0.5" />
-                          <span>{highlight}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-
-                  <div>
-                    <h4 className="font-semibold mb-2">Storage & Shelf Life</h4>
-                    <p className="text-sm text-muted-foreground">
-                      Store in a cool, dry place. Best consumed within 3-6 months of purchase. Keep away from direct sunlight and moisture.
-                    </p>
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            {/* Benefits Tab */}
-            <TabsContent value="benefits" className="mt-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Health Benefits</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <ul className="space-y-3">
-                    {benefits.map((benefit, idx) => (
-                      <li key={idx} className="flex gap-3 items-start">
-                        <div className="h-2 w-2 rounded-full bg-primary mt-2 flex-shrink-0" />
-                        <span className="text-sm">{benefit}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            {/* Reviews Tab */}
-            <TabsContent value="reviews" className="mt-6">
-              <div className="space-y-4">
-                {testimonials.map((testimonial, idx) => (
-                  <Card key={idx}>
-                    <CardContent className="pt-6">
-                      <div className="flex gap-1 mb-2">
-                        {[...Array(5)].map((_, i) => (
-                          <Star
-                            key={i}
-                            className={`h-4 w-4 ${
-                              i < testimonial.rating
-                                ? 'fill-yellow-400 text-yellow-400'
-                                : 'text-gray-300'
-                            }`}
-                          />
-                        ))}
-                      </div>
-                      <p className="font-semibold text-sm mb-1">{testimonial.author}</p>
-                      <p className="text-sm text-muted-foreground">{testimonial.text}</p>
-                    </CardContent>
-                  </Card>
-                ))}
+            {product.parentProduct === 'crunchy-chana' && product.flavour && (
+              <div className="mt-4">
+                <p className="mb-2 text-sm font-semibold text-[#1A0A00]">Flavour</p>
+                <span className={`inline-flex rounded-full border px-3 py-1 text-sm font-semibold ${flavorColorMap[product.flavour] || 'border-border bg-muted'}`}>
+                  {product.flavour}
+                </span>
               </div>
-            </TabsContent>
-          </Tabs>
+            )}
 
-          {/* Related Products */}
-          <div className="mt-12">
-            <h2 className="text-2xl font-bold mb-6">You May Also Like</h2>
-            {/* Will add related products component here */}
+            <p className="mt-6 text-4xl font-bold text-[#1A0A00]">Rs. {product.price}</p>
+            <p className="mt-2 inline-flex items-center rounded-full bg-muted px-3 py-1 text-sm text-muted-foreground">
+              {product.productType === 'deliverable' ? 'Usually ships in 2-3 days' : 'Enquire for Price'}
+            </p>
+
+            <div className="mt-5 flex items-center gap-3">
+              <p className="text-sm font-semibold text-[#1A0A00]">Quantity</p>
+              <div className="flex items-center rounded-full border border-border">
+                <button className="px-3 py-1.5" onClick={() => setQty((q) => Math.max(1, q - 1))}>
+                  <Minus className="h-4 w-4" />
+                </button>
+                <span className="w-8 text-center text-sm font-semibold">{qty}</span>
+                <button className="px-3 py-1.5" onClick={() => setQty((q) => q + 1)}>
+                  <Plus className="h-4 w-4" />
+                </button>
+              </div>
+            </div>
+
+            <div className="mt-7 space-y-3">
+              {product.productType === 'deliverable' ? (
+                <>
+                  <Button className="w-full bg-[#E8762A] hover:bg-[#d76b20]" size="lg" onClick={onAddToCart}>
+                    <ShoppingCart className="mr-2 h-5 w-5" />
+                    Add to Cart
+                  </Button>
+                  <Button variant="outline" className="w-full" size="lg" onClick={() => navigate('/checkout')}>
+                    Buy Now
+                  </Button>
+                </>
+              ) : (
+                <Button className="w-full bg-[#25D366] hover:bg-[#1fa959]" size="lg" asChild>
+                  <a href={whatsappLink} target="_blank" rel="noreferrer">
+                    <MessageCircle className="mr-2 h-5 w-5" />
+                    Enquire on WhatsApp
+                  </a>
+                </Button>
+              )}
+            </div>
+
+            <div className="mt-7 grid grid-cols-1 gap-2 sm:grid-cols-3">
+              <p className="inline-flex items-center gap-2 rounded-lg bg-card p-2 text-xs"><ShieldCheck className="h-4 w-4 text-[#2D5016]" /> Natural</p>
+              <p className="inline-flex items-center gap-2 rounded-lg bg-card p-2 text-xs"><PackageCheck className="h-4 w-4 text-[#2D5016]" /> Secure Packaging</p>
+              <p className="inline-flex items-center gap-2 rounded-lg bg-card p-2 text-xs"><Truck className="h-4 w-4 text-[#2D5016]" /> Fast Dispatch</p>
+            </div>
           </div>
         </div>
+
+        <Tabs defaultValue="description" className="mt-12">
+          <TabsList className="grid w-full grid-cols-2 gap-2 rounded-xl bg-muted p-1 sm:grid-cols-4">
+            <TabsTrigger value="description">Description</TabsTrigger>
+            <TabsTrigger value="ingredients">Ingredients</TabsTrigger>
+            <TabsTrigger value="nutrition">Nutrition</TabsTrigger>
+            <TabsTrigger value="storage">How to Store</TabsTrigger>
+          </TabsList>
+          <TabsContent value="description" className="mt-4 rounded-2xl border border-border bg-card p-5 text-sm text-muted-foreground">
+            {product.description}
+          </TabsContent>
+          <TabsContent value="ingredients" className="mt-4 rounded-2xl border border-border bg-card p-5">
+            <ul className="space-y-2 text-sm text-muted-foreground">
+              {(product.ingredients || ['Roasted chana', 'Natural seasoning', 'Cold-pressed oil', 'Sea salt']).map((item) => (
+                <li key={item} className="rounded-lg bg-muted px-3 py-2">{item}</li>
+              ))}
+            </ul>
+          </TabsContent>
+          <TabsContent value="nutrition" className="mt-4 rounded-2xl border border-border bg-card p-5">
+            <div className="grid grid-cols-2 gap-3 text-sm">
+              {[
+                ['Protein', '19g'],
+                ['Fiber', '11g'],
+                ['Energy', '410 kcal'],
+                ['Fat', '12g'],
+              ].map(([label, value]) => (
+                <div key={label} className="rounded-lg bg-muted p-3">
+                  <p className="text-muted-foreground">{label}</p>
+                  <p className="font-bold text-[#1A0A00]">{value}</p>
+                </div>
+              ))}
+            </div>
+          </TabsContent>
+          <TabsContent value="storage" className="mt-4 rounded-2xl border border-border bg-card p-5 text-sm text-muted-foreground">
+            Store in an airtight container away from sunlight and moisture. Best enjoyed within 90 days for peak crunch.
+          </TabsContent>
+        </Tabs>
+
+        <section className="mt-12">
+          <h2 className="mb-4 text-2xl font-bold text-[#1A0A00]">You May Also Like</h2>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {relatedProducts.map((item) => (
+              <Card key={item._id || item.id} className="overflow-hidden rounded-2xl border-border/70 shadow-soft">
+                <img src={getImageUrl(item.image)} alt={item.name} className="h-40 w-full object-cover" />
+                <CardContent className="p-4">
+                  <p className="font-semibold text-[#1A0A00]">{getDisplayProductName(item)}</p>
+                  <p className="text-sm text-muted-foreground">Rs. {item.price}</p>
+                  {item.productType === 'deliverable' ? (
+                    <Button className="mt-3 w-full bg-[#E8762A] hover:bg-[#d76b20]" onClick={() => addToCart(item, 1, { flavor: item.flavour || null })}>
+                      Add to Cart
+                    </Button>
+                  ) : (
+                    <Button className="mt-3 w-full bg-[#25D366] hover:bg-[#1fa959]" asChild>
+                      <a href={buildWhatsAppEnquiryLink(item)} target="_blank" rel="noreferrer">Enquire</a>
+                    </Button>
+                  )}
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </section>
+
+        {product.parentProduct === 'crunchy-chana' && flavourStoryItems.length > 0 && (
+          <section className="mt-12 pb-8">
+            <h2 className="mb-2 text-2xl font-bold text-[#1A0A00]">Choose Your Crunch</h2>
+            <p className="mb-4 text-sm text-muted-foreground">Tap a flavour to explore its product page.</p>
+            <div className="grid grid-flow-col auto-cols-[78%] gap-4 overflow-x-auto pb-2 sm:grid-flow-row sm:auto-cols-auto sm:grid-cols-3 lg:grid-cols-5">
+              {flavourStoryItems.map((item) => (
+                <Link
+                  key={item._id || item.id}
+                  to={`/product/${item._id || item.id}`}
+                  className="rounded-2xl border border-border bg-card p-4 shadow-soft"
+                >
+                  <p className={`inline-flex rounded-full border px-3 py-1 text-xs font-semibold ${flavorColorMap[item.flavour] || 'border-border bg-muted'}`}>
+                    {item.flavour}
+                  </p>
+                  <p className="mt-3 font-semibold text-[#1A0A00]">{getDisplayProductName(item)}</p>
+                  <p className="mt-1 text-xs text-muted-foreground">{item.story}</p>
+                </Link>
+              ))}
+            </div>
+          </section>
+        )}
       </div>
     </div>
   );
