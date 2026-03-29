@@ -115,6 +115,9 @@ const ProductDetail = () => {
   const displayName = getDisplayProductName(product);
   const whatsappLink = buildWhatsAppEnquiryLink(product);
   const activeSliderImage = safeImageGallery[activeImageIndex] || safeImageGallery[0] || '';
+  const hasRating = Number(product.rating) > 0;
+  const weights = product.weightOptions?.length ? product.weightOptions : product.weight ? [product.weight] : [];
+  const hasSingleWeight = weights.length === 1;
 
   const goToImage = (index) => {
     if (!safeImageGallery.length) return;
@@ -129,10 +132,10 @@ const ProductDetail = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background py-8">
+    <div className="min-h-screen bg-background py-8 pb-24 lg:pb-0">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="mb-6 text-sm text-muted-foreground">
-          <button onClick={() => navigate('/products')} className="hover:text-foreground">Products</button>
+          <button onClick={() => navigate('/products')} className="transition-colors hover:text-[#E8762A]">Products</button>
           <span className="mx-2">/</span>
           <span>{displayName}</span>
         </div>
@@ -178,39 +181,94 @@ const ProductDetail = () => {
           <div>
             <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#2D5016]">Sequeira Foods</p>
             <h1 className="mt-2 font-display text-4xl font-bold text-[#1A0A00]">{displayName}</h1>
-            <p className="mt-2 text-muted-foreground">Bold, crunchy, addictive. The snack that started it all.</p>
+            {(product.tagline || product.shortDescription) && (
+              <p className="mt-2 text-muted-foreground">{product.tagline || product.shortDescription}</p>
+            )}
 
-            <div className="mt-4 flex items-center gap-2 text-[#E8762A]">
-              {[...Array(5)].map((_, i) => (
-                <Star key={i} className="h-4 w-4 fill-current" />
-              ))}
-              <span className="text-sm text-muted-foreground">(128 ratings)</span>
-            </div>
-
-            <div className="mt-6 flex flex-wrap gap-2">
-              {['100g', '250g', '500g'].map((size) => (
-                <button
-                  key={size}
-                  className={`rounded-full border px-4 py-1.5 text-sm font-medium ${
-                    selectedWeight === size ? 'border-[#E8762A] bg-[#E8762A] text-white' : 'border-border text-muted-foreground'
-                  }`}
-                  onClick={() => setSelectedWeight(size)}
-                >
-                  {size}
-                </button>
-              ))}
-            </div>
-
-            {product.parentProduct === 'crunchy-chana' && product.flavour && (
-              <div className="mt-4">
-                <p className="mb-2 text-sm font-semibold text-[#1A0A00]">Flavour</p>
-                <span className={`inline-flex rounded-full border px-3 py-1 text-sm font-semibold ${flavorColorMap[product.flavour] || 'border-border bg-muted'}`}>
-                  {product.flavour}
-                </span>
+            {hasRating && (
+              <div className="mt-4 flex items-center gap-2 text-[#E8762A]">
+                {[...Array(5)].map((_, i) => (
+                  <Star
+                    key={i}
+                    className={`h-4 w-4 ${i < Math.round(product.rating) ? 'fill-current' : 'stroke-current fill-none opacity-40'}`}
+                  />
+                ))}
+                <span className="text-sm text-muted-foreground">({product.reviewCount || 0} ratings)</span>
               </div>
             )}
 
-            <p className="mt-6 text-4xl font-bold text-[#1A0A00]">Rs. {product.price}</p>
+            {weights.length > 0 && (
+              <div className="mt-6">
+                <p className="mb-2 text-sm font-semibold text-[#1A0A00]">Size</p>
+                <div className="flex flex-wrap gap-2">
+                  {weights.map((size) =>
+                    hasSingleWeight ? (
+                      <span key={size} className="rounded-full border border-[#E8762A] bg-[#E8762A]/10 px-4 py-1.5 text-sm font-medium text-[#1A0A00]">
+                        {size}
+                      </span>
+                    ) : (
+                      <button
+                        key={size}
+                        className={`rounded-full border px-4 py-1.5 text-sm font-medium transition ${
+                          selectedWeight === size
+                            ? 'border-[#E8762A] bg-[#E8762A] text-white'
+                            : 'border-border text-muted-foreground hover:border-[#E8762A]'
+                        }`}
+                        onClick={() => setSelectedWeight(size)}
+                      >
+                        {size}
+                      </button>
+                    )
+                  )}
+                </div>
+              </div>
+            )}
+
+            {product.parentProduct && (() => {
+              const siblings = allProducts.filter(
+                (p) => p.parentProduct === product.parentProduct && (p._id || p.id) !== (product._id || product.id)
+              );
+              const allFlavours = [product, ...siblings].sort((a, b) => (a.flavour || '').localeCompare(b.flavour || ''));
+              if (allFlavours.length <= 1) return null;
+
+              return (
+                <div className="mt-5">
+                  <p className="mb-2 text-sm font-semibold text-[#1A0A00]">Flavour</p>
+                  <div className="flex flex-wrap gap-2">
+                    {allFlavours.map((fp) => {
+                      const isActive = (fp._id || fp.id) === (product._id || product.id);
+                      const colorClass = flavorColorMap[fp.flavour] || 'border-border bg-muted text-foreground';
+
+                      return (
+                        <button
+                          key={fp._id || fp.id}
+                          onClick={() => navigate(`/product/${fp._id || fp.id}`)}
+                          className={`rounded-full border px-3 py-1 text-sm font-semibold transition ${
+                            isActive
+                              ? `${colorClass} ring-2 ring-[#E8762A] ring-offset-2`
+                              : 'border-border bg-muted text-muted-foreground hover:border-[#E8762A]'
+                          }`}
+                        >
+                          {fp.flavour}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })()}
+
+            <div className="mt-6 flex flex-wrap items-baseline gap-3">
+              <p className="text-4xl font-bold text-[#1A0A00]">Rs. {product.price}</p>
+              {product.originalPrice && product.originalPrice > product.price && (
+                <>
+                  <p className="text-lg text-muted-foreground line-through">Rs. {product.originalPrice}</p>
+                  <span className="rounded-full bg-green-100 px-2 py-0.5 text-sm font-semibold text-green-700">
+                    {Math.round((1 - product.price / product.originalPrice) * 100)}% OFF
+                  </span>
+                </>
+              )}
+            </div>
             <p className="mt-2 inline-flex items-center rounded-full bg-muted px-3 py-1 text-sm text-muted-foreground">
               {product.productType === 'deliverable' ? 'Usually ships in 2-3 days' : 'Enquire for Price'}
             </p>
@@ -235,7 +293,7 @@ const ProductDetail = () => {
                     <ShoppingCart className="mr-2 h-5 w-5" />
                     Add to Cart
                   </Button>
-                  <Button variant="outline" className="w-full" size="lg" onClick={() => navigate('/checkout')}>
+                  <Button variant="outline" className="w-full" size="lg" onClick={() => { onAddToCart(); navigate('/checkout'); }}>
                     Buy Now
                   </Button>
                 </>
@@ -249,10 +307,52 @@ const ProductDetail = () => {
               )}
             </div>
 
-            <div className="mt-7 grid grid-cols-1 gap-2 sm:grid-cols-3">
-              <p className="inline-flex items-center gap-2 rounded-lg bg-card p-2 text-xs"><ShieldCheck className="h-4 w-4 text-[#2D5016]" /> Natural</p>
-              <p className="inline-flex items-center gap-2 rounded-lg bg-card p-2 text-xs"><PackageCheck className="h-4 w-4 text-[#2D5016]" /> Secure Packaging</p>
-              <p className="inline-flex items-center gap-2 rounded-lg bg-card p-2 text-xs"><Truck className="h-4 w-4 text-[#2D5016]" /> Fast Dispatch</p>
+            <div className="mt-7 grid grid-cols-1 gap-3 sm:grid-cols-3">
+              <div className="inline-flex items-center gap-3 rounded-xl border border-border bg-card p-3 shadow-soft">
+                <ShieldCheck className="h-5 w-5 text-[#2D5016]" />
+                <span className="text-sm font-semibold text-[#1A0A00]">100% Natural</span>
+              </div>
+              <div className="inline-flex items-center gap-3 rounded-xl border border-border bg-card p-3 shadow-soft">
+                <PackageCheck className="h-5 w-5 text-[#2D5016]" />
+                <span className="text-sm font-semibold text-[#1A0A00]">Secure Packaging</span>
+              </div>
+              <div className="inline-flex items-center gap-3 rounded-xl border border-border bg-card p-3 shadow-soft">
+                <Truck className="h-5 w-5 text-[#2D5016]" />
+                <span className="text-sm font-semibold text-[#1A0A00]">Fast Dispatch</span>
+              </div>
+            </div>
+
+            <div className="mt-6 space-y-2 rounded-xl border border-border bg-muted/40 p-4 text-sm">
+              {product.ingredients && (
+                <div className="flex gap-2">
+                  <span className="min-w-[120px] font-semibold text-[#1A0A00]">Ingredients</span>
+                  <span className="text-muted-foreground">{Array.isArray(product.ingredients) ? product.ingredients.join(', ') : product.ingredients}</span>
+                </div>
+              )}
+              {product.shelfLife && (
+                <div className="flex gap-2">
+                  <span className="min-w-[120px] font-semibold text-[#1A0A00]">Shelf Life</span>
+                  <span className="text-muted-foreground">{product.shelfLife}</span>
+                </div>
+              )}
+              {product.netWeight && (
+                <div className="flex gap-2">
+                  <span className="min-w-[120px] font-semibold text-[#1A0A00]">Net Weight</span>
+                  <span className="text-muted-foreground">{product.netWeight}</span>
+                </div>
+              )}
+              {product.countryOfOrigin && (
+                <div className="flex gap-2">
+                  <span className="min-w-[120px] font-semibold text-[#1A0A00]">Country of Origin</span>
+                  <span className="text-muted-foreground">{product.countryOfOrigin}</span>
+                </div>
+              )}
+              {product.manufacturer && (
+                <div className="flex gap-2">
+                  <span className="min-w-[120px] font-semibold text-[#1A0A00]">Manufactured by</span>
+                  <span className="text-muted-foreground">{product.manufacturer}</span>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -275,71 +375,123 @@ const ProductDetail = () => {
             </ul>
           </TabsContent>
           <TabsContent value="nutrition" className="mt-4 rounded-2xl border border-border bg-card p-5">
-            <div className="grid grid-cols-2 gap-3 text-sm">
-              {[
-                ['Protein', '19g'],
-                ['Fiber', '11g'],
-                ['Energy', '410 kcal'],
-                ['Fat', '12g'],
-              ].map(([label, value]) => (
-                <div key={label} className="rounded-lg bg-muted p-3">
-                  <p className="text-muted-foreground">{label}</p>
-                  <p className="font-bold text-[#1A0A00]">{value}</p>
-                </div>
-              ))}
-            </div>
+            {product.nutrition ? (
+              <div className="grid grid-cols-2 gap-3 text-sm sm:grid-cols-4">
+                {Object.entries(product.nutrition).map(([label, value]) => (
+                  <div key={label} className="rounded-lg bg-muted p-3">
+                    <p className="text-muted-foreground capitalize">{label}</p>
+                    <p className="font-bold text-[#1A0A00]">{value}</p>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm text-muted-foreground">Detailed nutrition info coming soon.</p>
+            )}
           </TabsContent>
           <TabsContent value="storage" className="mt-4 rounded-2xl border border-border bg-card p-5 text-sm text-muted-foreground">
-            Store in an airtight container away from sunlight and moisture. Best enjoyed within 90 days for peak crunch.
+            {product.storageInfo || 'Store in a cool, dry place away from direct sunlight. Keep sealed after opening for best freshness.'}
           </TabsContent>
         </Tabs>
 
         <section className="mt-12">
-          <h2 className="mb-4 text-2xl font-bold text-[#1A0A00]">You May Also Like</h2>
+          <h2 className="font-display text-2xl font-bold text-[#1A0A00] sm:text-3xl">You May Also Like</h2>
+          <div className="mt-1 mb-4 h-1 w-12 rounded-full bg-[#E8762A]" />
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {relatedProducts.map((item) => (
-              <Card key={item._id || item.id} className="overflow-hidden rounded-2xl border-border/70 shadow-soft">
-                <img src={getImageUrl(item.image)} alt={item.name} className="h-40 w-full object-cover" />
-                <CardContent className="p-4">
-                  <p className="font-semibold text-[#1A0A00]">{getDisplayProductName(item)}</p>
-                  <p className="text-sm text-muted-foreground">Rs. {item.price}</p>
-                  {item.productType === 'deliverable' ? (
-                    <Button className="mt-3 w-full bg-[#E8762A] hover:bg-[#d76b20]" onClick={() => addToCart(item, 1, { flavor: item.flavour || null })}>
-                      Add to Cart
-                    </Button>
-                  ) : (
-                    <Button className="mt-3 w-full bg-[#25D366] hover:bg-[#1fa959]" asChild>
-                      <a href={buildWhatsAppEnquiryLink(item)} target="_blank" rel="noreferrer">Enquire</a>
-                    </Button>
-                  )}
-                </CardContent>
-              </Card>
+              <Link key={item._id || item.id} to={`/product/${item._id || item.id}`}>
+                <Card className="group overflow-hidden rounded-2xl border-border/70 shadow-soft transition-all duration-200 hover:-translate-y-1 hover:shadow-md">
+                  <div className="overflow-hidden">
+                    <img
+                      src={getImageUrl(item.image)}
+                      alt={item.name}
+                      className="h-48 w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                    />
+                  </div>
+                  <CardContent className="p-4">
+                    <p className="font-semibold text-[#1A0A00]">{getDisplayProductName(item)}</p>
+                    <p className="mt-1 text-sm font-bold text-[#E8762A]">Rs. {item.price}</p>
+                    {item.productType === 'deliverable' ? (
+                      <Button
+                        className="mt-3 w-full bg-[#E8762A] hover:bg-[#d76b20]"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          addToCart(item, 1, { flavor: item.flavour || null });
+                        }}
+                      >
+                        Add to Cart
+                      </Button>
+                    ) : (
+                      <Button className="mt-3 w-full bg-[#25D366] hover:bg-[#1fa959]" asChild>
+                        <a href={buildWhatsAppEnquiryLink(item)} target="_blank" rel="noreferrer" onClick={(e) => e.stopPropagation()}>
+                          Enquire
+                        </a>
+                      </Button>
+                    )}
+                  </CardContent>
+                </Card>
+              </Link>
             ))}
           </div>
         </section>
 
         {product.parentProduct === 'crunchy-chana' && flavourStoryItems.length > 0 && (
           <section className="mt-12 pb-8">
-            <h2 className="mb-2 text-2xl font-bold text-[#1A0A00]">Choose Your Crunch</h2>
+            <h2 className="font-display text-2xl font-bold text-[#1A0A00] sm:text-3xl">Choose Your Crunch</h2>
+            <div className="mt-1 mb-2 h-1 w-12 rounded-full bg-[#E8762A]" />
             <p className="mb-4 text-sm text-muted-foreground">Tap a flavour to explore its product page.</p>
             <div className="grid grid-flow-col auto-cols-[78%] gap-4 overflow-x-auto pb-2 sm:grid-flow-row sm:auto-cols-auto sm:grid-cols-3 lg:grid-cols-5">
               {flavourStoryItems.map((item) => (
                 <Link
                   key={item._id || item.id}
                   to={`/product/${item._id || item.id}`}
-                  className="rounded-2xl border border-border bg-card p-4 shadow-soft"
+                  className={`group overflow-hidden rounded-2xl border shadow-soft transition-all duration-200 hover:-translate-y-1 hover:shadow-md ${
+                    (item._id || item.id) === (product._id || product.id)
+                      ? 'border-[#E8762A] ring-2 ring-[#E8762A]'
+                      : 'border-border bg-card'
+                  }`}
                 >
-                  <p className={`inline-flex rounded-full border px-3 py-1 text-xs font-semibold ${flavorColorMap[item.flavour] || 'border-border bg-muted'}`}>
-                    {item.flavour}
-                  </p>
-                  <p className="mt-3 font-semibold text-[#1A0A00]">{getDisplayProductName(item)}</p>
-                  <p className="mt-1 text-xs text-muted-foreground">{item.story}</p>
+                  <img
+                    src={getImageUrl(item.image)}
+                    alt={getDisplayProductName(item)}
+                    className="h-32 w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                  />
+                  <div className="p-3">
+                    <span className={`inline-flex rounded-full border px-3 py-1 text-xs font-semibold ${flavorColorMap[item.flavour] || 'border-border bg-muted'}`}>
+                      {item.flavour}
+                    </span>
+                    <p className="mt-2 text-sm font-semibold text-[#1A0A00]">{getDisplayProductName(item)}</p>
+                    <p className="mt-1 text-xs text-muted-foreground">{item.story}</p>
+                  </div>
                 </Link>
               ))}
             </div>
           </section>
         )}
       </div>
+
+      {product.productType === 'deliverable' ? (
+        <div className="fixed bottom-0 left-0 right-0 z-50 border-t border-border bg-background p-3 shadow-lg lg:hidden">
+          <div className="flex items-center gap-3">
+            <div>
+              <p className="text-xs text-muted-foreground">Price</p>
+              <p className="text-lg font-bold text-[#1A0A00]">Rs. {product.price}</p>
+            </div>
+            <Button className="flex-1 bg-[#E8762A] hover:bg-[#d76b20]" size="lg" onClick={onAddToCart}>
+              <ShoppingCart className="mr-2 h-4 w-4" />
+              Add to Cart
+            </Button>
+          </div>
+        </div>
+      ) : (
+        <div className="fixed bottom-0 left-0 right-0 z-50 border-t border-border bg-background p-3 shadow-lg lg:hidden">
+          <Button className="w-full bg-[#25D366] hover:bg-[#1fa959]" size="lg" asChild>
+            <a href={whatsappLink} target="_blank" rel="noreferrer">
+              <MessageCircle className="mr-2 h-4 w-4" />
+              Enquire on WhatsApp
+            </a>
+          </Button>
+        </div>
+      )}
     </div>
   );
 };

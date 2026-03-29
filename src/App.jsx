@@ -5,7 +5,6 @@ import { Toaster } from './components/ui/sonner';
 
 // Components
 import Navigation from './components/Navigation';
-import AnnouncementBar from './components/AnnouncementBar';
 import Home from './pages/Home';
 import Products from './pages/Products';
 import ProductDetail from './pages/ProductDetail';
@@ -51,7 +50,6 @@ function App() {
           <div className="App min-h-screen bg-background flex flex-col">
         <BrowserRouter>
           <ScrollToTop />
-          <AnnouncementBar />
           <Navigation />
           <div className="flex-grow">
             <Routes>

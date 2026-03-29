@@ -17,6 +17,14 @@ const categoryNameMap = {
   seeds: 'Seeds',
 };
 
+const flavorColorMap = {
+  BBQ: 'bg-red-500 text-white border-red-500',
+  Cheese: 'bg-yellow-400 text-black border-yellow-400',
+  'Cream & Onion': 'bg-lime-300 text-black border-lime-300',
+  'Peri Peri': 'bg-orange-500 text-white border-orange-500',
+  Pudina: 'bg-green-500 text-white border-green-500',
+};
+
 const Products = () => {
   const { category: urlCategory } = useParams();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -116,7 +124,7 @@ const Products = () => {
     const hasFlavorGroup = Boolean(group && group.products.length > 1);
 
     return (
-      <Card key={product._id || product.id} className="group overflow-hidden rounded-2xl border-border/70 shadow-soft">
+      <Card key={product._id || product.id} className="group overflow-hidden rounded-2xl border-border/70 shadow-soft transition-all duration-200 hover:-translate-y-1 hover:shadow-md">
         <div className="relative overflow-hidden">
           <Link to={`/product/${product._id || product.id}`}>
             <img
@@ -130,7 +138,7 @@ const Products = () => {
         <CardContent className="space-y-4 p-5">
           <div>
             <h3 className="text-lg font-bold text-[#1A0A00]">{getDisplayProductName(product)}</h3>
-            <p className="text-sm text-muted-foreground">{product.description}</p>
+            <p className="line-clamp-2 text-sm text-muted-foreground">{product.description}</p>
           </div>
 
           {hasFlavorGroup && (
@@ -173,7 +181,7 @@ const Products = () => {
   const renderEnquiryCard = (product) => {
     const link = buildWhatsAppEnquiryLink(product);
     return (
-      <Card key={product._id || product.id} className="group overflow-hidden rounded-2xl border-border/70 bg-stone-50 shadow-soft">
+      <Card key={product._id || product.id} className="group overflow-hidden rounded-2xl border-border/70 bg-stone-50 shadow-soft transition-all duration-200 hover:-translate-y-1 hover:shadow-md">
         <div className="relative overflow-hidden">
           <Link to={`/product/${product._id || product.id}`}>
             <img
@@ -187,7 +195,7 @@ const Products = () => {
         <CardContent className="space-y-4 p-5">
           <div>
             <h3 className="text-lg font-bold text-[#1A0A00]">{product.name}</h3>
-            <p className="text-sm text-muted-foreground">{product.description}</p>
+            <p className="line-clamp-2 text-sm text-muted-foreground">{product.description}</p>
           </div>
 
           {product.coatings?.length > 0 && (
@@ -224,22 +232,26 @@ const Products = () => {
         <div className="mt-8 rounded-2xl border border-border bg-card p-3 shadow-soft">
           <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
             <button
-              className={`rounded-xl px-4 py-4 text-left transition ${
+              className={`rounded-xl px-4 py-4 text-center transition sm:text-left ${
                 activeMainTab === 'order' ? 'bg-[#E8762A] text-white' : 'bg-muted text-muted-foreground'
               }`}
               onClick={() => setActiveMainTab('order')}
             >
               <p className="text-lg font-bold">Order Now</p>
-              <p className="text-xs">Ready to ship. Add to cart and checkout.</p>
+              <p className={`text-xs ${activeMainTab === 'order' ? 'text-white/80' : 'text-muted-foreground'}`}>
+                Ready to ship. Add to cart and checkout.
+              </p>
             </button>
             <button
-              className={`rounded-xl px-4 py-4 text-left transition ${
+              className={`rounded-xl px-4 py-4 text-center transition sm:text-left ${
                 activeMainTab === 'enquire' ? 'bg-[#E8762A] text-white' : 'bg-muted text-muted-foreground'
               }`}
               onClick={() => setActiveMainTab('enquire')}
             >
               <p className="text-lg font-bold">Enquire via WhatsApp</p>
-              <p className="text-xs">Premium products available on request. Click to enquire.</p>
+              <p className={`text-xs ${activeMainTab === 'enquire' ? 'text-white/80' : 'text-muted-foreground'}`}>
+                Premium products available on request. Click to enquire.
+              </p>
             </button>
           </div>
         </div>
@@ -254,24 +266,49 @@ const Products = () => {
               <div className="space-y-8 pt-8">
                 {heroSpotlight.length > 0 && (
                   <section>
-                    <h2 className="mb-3 text-2xl font-bold text-[#1A0A00]">Hero Flavour Spotlight</h2>
+                    <h2 className="font-display text-2xl font-bold text-[#1A0A00] sm:text-3xl">Hero Flavour Spotlight</h2>
+                    <div className="mt-1 mb-3 h-1 w-12 rounded-full bg-[#E8762A]" />
                     <div className="grid grid-flow-col auto-cols-[78%] gap-4 overflow-x-auto pb-2 sm:grid-flow-row sm:auto-cols-auto sm:grid-cols-2 lg:grid-cols-5">
-                      {heroSpotlight.map((product) => (
-                        <Link
-                          key={product._id || product.id}
-                          to={`/product/${product._id || product.id}`}
-                          className="rounded-2xl border border-border bg-card p-3 shadow-soft transition hover:-translate-y-1"
-                        >
-                          <img src={getImageUrl(product.image)} alt={getDisplayProductName(product)} className="h-36 w-full rounded-xl object-cover" />
-                          <p className="mt-2 text-sm font-semibold text-[#1A0A00]">{getDisplayProductName(product)}</p>
-                        </Link>
-                      ))}
+                      {heroSpotlight.map((product) => {
+                        const colorClass = flavorColorMap[product.flavour] || 'border-border bg-muted text-foreground';
+                        return (
+                          <div
+                            key={product._id || product.id}
+                            className="flex flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-soft transition-all duration-200 hover:-translate-y-1 hover:shadow-md"
+                          >
+                            <Link to={`/product/${product._id || product.id}`} className="block overflow-hidden">
+                              <img
+                                src={getImageUrl(product.image)}
+                                alt={getDisplayProductName(product)}
+                                className="h-40 w-full object-cover transition-transform duration-300 hover:scale-105"
+                              />
+                            </Link>
+                            <div className="flex flex-1 flex-col gap-2 p-3">
+                              <span className={`self-start rounded-full border px-2.5 py-0.5 text-xs font-semibold ${colorClass}`}>
+                                {product.flavour}
+                              </span>
+                              <p className="text-sm font-semibold leading-snug text-[#1A0A00]">{getDisplayProductName(product)}</p>
+                              <p className="text-sm font-bold text-[#E8762A]">Rs. {product.price}</p>
+                              <Button
+                                size="sm"
+                                className="mt-auto w-full bg-[#E8762A] text-xs hover:bg-[#d76b20]"
+                                onClick={() => onAddToCart(product)}
+                              >
+                                <ShoppingCart className="mr-1 h-3 w-3" />
+                                Add to Cart
+                              </Button>
+                            </div>
+                          </div>
+                        );
+                      })}
                     </div>
                   </section>
                 )}
 
                 <div className="flex items-center gap-3">
-                  <Filter className="h-4 w-4" />
+                  <span className="flex items-center gap-1 text-sm text-muted-foreground">
+                    <Filter className="h-4 w-4" /> Filter:
+                  </span>
                   {[
                     { id: 'all', label: 'All' },
                     { id: 'gud', label: 'Gud Chana' },
@@ -296,7 +333,9 @@ const Products = () => {
             {activeMainTab === 'enquire' && (
               <div className="space-y-8 pt-8">
                 <div className="flex flex-wrap items-center gap-3">
-                  <Filter className="h-4 w-4" />
+                  <span className="flex items-center gap-1 text-sm text-muted-foreground">
+                    <Filter className="h-4 w-4" /> Filter:
+                  </span>
                   {enquiryCategories.map((categoryId) => (
                     <button
                       key={categoryId}
@@ -310,7 +349,21 @@ const Products = () => {
                   ))}
                 </div>
 
-                <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">{filteredEnquiryProducts.map(renderEnquiryCard)}</div>
+                <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+                  {filteredEnquiryProducts.length === 0 ? (
+                    <div className="col-span-full py-16 text-center">
+                      <p className="text-muted-foreground">No products in this category yet.</p>
+                      <button
+                        className="mt-3 text-sm font-semibold text-[#E8762A] hover:underline"
+                        onClick={() => setEnquiryFilter('all')}
+                      >
+                        View all enquiry products →
+                      </button>
+                    </div>
+                  ) : (
+                    filteredEnquiryProducts.map(renderEnquiryCard)
+                  )}
+                </div>
               </div>
             )}
           </>
