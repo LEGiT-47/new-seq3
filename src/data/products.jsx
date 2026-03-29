@@ -117,7 +117,26 @@ export const products = [
     whatsappEnquiryText: "Hi Sequeira Foods! I'm interested in Gud Chana. Could you please share pricing and availability?",
     isDeliverable: true,
     coatings: ['Jaggery'],
-    flavors: []
+    flavors: [],
+    ingredients: [
+      'Roasted Chickpeas (Chana) - Rich source of protein and fiber',
+      'Organic Jaggery - Natural sweetener with minerals and antioxidants',
+      'Sesame Seeds (Til) - High in calcium and essential minerals',
+      'Cold-Pressed Groundnut Oil - Adds richness without refined oils',
+      'Rock Salt - Natural seasoning for enhanced taste',
+      'Turmeric Powder - Natural spice with anti-inflammatory properties',
+      'Natural Gum Arabic - Coating agent for texture (food-grade)'
+    ],
+    nutrition: {
+      'Calories (per 100g)': '385 kcal',
+      'Protein': '18g',
+      'Carbohydrates': '52g',
+      'Fat': '10g',
+      'Fiber': '8g',
+      'Iron': '4.2mg',
+      'Calcium': '120mg'
+    },
+    storageInfo: 'Store in an **airtight container** in a **cool, dry place** away from direct sunlight and moisture. Keep away from heat sources. Best consumed within **2 months** of opening. Do not refrigerate as it may cause condensation. Once opened, reseal the package immediately to maintain crunchiness.'
   },
   {
     id: 101,
@@ -140,7 +159,27 @@ export const products = [
     whatsappEnquiryText: "Hi Sequeira Foods! I'm interested in Crunchy Chana - BBQ. Could you please share pricing and availability?",
     isDeliverable: true,
     coatings: [],
-    flavors: []
+    flavors: [],
+    ingredients: [
+      'Roasted Chickpeas (Chana) - Prime protein source with complete amino acids',
+      'Smoky BBQ Seasoning - Paprika, garlic, and smoke-infused spices',
+      'Cold-Pressed Vegetable Oil - For light coating without trans fats',
+      'Black Pepper - Natural flavor enhancer with digestive benefits',
+      'Garlic Powder - Adds umami depth to the smoky profile',
+      'Sea Salt - Pure mineral-rich salt for salting',
+      'Onion Powder - Complements the smoky BBQ flavor',
+      'Natural Maltodextrin - Carries flavor without additives'
+    ],
+    nutrition: {
+      'Calories (per 100g)': '390 kcal',
+      'Protein': '19g',
+      'Carbohydrates': '50g',
+      'Fat': '11g',
+      'Fiber': '9g',
+      'Iron': '4.5mg',
+      'Calcium': '100mg'
+    },
+    storageInfo: 'Store in an **airtight container** at room temperature for **maximum freshness**. Keep in a **dry, cool place** away from direct sunlight, heat, and humidity. Ideal storage temperature is **15-25°C**. Consume within **45 days** of opening for best taste and texture. Keep the container sealed after each use to prevent moisture absorption and maintain crunchiness.'
   },
   {
     id: 102,
@@ -163,7 +202,27 @@ export const products = [
     whatsappEnquiryText: "Hi Sequeira Foods! I'm interested in Crunchy Chana - Cheese. Could you please share pricing and availability?",
     isDeliverable: true,
     coatings: [],
-    flavors: []
+    flavors: [],
+    ingredients: [
+      'Roasted Chickpeas (Chana) - Excellent plant-based protein with dietary fiber',
+      'Cheese Powder - Natural cheddar flavor with real cheese taste',
+      'Nutritional Yeast - Rich in B vitamins and adds savory depth',
+      'Cold-Pressed Vegetable Oil - Light carrier for flavor coating',
+      'Sea Salt - Pure mineral content for flavor balance',
+      'Garlic Powder - Enhances the cheese complexity',
+      'Butter Powder - Adds creamy richness to cheese profile',
+      'Onion Powder - Balances savory cheese notes'
+    ],
+    nutrition: {
+      'Calories (per 100g)': '388 kcal',
+      'Protein': '18g',
+      'Carbohydrates': '51g',
+      'Fat': '10g',
+      'Fiber': '8g',
+      'Iron': '4.3mg',
+      'Calcium': '140mg'
+    },
+    storageInfo: 'Keep in an **airtight, moisture-proof container** at **room temperature**. Store in a **cool, dark place** away from heat sources and direct sunlight. **High humidity** may soften the texture, so use silica gel packets in the container if needed. Best consumed within **6 weeks** of opening. Seal tightly after each use to preserve the **creamy cheese flavor** and crispy texture.'
   },
   {
     id: 103,
@@ -186,7 +245,28 @@ export const products = [
     whatsappEnquiryText: "Hi Sequeira Foods! I'm interested in Crunchy Chana - Cream & Onion. Could you please share pricing and availability?",
     isDeliverable: true,
     coatings: [],
-    flavors: []
+    flavors: [],
+    ingredients: [
+      'Roasted Chickpeas (Chana) - Rich in protein and vegetarian iron',
+      'Cream Powder - Adds smooth, luxurious creamy base',
+      'Dried Onion - Layered savory and slightly sweet notes',
+      'Cold-Pressed Vegetable Oil - Light carrier without artificial additives',
+      'Sea Salt - Enhances all flavor components',
+      'Butter Powder - Creamy, rich undertone',
+      'Garlic Powder - Complements onion with depth',
+      'White Pepper - Subtle heat without darkness',
+      'Sour Cream Powder - Tangy complexity'
+    ],
+    nutrition: {
+      'Calories (per 100g)': '392 kcal',
+      'Protein': '19g',
+      'Carbohydrates': '51g',
+      'Fat': '11.5g',
+      'Fiber': '8.5g',
+      'Iron': '4.4mg',
+      'Calcium': '110mg'
+    },
+    storageInfo: 'Store in a **sealed airtight container** at **room temperature** in a **cool, dry location**. Keep away from direct sunlight and heat sources. Avoid storing near open water or damp areas as the cream and onion flavoring is **moisture-sensitive**. Best consumed within **8 weeks** of opening. Always ensure the container is **tightly sealed** after consumption to preserve the creamy and oniony flavors.'
   },
   {
     id: 104,
@@ -209,7 +289,27 @@ export const products = [
     whatsappEnquiryText: "Hi Sequeira Foods! I'm interested in Crunchy Chana - Peri Peri. Could you please share pricing and availability?",
     isDeliverable: true,
     coatings: [],
-    flavors: []
+    flavors: [],
+    ingredients: [
+      'Roasted Chickpeas (Chana) - Plant-based protein powerhouse with antioxidants',
+      'Peri Peri Chili - African red chilies with bold, layered heat (Capsaicin-rich)',
+      'Paprika - Smoky undertone with vitamin C and antioxidants',
+      'Garlic & Onion - Aromatic base with sulfur compounds for immunity',
+      'Cold-Pressed Vegetable Oil - Clean carrier for spice coating',
+      'Sea Salt - Mineral-rich sodium chloride for balance',
+      'Black Pepper - Enhances capsaicin absorption',
+      'Cayenne & Chili Extract - Concentrated spicy heat'
+    ],
+    nutrition: {
+      'Calories (per 100g)': '395 kcal',
+      'Protein': '19.5g',
+      'Carbohydrates': '50g',
+      'Fat': '12g',
+      'Fiber': '9g',
+      'Iron': '4.6mg',
+      'Calcium': '105mg'
+    },
+    storageInfo: 'Store in an **airtight container** at **room temperature** in a **dark, cool place**. Keep away from direct sunlight and heat exposure. **Keep away from moisture** as peri peri seasoning is hygroscopic. Best consumed within **6 weeks** of opening. Ensure the container is **tightly sealed** after each use to maintain the **bold spicy flavor**. Store separately from other products if they are mild-flavored.'
   },
   {
     id: 105,
@@ -232,7 +332,27 @@ export const products = [
     whatsappEnquiryText: "Hi Sequeira Foods! I'm interested in Crunchy Chana - Pudina. Could you please share pricing and availability?",
     isDeliverable: true,
     coatings: [],
-    flavors: []
+    flavors: [],
+    ingredients: [
+      'Roasted Chickpeas (Chana) - High-quality legume protein with complete amino acids',
+      'Dried Pudina (Mint) - Cooling menthol with digestive and antimicrobial properties',
+      'Amchur (Dry Mango Powder) - Tangy notes with natural tartness',
+      'Cumin (Jeera) - Warm spice with digestive benefits and anti-inflammatory compounds',
+      'Coriander (Dhania) - Aromatic with cooling properties',
+      'Black Salt (Kala Namak) - Contains sulfur compounds for unique sulphury taste',
+      'Cold-Pressed Vegetable Oil - Light, clean carrier oil',
+      'Dried Cilantro - Fresh herbal notes'
+    ],
+    nutrition: {
+      'Calories (per 100g)': '388 kcal',
+      'Protein': '19g',
+      'Carbohydrates': '52g',
+      'Fat': '10g',
+      'Fiber': '8.5g',
+      'Iron': '4.1mg',
+      'Calcium': '115mg'
+    },
+    storageInfo: 'Store in a **cool, dry place** in an **airtight container** at **room temperature**. Keep away from direct sunlight and heat sources which can fade the refreshing mint flavor. **Store away from moisture** as pudina masala is sensitive to humidity. Best consumed within **2 months** of opening for optimal **minty freshness and masala aroma**. Seal the container tightly after each use to preserve the delicate mint essence and prevent flavor dissipation.'
   },
   // CHOCOLATES (8 products)
   {

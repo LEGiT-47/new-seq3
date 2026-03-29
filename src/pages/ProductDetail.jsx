@@ -479,33 +479,58 @@ const ProductDetail = () => {
         )}
         {activeTab === 'ingredients' && (
           <div className="mt-4 rounded-2xl border border-border bg-card p-6">
-            <h3 className="text-2xl font-bold text-[#1A0A00]">Ingredients</h3>
-            <ul className="mt-4 space-y-2 text-base text-muted-foreground">
+            <h3 className="text-2xl font-bold text-[#1A0A00]">Premium Ingredients</h3>
+            <p className="mt-2 text-sm text-muted-foreground">Each ingredient is carefully selected for quality and nutritional value</p>
+            <ul className="mt-6 space-y-3 text-base">
               {ingredientItems.map((item) => (
-                <li key={item} className="rounded-lg bg-muted px-3 py-2">{item}</li>
+                <li key={item} className="rounded-lg border border-border/50 bg-gradient-to-r from-muted/40 to-transparent p-4 text-muted-foreground hover:border-[#E8762A]/30 hover:bg-muted/60 transition-all">
+                  <span className="block">{item}</span>
+                </li>
               ))}
             </ul>
           </div>
         )}
-        {activeTab === 'nutrition' && (
-          <div className="mt-4 rounded-2xl border border-border bg-card p-5">
-            {product.nutrition ? (
-              <div className="grid grid-cols-2 gap-3 text-sm sm:grid-cols-4">
-                {Object.entries(product.nutrition).map(([label, value]) => (
-                  <div key={label} className="rounded-lg bg-muted p-3">
-                    <p className="text-muted-foreground capitalize">{label}</p>
-                    <p className="font-bold text-[#1A0A00]">{value}</p>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <p className="text-sm text-muted-foreground">Detailed nutrition info coming soon.</p>
-            )}
-          </div>
-        )}
         {activeTab === 'storage' && (
-          <div className="mt-4 rounded-2xl border border-border bg-card p-6 text-base text-muted-foreground">
-            {product.storageInfo || 'Store in a cool, dry place away from direct sunlight. Keep sealed after opening for best freshness.'}
+          <div className="mt-4 rounded-2xl border border-border bg-card p-6">
+            <h3 className="text-2xl font-bold text-[#1A0A00] mb-4">How to Store</h3>
+            <div className="prose prose-sm max-w-none text-base text-muted-foreground leading-relaxed">
+              {product.storageInfo ? (
+                <p className="whitespace-pre-wrap">
+                  {product.storageInfo.split(/(\*\*[^*]+\*\*)/g).map((part, idx) => {
+                    if (part.startsWith('**') && part.endsWith('**')) {
+                      return (
+                        <span key={idx} className="font-bold text-[#1A0A00]">
+                          {part.slice(2, -2)}
+                        </span>
+                      );
+                    }
+                    return part;
+                  })}
+                </p>
+              ) : (
+                'Store in a cool, dry place away from direct sunlight. Keep sealed after opening for best freshness.'
+              )}
+            </div>
+            <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="rounded-lg border border-border bg-muted/30 p-4">
+                <p className="font-semibold text-[#1A0A00] mb-2">✓ Storage Tips</p>
+                <ul className="text-sm text-muted-foreground space-y-1">
+                  <li>• Use airtight containers</li>
+                  <li>• Maintain cool temperature</li>
+                  <li>• Avoid moisture and humidity</li>
+                  <li>• Keep away from heat sources</li>
+                </ul>
+              </div>
+              <div className="rounded-lg border border-border bg-muted/30 p-4">
+                <p className="font-semibold text-[#1A0A00] mb-2">✗ Avoid</p>
+                <ul className="text-sm text-muted-foreground space-y-1">
+                  <li>• Direct sunlight exposure</li>
+                  <li>• Refrigeration/Freezing</li>
+                  <li>• Damp environments</li>
+                  <li>• Opened containers</li>
+                </ul>
+              </div>
+            </div>
           </div>
         )}
 
