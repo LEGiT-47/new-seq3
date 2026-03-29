@@ -117,6 +117,62 @@ const ProductDetail = () => {
   const hasRating = Number(product.rating) > 0;
   const weights = product.weightOptions?.length ? product.weightOptions : product.weight ? [product.weight] : [];
   const hasSingleWeight = weights.length === 1;
+  const unitPrice = Number(product.price) || 0;
+  const originalUnitPrice = Number(product.originalPrice) || 0;
+  const totalPrice = unitPrice * qty;
+  const totalOriginalPrice = originalUnitPrice * qty;
+  const savingsPercent = originalUnitPrice > unitPrice ? Math.round((1 - unitPrice / originalUnitPrice) * 100) : 0;
+
+  const formatPrice = (value) => new Intl.NumberFormat('en-IN').format(Math.round(value || 0));
+
+  const ingredientItems = useMemo(() => {
+    const fallback = ['Roasted chana', 'Natural seasoning', 'Cold-pressed oil', 'Sea salt'];
+
+    if (!product?.ingredients) return fallback;
+    if (Array.isArray(product.ingredients)) return product.ingredients;
+
+    return String(product.ingredients)
+      .split(',')
+      .map((item) => item.trim())
+      .filter(Boolean);
+  }, [product]);
+
+  const enhancedDescription = useMemo(() => {
+    if (product?.description) return product.description;
+
+    const base = `${displayName} is crafted for a satisfying crunch and bold taste.`;
+    const flavourText = product?.flavour ? ` The ${product.flavour} profile makes it easy to enjoy as an anytime snack.` : '';
+    const categoryText = product?.category ? ` A great pick from our ${product.category} collection.` : '';
+    return `${base}${flavourText}${categoryText}`;
+  }, [displayName, product]);
+
+  const whyLovePoints = useMemo(() => {
+    const points = [];
+
+    if (ingredientItems.length) points.push('Made using carefully selected ingredients.');
+    if (product?.weight || product?.netWeight) points.push(`Packed in ${product.netWeight || product.weight} for consistent portioning.`);
+    if (product?.productType === 'deliverable') points.push('Ready to ship with secure packaging and quick dispatch.');
+    if (product?.flavour) points.push(`${product.flavour} flavour profile for balanced everyday snacking.`);
+
+    if (!points.length) {
+      points.push('Balanced taste with a crunchy texture.');
+      points.push('Crafted with quality-focused ingredient selection.');
+      points.push('Suitable for regular snacking and sharing.');
+    }
+
+    return points.slice(0, 3);
+  }, [ingredientItems, product]);
+
+  const bestForPoints = useMemo(() => {
+    const points = [];
+
+    points.push('Tea-time snacking and office breaks');
+    points.push('Travel-friendly munching');
+    if (product?.parentProduct === 'crunchy-chana') points.push('Trying multiple flavours from the Crunchy Chana range');
+    else points.push('Family sharing and light evening cravings');
+
+    return points.slice(0, 3);
+  }, [product]);
 
   const goToImage = (index) => {
     if (!safeImageGallery.length) return;
@@ -126,7 +182,7 @@ const ProductDetail = () => {
   };
 
   const onAddToCart = () => {
-    addToCart(product, qty, { flavor: product.flavour || null });
+    addToCart(product, qty, { flavor: product.flavour || null, weight: selectedWeight || product.weight || null });
     toast.success(`${displayName} added to cart`);
   };
 
@@ -265,16 +321,21 @@ const ProductDetail = () => {
             })()}
 
             <div className="mt-6 flex flex-wrap items-baseline gap-3">
-              <p className="font-display text-5xl font-black text-[#1A0A00]">Rs. {product.price}</p>
-              {product.originalPrice && product.originalPrice > product.price && (
+              <p className="font-display text-5xl font-black text-[#1A0A00]">Rs. {formatPrice(totalPrice)}</p>
+              {originalUnitPrice > unitPrice && (
                 <>
-                  <p className="text-lg text-muted-foreground line-through">Rs. {product.originalPrice}</p>
+                  <p className="text-lg text-muted-foreground line-through">Rs. {formatPrice(totalOriginalPrice)}</p>
                   <span className="rounded-full bg-green-100 px-2 py-0.5 text-sm font-semibold text-green-700">
-                    {Math.round((1 - product.price / product.originalPrice) * 100)}% OFF
+                    {savingsPercent}% OFF
                   </span>
                 </>
               )}
             </div>
+            {product.productType === 'deliverable' && (
+              <p className="mt-1 text-sm text-muted-foreground">
+                Rs. {formatPrice(unitPrice)} x {qty} = <span className="font-semibold text-[#1A0A00]">Rs. {formatPrice(totalPrice)}</span>
+              </p>
+            )}
             <p className="mt-2 inline-flex items-center rounded-full bg-muted px-3 py-1 text-sm text-muted-foreground">
               {product.productType === 'deliverable' ? 'Usually ships in 2-3 days' : 'Enquire for Price'}
             </p>
@@ -390,14 +451,35 @@ const ProductDetail = () => {
         </div>
 
         {activeTab === 'description' && (
-          <div className="mt-4 rounded-2xl border border-border bg-card p-5 text-sm text-muted-foreground">
-            {product.description}
+          <div className="mt-4 rounded-2xl border border-border bg-card p-6">
+            <h3 className="text-2xl font-bold text-[#1A0A00]">About {displayName}</h3>
+            <p className="mt-3 text-base leading-relaxed text-muted-foreground">{enhancedDescription}</p>
+
+            <div className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-2">
+              <div className="rounded-xl border border-border bg-muted/60 p-4">
+                <h4 className="text-lg font-semibold text-[#1A0A00]">Why You Will Love It</h4>
+                <ul className="mt-3 space-y-2 text-sm text-muted-foreground">
+                  {whyLovePoints.map((point) => (
+                    <li key={point}>• {point}</li>
+                  ))}
+                </ul>
+              </div>
+              <div className="rounded-xl border border-border bg-muted/60 p-4">
+                <h4 className="text-lg font-semibold text-[#1A0A00]">Best For</h4>
+                <ul className="mt-3 space-y-2 text-sm text-muted-foreground">
+                  {bestForPoints.map((point) => (
+                    <li key={point}>• {point}</li>
+                  ))}
+                </ul>
+              </div>
+            </div>
           </div>
         )}
         {activeTab === 'ingredients' && (
-          <div className="mt-4 rounded-2xl border border-border bg-card p-5">
-            <ul className="space-y-2 text-sm text-muted-foreground">
-              {(product.ingredients || ['Roasted chana', 'Natural seasoning', 'Cold-pressed oil', 'Sea salt']).map((item) => (
+          <div className="mt-4 rounded-2xl border border-border bg-card p-6">
+            <h3 className="text-2xl font-bold text-[#1A0A00]">Ingredients</h3>
+            <ul className="mt-4 space-y-2 text-base text-muted-foreground">
+              {ingredientItems.map((item) => (
                 <li key={item} className="rounded-lg bg-muted px-3 py-2">{item}</li>
               ))}
             </ul>
@@ -420,7 +502,7 @@ const ProductDetail = () => {
           </div>
         )}
         {activeTab === 'storage' && (
-          <div className="mt-4 rounded-2xl border border-border bg-card p-5 text-sm text-muted-foreground">
+          <div className="mt-4 rounded-2xl border border-border bg-card p-6 text-base text-muted-foreground">
             {product.storageInfo || 'Store in a cool, dry place away from direct sunlight. Keep sealed after opening for best freshness.'}
           </div>
         )}
@@ -507,8 +589,8 @@ const ProductDetail = () => {
         <div className="fixed bottom-0 left-0 right-0 z-50 border-t border-border bg-background p-3 shadow-lg lg:hidden">
           <div className="flex items-center gap-3">
             <div>
-              <p className="text-xs text-muted-foreground">Price</p>
-              <p className="text-lg font-bold text-[#1A0A00]">Rs. {product.price}</p>
+              <p className="text-xs text-muted-foreground">Total ({qty})</p>
+              <p className="text-lg font-bold text-[#1A0A00]">Rs. {formatPrice(totalPrice)}</p>
             </div>
             <Button className="flex-1 bg-[#E8762A] hover:bg-[#d76b20]" size="lg" onClick={onAddToCart}>
               <ShoppingCart className="mr-2 h-4 w-4" />

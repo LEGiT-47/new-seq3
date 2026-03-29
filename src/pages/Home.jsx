@@ -10,7 +10,6 @@ import { toast } from 'sonner';
 import { ArrowRight, Star, Truck, Gift, Leaf, Factory, MessageCircle, ShoppingCart } from 'lucide-react';
 import HeroCarousel from '../components/HeroCarousel';
 import OccasionBanner from '../components/OccasionBanner';
-import AnnouncementBar from '../components/AnnouncementBar';
 import { useReveal } from '../hooks/useReveal';
 import heroOne from '../assets/first.jpg';
 import heroTwo from '../assets/second.jpg';
@@ -201,7 +200,6 @@ const Home = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <AnnouncementBar />
       <HeroCarousel slides={heroSlides} />
 
       <section ref={occasionRef} className="reveal bg-white py-8 px-4 sm:px-6 sm:py-10 lg:px-8">

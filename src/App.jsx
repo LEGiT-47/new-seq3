@@ -25,6 +25,7 @@ import WhatsAppFloat from './components/WhatsAppFloat';
 import FestivePopup from './components/FestivePopup';
 import LoadingScreen from './components/LoadingScreen';
 import Footer from './components/Footer';
+import AnnouncementBar from './components/AnnouncementBar';
 
 // Context
 import { CartProvider } from './context/CartContext';
@@ -50,6 +51,7 @@ function App() {
           <div className="App min-h-screen bg-background flex flex-col">
         <BrowserRouter>
           <ScrollToTop />
+          <AnnouncementBar />
           <Navigation />
           <div className="flex-grow">
             <Routes>
