@@ -9,7 +9,7 @@ const messages = [
 ];
 
 const AnnouncementBar = () => (
-  <div className="overflow-hidden bg-[#1A0A00] py-2 text-sm text-white">
+  <div className="sticky top-0 z-50 overflow-hidden bg-[#1A0A00] py-2 text-sm text-white">
     <div
       className="flex w-max gap-12 whitespace-nowrap"
       style={{

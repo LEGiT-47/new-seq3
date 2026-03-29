@@ -83,36 +83,77 @@ export const adminAuthAPI = {
   verifyToken: null, // Will be set below after adminApiClient is created
 };
 
-// Create a mapping of local product images
-const createLocalImageMap = async () => {
+// Create a mapping of local product metadata
+const createLocalProductMap = async () => {
   const { products: localProducts } = await import('../data/products.jsx');
-  const imageMap = {};
+  const productMap = {};
 
   localProducts.forEach(product => {
+    const normalizedName = String(product.name || '').toLowerCase();
+
+    if (product.id !== undefined && product.id !== null) {
+      productMap[`id:${product.id}`] = product;
+    }
+
+    if (normalizedName) {
+      productMap[`name:${normalizedName}`] = product;
+    }
+
     if (product.image && typeof product.image === 'string') {
-      // Extract filename from image path
       const filename = product.image.split('/').pop().toLowerCase();
-      imageMap[filename] = product.image;
-      // Also map by product name
-      imageMap[product.name.toLowerCase()] = product.image;
+      productMap[`file:${filename}`] = product;
     }
   });
 
-  return imageMap;
+  return productMap;
 };
 
 // Helper function to merge local images with backend products
 const enrichProductsWithImages = async (products) => {
-  const imageMap = await createLocalImageMap();
+  const productMap = await createLocalProductMap();
 
   return products.map(product => {
+    const lookupKeys = [];
+
+    if (product.productId !== undefined && product.productId !== null) {
+      lookupKeys.push(`id:${product.productId}`);
+    }
+    if (product.id !== undefined && product.id !== null) {
+      lookupKeys.push(`id:${product.id}`);
+    }
+    if (product.name) {
+      lookupKeys.push(`name:${String(product.name).toLowerCase()}`);
+    }
     if (product.image) {
       const filename = product.image.split('/').pop().toLowerCase();
-      // If we have a local image, use that instead of backend URL
-      if (imageMap[filename]) {
-        return normalizeProduct({ ...product, image: imageMap[filename] });
+      lookupKeys.push(`file:${filename}`);
+    }
+
+    const localProduct = lookupKeys.map((key) => productMap[key]).find(Boolean);
+
+    if (localProduct) {
+      return normalizeProduct({
+        ...product,
+        image: localProduct.image || product.image,
+        images:
+          Array.isArray(localProduct.images) && localProduct.images.length > 0
+            ? localProduct.images
+            : product.images,
+      });
+    }
+
+    if (product.image && typeof product.image === 'string') {
+      const filename = product.image.split('/').pop().toLowerCase();
+      const fallbackProduct = productMap[`file:${filename}`];
+      if (fallbackProduct) {
+        return normalizeProduct({
+          ...product,
+          image: fallbackProduct.image || product.image,
+          images: fallbackProduct.images || product.images,
+        });
       }
     }
+
     return normalizeProduct(product);
   });
 };
