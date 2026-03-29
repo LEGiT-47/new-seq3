@@ -11,6 +11,7 @@ import { ArrowRight, Star, Truck, Gift, Leaf, Factory, MessageCircle, ShoppingCa
 import HeroCarousel from '../components/HeroCarousel';
 import OccasionBanner from '../components/OccasionBanner';
 import AnnouncementBar from '../components/AnnouncementBar';
+import { useReveal } from '../hooks/useReveal';
 import heroOne from '../assets/first.jpg';
 import heroTwo from '../assets/second.jpg';
 import heroThree from '../assets/partner.jpg';
@@ -47,6 +48,13 @@ const Home = () => {
   const [loading, setLoading] = useState(true);
   const [activeCategoryTab, setActiveCategoryTab] = useState('snacks');
   const [selectedHomeFlavourByGroup, setSelectedHomeFlavourByGroup] = useState({});
+  const occasionRef = useReveal();
+  const heroRef = useReveal();
+  const categoryRef = useReveal();
+  const trustRef = useReveal();
+  const enquiryRef = useReveal();
+  const giftingRef = useReveal();
+  const reviewsRef = useReveal();
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -196,105 +204,115 @@ const Home = () => {
       <AnnouncementBar />
       <HeroCarousel slides={heroSlides} />
 
-      <section className="py-8 sm:py-10 px-4 sm:px-6 lg:px-8">
+      <section ref={occasionRef} className="reveal bg-white py-8 px-4 sm:px-6 sm:py-10 lg:px-8">
         <div className="max-w-7xl mx-auto">
           <OccasionBanner />
         </div>
       </section>
 
-      <section className="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
-        <div className="mb-8 text-center">
-          <h2 className="font-display text-2xl font-bold text-[#1A0A00] sm:text-3xl">Order Online - Delivered Fresh</h2>
-          <div className="mx-auto mt-1 h-1 w-12 rounded-full bg-[#E8762A]" />
-          <p className="mt-2 text-muted-foreground">Our signature snacks, ready to ship straight to you.</p>
-        </div>
-
-        {loading ? (
-          <p className="py-10 text-center text-muted-foreground">Loading hero products...</p>
-        ) : (
-          <div className="grid grid-flow-col auto-cols-[78%] gap-4 overflow-x-auto pb-2 sm:grid-flow-row sm:auto-cols-auto sm:grid-cols-2 lg:grid-cols-3">
-            {homeCards.map(({ key, products: groupedProducts, active }) => {
-              const displayName = getDisplayProductName(active);
-              const hasGroup = groupedProducts.length > 1;
-              const activeWeightOptions = active.weightOptions?.length ? active.weightOptions : active.weight ? [active.weight] : [];
-
-              return (
-                <Card
-                  key={key}
-                  className="group overflow-hidden rounded-2xl border-border/80 shadow-soft transition-all duration-200 hover:-translate-y-1 hover:shadow-md"
-                >
-                  <Link to={`/product/${active._id || active.id}`}>
-                    <div className="relative overflow-hidden">
-                      <img
-                        src={getImageUrl(active.image)}
-                        alt={displayName}
-                        className="h-64 w-full object-cover transition-transform duration-300 group-hover:scale-105"
-                      />
-                      <Badge className="absolute left-3 top-3 bg-[#2D5016] text-white">🚚 Deliverable</Badge>
-                    </div>
-                  </Link>
-                  <CardContent className="space-y-3 p-5">
-                    <div className="flex items-start justify-between gap-2">
-                      <h3 className="text-lg font-bold leading-tight text-[#1A0A00]">{displayName}</h3>
-                      <p className="ml-2 shrink-0 text-xl font-bold text-[#E8762A]">Rs. {active.price}</p>
-                    </div>
-
-                    {hasGroup && (
-                      <div className="flex flex-wrap gap-1.5">
-                        {groupedProducts.map((fp) => (
-                          <button
-                            key={fp._id || fp.id}
-                            className={`rounded-full border px-2.5 py-1 text-xs font-medium transition ${
-                              (selectedHomeFlavourByGroup[key] || groupedProducts[0].flavour) === fp.flavour
-                                ? 'border-[#E8762A] bg-[#E8762A] text-white'
-                                : 'border-border text-muted-foreground hover:border-[#E8762A]'
-                            }`}
-                            onClick={() => setSelectedHomeFlavourByGroup((prev) => ({ ...prev, [key]: fp.flavour }))}
-                          >
-                            {fp.flavour}
-                          </button>
-                        ))}
-                      </div>
-                    )}
-
-                    {activeWeightOptions.length > 0 && (
-                      <div className="flex flex-wrap gap-2">
-                        {activeWeightOptions.map((size) => (
-                          <span key={size} className="rounded-full border border-border px-3 py-1 text-xs font-medium">
-                            {size}
-                          </span>
-                        ))}
-                      </div>
-                    )}
-
-                    <div className="flex gap-2">
-                      <Button className="flex-1 bg-[#E8762A] text-sm hover:bg-[#d76b20]" onClick={() => onAddHeroToCart(active)}>
-                        <ShoppingCart className="mr-1.5 h-3.5 w-3.5" />
-                        Add to Cart
-                      </Button>
-                      <Button variant="outline" className="px-3 text-sm" asChild>
-                        <Link to={`/product/${active._id || active.id}`}>View</Link>
-                      </Button>
-                    </div>
-                    <Link to={`/product/${active._id || active.id}`} className="inline-flex items-center gap-1 text-xs font-semibold text-[#E8762A] hover:underline">
-                      View Details <ArrowRight className="h-3.5 w-3.5" />
-                    </Link>
-                  </CardContent>
-                </Card>
-              );
-            })}
+      <section ref={heroRef} className="reveal relative overflow-hidden bg-[#FDF6EC] py-16 px-4 sm:px-6 sm:py-20 lg:px-8">
+        <div className="pointer-events-none absolute -right-32 -top-32 h-96 w-96 rounded-full bg-[#E8762A]/6 blur-3xl" />
+        <div className="pointer-events-none absolute -left-20 bottom-0 h-64 w-64 rounded-full bg-[#2D5016]/5 blur-3xl" />
+        <div className="relative mx-auto max-w-7xl">
+          <div className="mb-8 text-center">
+            <h2 className="font-display text-2xl font-bold text-[#1A0A00] sm:text-3xl">Order Online - Delivered Fresh</h2>
+            <div className="mx-auto mt-1 h-1 w-12 rounded-full bg-[#E8762A]" />
+            <p className="mx-auto mt-2 max-w-2xl text-sm text-muted-foreground sm:text-base">Our signature snacks, ready to ship straight to you.</p>
           </div>
-        )}
 
-        <div className="mt-6 text-center">
-          <Link to="/products?tab=order" className="inline-flex items-center gap-1 text-sm font-semibold text-[#E8762A] hover:underline">
-            View All Deliverable Products <ArrowRight className="h-4 w-4" />
-          </Link>
+          {loading ? (
+            <p className="py-10 text-center text-muted-foreground">Loading hero products...</p>
+          ) : (
+            <div className="grid grid-flow-col auto-cols-[78%] gap-4 overflow-x-auto pb-2 sm:grid-flow-row sm:auto-cols-auto sm:grid-cols-2 lg:grid-cols-3">
+              {homeCards.map(({ key, products: groupedProducts, active }) => {
+                const displayName = getDisplayProductName(active);
+                const hasGroup = groupedProducts.length > 1;
+                const activeWeightOptions = active.weightOptions?.length ? active.weightOptions : active.weight ? [active.weight] : [];
+
+                return (
+                  <Card
+                    key={key}
+                    className="group overflow-hidden rounded-3xl border-0 bg-white shadow-card transition-all duration-300 hover:-translate-y-2 hover:shadow-strong"
+                  >
+                    <Link to={`/product/${active._id || active.id}`}>
+                      <div className="relative overflow-hidden rounded-t-3xl">
+                        <img
+                          src={getImageUrl(active.image)}
+                          alt={displayName}
+                          className="h-64 w-full object-cover transition-transform duration-500 group-hover:scale-108"
+                        />
+                        <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-white to-transparent" />
+                        <Badge className="absolute left-3 top-3 bg-[#2D5016] text-white">🚚 Deliverable</Badge>
+                      </div>
+                    </Link>
+                    <CardContent className="space-y-3 p-6">
+                      <div className="flex items-start justify-between gap-2">
+                        <h3 className="text-lg font-bold leading-tight text-[#1A0A00]">{displayName}</h3>
+                        <p className="text-2xl font-black text-[#E8762A]">Rs. {active.price}</p>
+                      </div>
+
+                      {hasGroup && (
+                        <div className="flex flex-wrap gap-1.5">
+                          {groupedProducts.map((fp) => (
+                            <button
+                              key={fp._id || fp.id}
+                              className={`rounded-full border px-2.5 py-1 text-xs font-medium transition ${
+                                (selectedHomeFlavourByGroup[key] || groupedProducts[0].flavour) === fp.flavour
+                                  ? 'border-[#E8762A] bg-[#E8762A] text-white'
+                                  : 'border-border text-muted-foreground hover:border-[#E8762A]'
+                              }`}
+                              onClick={() => setSelectedHomeFlavourByGroup((prev) => ({ ...prev, [key]: fp.flavour }))}
+                            >
+                              {fp.flavour}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+
+                      {activeWeightOptions.length > 0 && (
+                        <div className="flex flex-wrap gap-2">
+                          {activeWeightOptions.map((size) => (
+                            <span key={size} className="rounded-full border border-border px-3 py-1 text-xs font-medium">
+                              {size}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+
+                      <div className="flex gap-2">
+                        <Button className="flex-1 rounded-full bg-[#E8762A] text-sm hover:bg-[#d76b20]" onClick={() => onAddHeroToCart(active)}>
+                          <ShoppingCart className="mr-1.5 h-3.5 w-3.5" />
+                          Add to Cart
+                        </Button>
+                        <Button variant="outline" className="rounded-full px-3 text-sm" asChild>
+                          <Link to={`/product/${active._id || active.id}`}>View</Link>
+                        </Button>
+                      </div>
+                      <Link to={`/product/${active._id || active.id}`} className="inline-flex items-center gap-1 text-xs font-semibold text-[#E8762A] hover:underline">
+                        View Details <ArrowRight className="h-3.5 w-3.5" />
+                      </Link>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+          )}
+
+          <div className="mt-6 text-center">
+            <Link to="/products?tab=order" className="inline-flex items-center gap-1 text-sm font-semibold text-[#E8762A] hover:underline">
+              View All Deliverable Products <ArrowRight className="h-4 w-4" />
+            </Link>
+          </div>
         </div>
       </section>
 
-      <section className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
-        <div className="rounded-2xl bg-white/80 p-6 shadow-soft transition-all duration-200 hover:-translate-y-1 hover:shadow-md">
+      <section ref={categoryRef} className="reveal bg-white py-12 px-4 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-7xl">
+          <div className="mb-8 text-center">
+            <h2 className="font-display text-2xl font-bold text-[#1A0A00] sm:text-3xl">Shop By Category</h2>
+            <div className="mx-auto mt-2 h-1 w-12 rounded-full bg-[#E8762A]" />
+          </div>
+          <div className="rounded-3xl border border-[#f0e3d4] bg-white p-6 shadow-soft transition-all duration-200 hover:-translate-y-1 hover:shadow-md">
           <div className="mb-6 flex flex-wrap items-center justify-center gap-2">
             {categoryTabs.map((tab) => (
               <button
@@ -313,7 +331,7 @@ const Home = () => {
               <Link
                 key={tile.id}
                 to={`/products/${tile.id}`}
-                className="group relative block h-48 overflow-hidden rounded-2xl shadow-soft transition-all duration-200 hover:-translate-y-1 hover:shadow-md"
+                className="group relative block h-48 overflow-hidden rounded-3xl shadow-soft transition-all duration-300 hover:-translate-y-1.5 hover:shadow-medium"
               >
                 <img src={tile.image} alt={tile.name} className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105" />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/65 to-transparent" />
@@ -321,34 +339,37 @@ const Home = () => {
               </Link>
             ))}
           </div>
+          </div>
         </div>
       </section>
 
-      <section className="mx-auto my-10 grid max-w-7xl grid-cols-2 gap-3 px-4 sm:grid-cols-4 sm:px-6 lg:px-8">
-        {[
-          { icon: <Leaf className="h-5 w-5" />, label: '100% Natural' },
-          { icon: <Factory className="h-5 w-5" />, label: 'Made in India' },
-          { icon: <Gift className="h-5 w-5" />, label: 'Custom Gifting' },
-          { icon: <Truck className="h-5 w-5" />, label: 'Pan-India Delivery' },
-        ].map((item) => (
-          <div key={item.label} className="flex items-center justify-center gap-2 rounded-xl border border-border bg-card px-3 py-4 text-center text-sm font-semibold text-[#1A0A00] shadow-soft transition-all duration-200 hover:-translate-y-1 hover:shadow-md">
-            <span className="text-[#2D5016]">{item.icon}</span>
-            <span>{item.label}</span>
-          </div>
-        ))}
+      <section ref={trustRef} className="reveal bg-[#1A0A00] py-10 px-4 sm:px-6 lg:px-8">
+        <div className="mx-auto grid max-w-7xl grid-cols-2 gap-3 sm:grid-cols-4">
+          {[
+            { icon: <Leaf className="h-5 w-5" />, label: '100% Natural' },
+            { icon: <Factory className="h-5 w-5" />, label: 'Made in India' },
+            { icon: <Gift className="h-5 w-5" />, label: 'Custom Gifting' },
+            { icon: <Truck className="h-5 w-5" />, label: 'Pan-India Delivery' },
+          ].map((item) => (
+            <div key={item.label} className="flex items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/5 px-3 py-4 text-center text-sm font-semibold text-white">
+              <span className="text-[#E8762A]">{item.icon}</span>
+              <span>{item.label}</span>
+            </div>
+          ))}
+        </div>
       </section>
 
-      <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="rounded-3xl bg-gradient-primary px-6 py-10 text-white shadow-medium sm:px-10">
+      <section ref={enquiryRef} className="reveal bg-[#FDF6EC] py-12 px-4 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-7xl rounded-3xl bg-gradient-primary px-6 py-10 text-white shadow-medium sm:px-10">
           <p className="text-sm uppercase tracking-[0.2em] text-white/80">Premium Enquiry Collection</p>
-          <h3 className="mt-2 text-2xl font-bold sm:text-3xl">
+          <h3 className="mt-2 font-display text-2xl font-bold sm:text-3xl">
             Looking for premium dry fruits, cashews, or custom bulk orders?
           </h3>
           <p className="mt-2 max-w-3xl text-white/90">
             Our premium range is available on enquiry so we can share fresh pricing, stock, and packaging options.
           </p>
           <Button
-            className="mt-6 bg-[#25D366] text-white hover:bg-[#1fa959]"
+            className="mt-6 rounded-full bg-[#25D366] text-white hover:bg-[#1fa959]"
             onClick={() => {
               if (enquiryProducts[0]) {
                 openWhatsAppEnquiry(enquiryProducts[0]);
@@ -361,7 +382,8 @@ const Home = () => {
         </div>
       </section>
 
-      <section className="mx-auto grid max-w-7xl grid-cols-1 items-center gap-8 px-4 py-16 sm:px-6 lg:grid-cols-2 lg:px-8">
+        <section ref={giftingRef} className="reveal bg-white py-16 px-4 sm:px-6 lg:px-8">
+          <div className="mx-auto grid max-w-7xl grid-cols-1 items-center gap-8 lg:grid-cols-2">
         <img
           src={heroVisual}
           alt="Gifting teaser"
@@ -369,32 +391,35 @@ const Home = () => {
         />
         <div>
           <h3 className="font-display text-3xl font-bold text-[#1A0A00]">Gift Something Real</h3>
-          <p className="mt-3 text-muted-foreground">
+          <p className="mt-3 max-w-xl text-muted-foreground">
             Curated hampers for family, festive moments, and corporate teams with premium packaging and personalization.
           </p>
-          <Button className="mt-6 bg-[#2D5016] hover:bg-[#243f12]" asChild>
+          <Button className="mt-6 rounded-full bg-[#2D5016] hover:bg-[#243f12]" asChild>
             <Link to="/gifting">Explore Gifting</Link>
           </Button>
         </div>
+        </div>
       </section>
 
-      <section className="mx-auto max-w-7xl px-4 pb-16 sm:px-6 lg:px-8">
-        <h2 className="text-center font-display text-2xl font-bold text-[#1A0A00] sm:text-3xl">Loved by Snack Fans</h2>
-        <div className="mx-auto mt-1 mb-6 h-1 w-12 rounded-full bg-[#E8762A]" />
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {reviewCards.map((review) => (
-            <Card key={review.name} className="rounded-2xl border-border/70 shadow-soft transition-all duration-200 hover:-translate-y-1 hover:shadow-md">
-              <CardContent className="p-5">
-                <div className="mb-3 flex items-center gap-1 text-[#E8762A]">
-                  {[...Array(5)].map((_, index) => (
-                    <Star key={index} className="h-4 w-4 fill-current" />
-                  ))}
-                </div>
-                <p className="text-sm text-muted-foreground">"{review.quote}"</p>
-                <p className="mt-4 text-sm font-semibold text-[#1A0A00]">{review.name}</p>
-              </CardContent>
-            </Card>
-          ))}
+      <section ref={reviewsRef} className="reveal bg-[#FDF6EC] pb-16 pt-12 px-4 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-7xl">
+          <h2 className="text-center font-display text-2xl font-bold text-[#1A0A00] sm:text-3xl">Loved by Snack Fans</h2>
+          <div className="mx-auto mt-1 mb-6 h-1 w-12 rounded-full bg-[#E8762A]" />
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {reviewCards.map((review) => (
+              <Card key={review.name} className="rounded-3xl border-0 bg-white shadow-card transition-all duration-300 hover:-translate-y-1.5 hover:shadow-medium">
+                <CardContent className="p-5">
+                  <div className="mb-3 flex items-center gap-1 text-[#E8762A]">
+                    {[...Array(5)].map((_, index) => (
+                      <Star key={index} className="h-4 w-4 fill-current" />
+                    ))}
+                  </div>
+                  <p className="text-sm text-muted-foreground">"{review.quote}"</p>
+                  <p className="mt-4 text-sm font-semibold text-[#1A0A00]">{review.name}</p>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
         </div>
       </section>
     </div>

@@ -1,8 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
 import { Button } from '../components/ui/button';
-import { Badge } from '../components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
 import { Card, CardContent } from '../components/ui/card';
 import { useCart } from '../context/CartContext';
 import { productAPI, getImageUrl } from '../lib/api';
@@ -29,6 +27,7 @@ const ProductDetail = () => {
   const [qty, setQty] = useState(1);
   const [selectedWeight, setSelectedWeight] = useState('');
   const [activeImageIndex, setActiveImageIndex] = useState(0);
+  const [activeTab, setActiveTab] = useState('description');
 
   useEffect(() => {
     const load = async () => {
@@ -142,8 +141,8 @@ const ProductDetail = () => {
 
         <div className="grid grid-cols-1 gap-10 lg:grid-cols-2">
           <div>
-            <div className="relative overflow-hidden rounded-3xl border border-border bg-card">
-              <img src={activeSliderImage} alt={displayName} className="h-[420px] w-full object-cover transition duration-300 hover:scale-105" />
+            <div className="relative overflow-hidden rounded-3xl bg-[#FDF6EC] shadow-strong">
+              <img src={activeSliderImage} alt={displayName} className="h-[480px] w-full object-cover" />
               {safeImageGallery.length > 1 && (
                 <>
                   <button
@@ -165,24 +164,31 @@ const ProductDetail = () => {
                 </>
               )}
             </div>
-            <div className="mt-4 grid grid-cols-4 gap-3">
+            <div className="mt-3 flex gap-2 overflow-x-auto pb-1">
               {safeImageGallery.map((image, index) => (
                 <button
                   key={`${image}-${index}`}
-                  className={`overflow-hidden rounded-xl border ${activeImageIndex === index ? 'border-[#E8762A]' : 'border-border'}`}
+                  className={`relative h-20 w-20 shrink-0 overflow-hidden rounded-2xl border-2 transition-all duration-200 ${
+                    activeImageIndex === index
+                      ? 'scale-105 border-[#E8762A] shadow-md'
+                      : 'border-transparent opacity-60 hover:opacity-100'
+                  }`}
                   onClick={() => goToImage(index)}
                 >
-                  <img src={image} alt={`${displayName}-${index}`} className="h-20 w-full object-cover" />
+                  <img src={image} alt="" className="h-full w-full object-cover" />
                 </button>
               ))}
             </div>
           </div>
 
           <div>
-            <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#2D5016]">Sequeira Foods</p>
-            <h1 className="mt-2 font-display text-4xl font-bold text-[#1A0A00]">{displayName}</h1>
+            <p className="inline-flex items-center gap-2 rounded-full bg-[#2D5016]/10 px-3 py-1 text-xs font-bold uppercase tracking-widest text-[#2D5016]">
+              <span className="h-1.5 w-1.5 rounded-full bg-[#2D5016]" />
+              Sequeira Foods
+            </p>
+            <h1 className="mt-3 font-display text-4xl font-black leading-tight text-[#1A0A00] sm:text-5xl">{displayName}</h1>
             {(product.tagline || product.shortDescription) && (
-              <p className="mt-2 text-muted-foreground">{product.tagline || product.shortDescription}</p>
+              <p className="mt-2 max-w-xl text-muted-foreground">{product.tagline || product.shortDescription}</p>
             )}
 
             {hasRating && (
@@ -259,7 +265,7 @@ const ProductDetail = () => {
             })()}
 
             <div className="mt-6 flex flex-wrap items-baseline gap-3">
-              <p className="text-4xl font-bold text-[#1A0A00]">Rs. {product.price}</p>
+              <p className="font-display text-5xl font-black text-[#1A0A00]">Rs. {product.price}</p>
               {product.originalPrice && product.originalPrice > product.price && (
                 <>
                   <p className="text-lg text-muted-foreground line-through">Rs. {product.originalPrice}</p>
@@ -289,16 +295,24 @@ const ProductDetail = () => {
             <div className="mt-7 space-y-3">
               {product.productType === 'deliverable' ? (
                 <>
-                  <Button className="w-full bg-[#E8762A] hover:bg-[#d76b20]" size="lg" onClick={onAddToCart}>
+                  <Button
+                    className="w-full rounded-full bg-[#E8762A] py-6 text-base font-bold shadow-medium transition-all duration-200 hover:scale-[1.02] hover:bg-[#d76b20] hover:shadow-strong active:scale-[0.98]"
+                    size="lg"
+                    onClick={onAddToCart}
+                  >
                     <ShoppingCart className="mr-2 h-5 w-5" />
                     Add to Cart
                   </Button>
-                  <Button variant="outline" className="w-full" size="lg" onClick={() => { onAddToCart(); navigate('/checkout'); }}>
+                  <Button variant="outline" className="w-full rounded-full py-6 text-base font-bold" size="lg" onClick={() => { onAddToCart(); navigate('/checkout'); }}>
                     Buy Now
                   </Button>
                 </>
               ) : (
-                <Button className="w-full bg-[#25D366] hover:bg-[#1fa959]" size="lg" asChild>
+                <Button
+                  className="w-full rounded-full bg-[#25D366] py-6 text-base font-bold shadow-medium transition-all duration-200 hover:scale-[1.02] hover:bg-[#1fa959]"
+                  size="lg"
+                  asChild
+                >
                   <a href={whatsappLink} target="_blank" rel="noreferrer">
                     <MessageCircle className="mr-2 h-5 w-5" />
                     Enquire on WhatsApp
@@ -357,24 +371,40 @@ const ProductDetail = () => {
           </div>
         </div>
 
-        <Tabs defaultValue="description" className="mt-12">
-          <TabsList className="grid w-full grid-cols-2 gap-2 rounded-xl bg-muted p-1 sm:grid-cols-4">
-            <TabsTrigger value="description">Description</TabsTrigger>
-            <TabsTrigger value="ingredients">Ingredients</TabsTrigger>
-            <TabsTrigger value="nutrition">Nutrition</TabsTrigger>
-            <TabsTrigger value="storage">How to Store</TabsTrigger>
-          </TabsList>
-          <TabsContent value="description" className="mt-4 rounded-2xl border border-border bg-card p-5 text-sm text-muted-foreground">
+        <div className="mt-12 border-b border-border">
+          <div className="flex gap-0 overflow-x-auto">
+            {['description', 'ingredients', 'nutrition', 'storage'].map((tab) => (
+              <button
+                key={tab}
+                onClick={() => setActiveTab(tab)}
+                className={`-mb-px whitespace-nowrap border-b-2 px-5 py-3 text-sm font-semibold capitalize transition-all duration-200 ${
+                  activeTab === tab
+                    ? 'border-[#E8762A] text-[#E8762A]'
+                    : 'border-transparent text-muted-foreground hover:text-[#1A0A00]'
+                }`}
+              >
+                {tab === 'storage' ? 'How to Store' : tab}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {activeTab === 'description' && (
+          <div className="mt-4 rounded-2xl border border-border bg-card p-5 text-sm text-muted-foreground">
             {product.description}
-          </TabsContent>
-          <TabsContent value="ingredients" className="mt-4 rounded-2xl border border-border bg-card p-5">
+          </div>
+        )}
+        {activeTab === 'ingredients' && (
+          <div className="mt-4 rounded-2xl border border-border bg-card p-5">
             <ul className="space-y-2 text-sm text-muted-foreground">
               {(product.ingredients || ['Roasted chana', 'Natural seasoning', 'Cold-pressed oil', 'Sea salt']).map((item) => (
                 <li key={item} className="rounded-lg bg-muted px-3 py-2">{item}</li>
               ))}
             </ul>
-          </TabsContent>
-          <TabsContent value="nutrition" className="mt-4 rounded-2xl border border-border bg-card p-5">
+          </div>
+        )}
+        {activeTab === 'nutrition' && (
+          <div className="mt-4 rounded-2xl border border-border bg-card p-5">
             {product.nutrition ? (
               <div className="grid grid-cols-2 gap-3 text-sm sm:grid-cols-4">
                 {Object.entries(product.nutrition).map(([label, value]) => (
@@ -387,11 +417,13 @@ const ProductDetail = () => {
             ) : (
               <p className="text-sm text-muted-foreground">Detailed nutrition info coming soon.</p>
             )}
-          </TabsContent>
-          <TabsContent value="storage" className="mt-4 rounded-2xl border border-border bg-card p-5 text-sm text-muted-foreground">
+          </div>
+        )}
+        {activeTab === 'storage' && (
+          <div className="mt-4 rounded-2xl border border-border bg-card p-5 text-sm text-muted-foreground">
             {product.storageInfo || 'Store in a cool, dry place away from direct sunlight. Keep sealed after opening for best freshness.'}
-          </TabsContent>
-        </Tabs>
+          </div>
+        )}
 
         <section className="mt-12">
           <h2 className="font-display text-2xl font-bold text-[#1A0A00] sm:text-3xl">You May Also Like</h2>
@@ -399,12 +431,13 @@ const ProductDetail = () => {
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {relatedProducts.map((item) => (
               <Link key={item._id || item.id} to={`/product/${item._id || item.id}`}>
-                <Card className="group overflow-hidden rounded-2xl border-border/70 shadow-soft transition-all duration-200 hover:-translate-y-1 hover:shadow-md">
+                <Card className="group overflow-hidden rounded-3xl border-0 bg-white shadow-card transition-all duration-300 hover:-translate-y-2 hover:shadow-strong">
+                  <div className="h-1 w-full bg-gradient-to-r from-[#E8762A] to-[#f0943a]" />
                   <div className="overflow-hidden">
                     <img
                       src={getImageUrl(item.image)}
                       alt={item.name}
-                      className="h-48 w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                      className="h-48 w-full object-cover transition-transform duration-500 group-hover:scale-108"
                     />
                   </div>
                   <CardContent className="p-4">
@@ -412,7 +445,7 @@ const ProductDetail = () => {
                     <p className="mt-1 text-sm font-bold text-[#E8762A]">Rs. {item.price}</p>
                     {item.productType === 'deliverable' ? (
                       <Button
-                        className="mt-3 w-full bg-[#E8762A] hover:bg-[#d76b20]"
+                        className="mt-3 w-full rounded-full bg-[#E8762A] hover:bg-[#d76b20]"
                         onClick={(e) => {
                           e.preventDefault();
                           addToCart(item, 1, { flavor: item.flavour || null });
@@ -421,7 +454,7 @@ const ProductDetail = () => {
                         Add to Cart
                       </Button>
                     ) : (
-                      <Button className="mt-3 w-full bg-[#25D366] hover:bg-[#1fa959]" asChild>
+                      <Button className="mt-3 w-full rounded-full bg-[#25D366] hover:bg-[#1fa959]" asChild>
                         <a href={buildWhatsAppEnquiryLink(item)} target="_blank" rel="noreferrer" onClick={(e) => e.stopPropagation()}>
                           Enquire
                         </a>
@@ -444,16 +477,17 @@ const ProductDetail = () => {
                 <Link
                   key={item._id || item.id}
                   to={`/product/${item._id || item.id}`}
-                  className={`group overflow-hidden rounded-2xl border shadow-soft transition-all duration-200 hover:-translate-y-1 hover:shadow-md ${
+                  className={`group overflow-hidden rounded-3xl border-0 shadow-card transition-all duration-300 hover:-translate-y-2 hover:shadow-strong ${
                     (item._id || item.id) === (product._id || product.id)
-                      ? 'border-[#E8762A] ring-2 ring-[#E8762A]'
-                      : 'border-border bg-card'
+                      ? 'bg-white ring-2 ring-[#E8762A]'
+                      : 'bg-white'
                   }`}
                 >
+                  <div className="h-1 w-full bg-gradient-to-r from-[#2D5016] to-[#4a7a24]" />
                   <img
                     src={getImageUrl(item.image)}
                     alt={getDisplayProductName(item)}
-                    className="h-32 w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                    className="h-32 w-full object-cover transition-transform duration-500 group-hover:scale-108"
                   />
                   <div className="p-3">
                     <span className={`inline-flex rounded-full border px-3 py-1 text-xs font-semibold ${flavorColorMap[item.flavour] || 'border-border bg-muted'}`}>

@@ -64,7 +64,7 @@ const Products = () => {
     const next = new URLSearchParams(searchParams);
     next.set('tab', activeMainTab);
     setSearchParams(next, { replace: true });
-  }, [activeMainTab]);
+  }, [activeMainTab, searchParams, setSearchParams]);
 
   const orderProducts = useMemo(() => products.filter((p) => p.productType === 'deliverable'), [products]);
   const enquiryProducts = useMemo(() => products.filter((p) => p.productType === 'enquiry'), [products]);
@@ -124,14 +124,16 @@ const Products = () => {
     const hasFlavorGroup = Boolean(group && group.products.length > 1);
 
     return (
-      <Card key={product._id || product.id} className="group overflow-hidden rounded-2xl border-border/70 shadow-soft transition-all duration-200 hover:-translate-y-1 hover:shadow-md">
+      <Card key={product._id || product.id} className="group overflow-hidden rounded-3xl border-0 bg-white shadow-card transition-all duration-300 hover:-translate-y-2 hover:shadow-strong">
+        <div className="h-1 w-full bg-gradient-to-r from-[#E8762A] to-[#f0943a]" />
         <div className="relative overflow-hidden">
           <Link to={`/product/${product._id || product.id}`}>
             <img
               src={getImageUrl(product.image)}
               alt={getDisplayProductName(product)}
-              className="h-56 w-full object-cover transition-transform duration-300 group-hover:scale-105"
+              className="h-60 w-full object-cover transition-transform duration-500 group-hover:scale-108"
             />
+            <div className="absolute inset-0 bg-white/0 transition-all duration-300 group-hover:bg-white/5" />
           </Link>
           <Badge className="absolute left-3 top-3 bg-[#2D5016] text-white">Deliverable</Badge>
         </div>
@@ -169,7 +171,7 @@ const Products = () => {
             <p className="text-xs text-muted-foreground">{product.weight}</p>
           </div>
 
-          <Button className="w-full bg-[#E8762A] hover:bg-[#d76b20]" onClick={() => onAddToCart(product)}>
+          <Button className="w-full rounded-full bg-[#E8762A] hover:bg-[#d76b20]" onClick={() => onAddToCart(product)}>
             <ShoppingCart className="mr-2 h-4 w-4" />
             Add to Cart
           </Button>
@@ -181,14 +183,16 @@ const Products = () => {
   const renderEnquiryCard = (product) => {
     const link = buildWhatsAppEnquiryLink(product);
     return (
-      <Card key={product._id || product.id} className="group overflow-hidden rounded-2xl border-border/70 bg-stone-50 shadow-soft transition-all duration-200 hover:-translate-y-1 hover:shadow-md">
+      <Card key={product._id || product.id} className="group overflow-hidden rounded-3xl border-0 bg-white shadow-card transition-all duration-300 hover:-translate-y-2 hover:shadow-strong">
+        <div className="h-1 w-full bg-gradient-to-r from-[#2D5016] to-[#4a7a24]" />
         <div className="relative overflow-hidden">
           <Link to={`/product/${product._id || product.id}`}>
             <img
               src={getImageUrl(product.image)}
               alt={product.name}
-              className="h-56 w-full object-cover transition-transform duration-300 group-hover:scale-105"
+              className="h-60 w-full object-cover transition-transform duration-500 group-hover:scale-108"
             />
+            <div className="absolute inset-0 bg-white/0 transition-all duration-300 group-hover:bg-white/5" />
           </Link>
           <Badge className="absolute left-3 top-3 bg-stone-500 text-white">Enquiry Only</Badge>
         </div>
@@ -210,7 +214,7 @@ const Products = () => {
             <p className="text-xs text-muted-foreground">{product.weight}</p>
           </div>
 
-          <Button className="w-full bg-[#25D366] hover:bg-[#1fa959]" asChild>
+          <Button className="w-full rounded-full bg-[#25D366] hover:bg-[#1fa959]" asChild>
             <a href={link} target="_blank" rel="noreferrer">
               <MessageCircle className="mr-2 h-4 w-4" />
               Enquire on WhatsApp
@@ -222,40 +226,39 @@ const Products = () => {
   };
 
   return (
-    <div className="min-h-screen py-10">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="text-center">
-          <h1 className="font-display text-4xl font-bold text-[#1A0A00] sm:text-5xl">Our Products</h1>
-          <p className="mt-3 text-muted-foreground">Choose between ready-to-ship hero snacks and premium enquiry-only collections.</p>
-        </div>
+    <div className="min-h-screen">
+      <div className="bg-[#1A0A00] px-4 py-14 text-center sm:py-20">
+        <p className="mb-2 text-xs font-bold uppercase tracking-widest text-[#E8762A]">Everything We Make</p>
+        <h1 className="font-display text-4xl font-black text-white sm:text-5xl lg:text-6xl">Our Products</h1>
+        <p className="mx-auto mt-3 max-w-2xl text-base text-white/70">
+          Choose between ready-to-ship hero snacks and our premium enquiry-only collection.
+        </p>
+      </div>
 
-        <div className="mt-8 rounded-2xl border border-border bg-card p-3 shadow-soft">
-          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+      <div className="mt-0 border-b-2 border-border bg-white px-4 sm:px-6 lg:px-8">
+        <div className="mx-auto flex max-w-7xl gap-0 overflow-x-auto">
+          {[
+            { id: 'order', label: '🛒 Order Now', sub: 'Ready to deliver' },
+            { id: 'enquire', label: '💬 Enquire via WhatsApp', sub: 'Premium collection' },
+          ].map((tab) => (
             <button
-              className={`rounded-xl px-4 py-4 text-center transition sm:text-left ${
-                activeMainTab === 'order' ? 'bg-[#E8762A] text-white' : 'bg-muted text-muted-foreground'
+              key={tab.id}
+              onClick={() => setActiveMainTab(tab.id)}
+              className={`relative flex min-w-fit flex-col items-start px-6 py-4 transition-colors sm:px-8 ${
+                activeMainTab === tab.id ? 'text-[#E8762A]' : 'text-muted-foreground hover:text-[#1A0A00]'
               }`}
-              onClick={() => setActiveMainTab('order')}
             >
-              <p className="text-lg font-bold">Order Now</p>
-              <p className={`text-xs ${activeMainTab === 'order' ? 'text-white/80' : 'text-muted-foreground'}`}>
-                Ready to ship. Add to cart and checkout.
-              </p>
+              <span className="text-base font-bold">{tab.label}</span>
+              <span className="text-xs opacity-70">{tab.sub}</span>
+              {activeMainTab === tab.id && (
+                <span className="absolute bottom-0 left-0 right-0 h-0.5 rounded-full bg-[#E8762A]" />
+              )}
             </button>
-            <button
-              className={`rounded-xl px-4 py-4 text-center transition sm:text-left ${
-                activeMainTab === 'enquire' ? 'bg-[#E8762A] text-white' : 'bg-muted text-muted-foreground'
-              }`}
-              onClick={() => setActiveMainTab('enquire')}
-            >
-              <p className="text-lg font-bold">Enquire via WhatsApp</p>
-              <p className={`text-xs ${activeMainTab === 'enquire' ? 'text-white/80' : 'text-muted-foreground'}`}>
-                Premium products available on request. Click to enquire.
-              </p>
-            </button>
-          </div>
+          ))}
         </div>
+      </div>
 
+      <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
         {loading ? (
           <p className="py-12 text-center text-muted-foreground">Loading products...</p>
         ) : error ? (
@@ -263,7 +266,7 @@ const Products = () => {
         ) : (
           <>
             {activeMainTab === 'order' && (
-              <div className="space-y-8 pt-8">
+              <div className="space-y-8 pt-2">
                 {heroSpotlight.length > 0 && (
                   <section>
                     <h2 className="font-display text-2xl font-bold text-[#1A0A00] sm:text-3xl">Hero Flavour Spotlight</h2>
@@ -274,13 +277,14 @@ const Products = () => {
                         return (
                           <div
                             key={product._id || product.id}
-                            className="flex flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-soft transition-all duration-200 hover:-translate-y-1 hover:shadow-md"
+                            className="group flex flex-col overflow-hidden rounded-3xl border-0 bg-white shadow-card transition-all duration-300 hover:-translate-y-2 hover:shadow-strong"
                           >
+                            <div className="h-1 w-full bg-gradient-to-r from-[#E8762A] to-[#f0943a]" />
                             <Link to={`/product/${product._id || product.id}`} className="block overflow-hidden">
                               <img
                                 src={getImageUrl(product.image)}
                                 alt={getDisplayProductName(product)}
-                                className="h-40 w-full object-cover transition-transform duration-300 hover:scale-105"
+                                className="h-40 w-full object-cover transition-transform duration-500 group-hover:scale-108"
                               />
                             </Link>
                             <div className="flex flex-1 flex-col gap-2 p-3">
@@ -305,7 +309,7 @@ const Products = () => {
                   </section>
                 )}
 
-                <div className="flex items-center gap-3">
+                <div className="flex flex-wrap items-center gap-3">
                   <span className="flex items-center gap-1 text-sm text-muted-foreground">
                     <Filter className="h-4 w-4" /> Filter:
                   </span>
@@ -316,8 +320,10 @@ const Products = () => {
                   ].map((item) => (
                     <button
                       key={item.id}
-                      className={`rounded-full px-3 py-1 text-sm font-medium ${
-                        orderFilter === item.id ? 'bg-[#E8762A] text-white' : 'bg-muted text-muted-foreground'
+                      className={`rounded-full border px-3 py-1 text-sm font-medium transition ${
+                        orderFilter === item.id
+                          ? 'border-[#E8762A] bg-[#E8762A] text-white'
+                          : 'border-border bg-muted text-muted-foreground hover:border-[#E8762A]'
                       }`}
                       onClick={() => setOrderFilter(item.id)}
                     >
@@ -331,7 +337,7 @@ const Products = () => {
             )}
 
             {activeMainTab === 'enquire' && (
-              <div className="space-y-8 pt-8">
+              <div className="space-y-8 pt-2">
                 <div className="flex flex-wrap items-center gap-3">
                   <span className="flex items-center gap-1 text-sm text-muted-foreground">
                     <Filter className="h-4 w-4" /> Filter:
@@ -339,8 +345,10 @@ const Products = () => {
                   {enquiryCategories.map((categoryId) => (
                     <button
                       key={categoryId}
-                      className={`rounded-full px-3 py-1 text-sm font-medium ${
-                        enquiryFilter === categoryId ? 'bg-[#E8762A] text-white' : 'bg-muted text-muted-foreground'
+                      className={`rounded-full border px-3 py-1 text-sm font-medium transition ${
+                        enquiryFilter === categoryId
+                          ? 'border-[#E8762A] bg-[#E8762A] text-white'
+                          : 'border-border bg-muted text-muted-foreground hover:border-[#E8762A]'
                       }`}
                       onClick={() => setEnquiryFilter(categoryId)}
                     >
