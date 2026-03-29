@@ -98,32 +98,7 @@ const ProductDetail = () => {
     });
   }, [safeImageGallery]);
 
-  if (loading) {
-    return <div className="py-20 text-center text-muted-foreground">Loading product details...</div>;
-  }
-
-  if (!product) {
-    return (
-      <div className="py-20 text-center">
-        <p className="mb-4 text-lg font-semibold">Product not found.</p>
-        <Button onClick={() => navigate('/products')}>Back to Products</Button>
-      </div>
-    );
-  }
-
-  const displayName = getDisplayProductName(product);
-  const whatsappLink = buildWhatsAppEnquiryLink(product);
-  const activeSliderImage = safeImageGallery[activeImageIndex] || safeImageGallery[0] || '';
-  const hasRating = Number(product.rating) > 0;
-  const weights = product.weightOptions?.length ? product.weightOptions : product.weight ? [product.weight] : [];
-  const hasSingleWeight = weights.length === 1;
-  const unitPrice = Number(product.price) || 0;
-  const originalUnitPrice = Number(product.originalPrice) || 0;
-  const totalPrice = unitPrice * qty;
-  const totalOriginalPrice = originalUnitPrice * qty;
-  const savingsPercent = originalUnitPrice > unitPrice ? Math.round((1 - unitPrice / originalUnitPrice) * 100) : 0;
-
-  const formatPrice = (value) => new Intl.NumberFormat('en-IN').format(Math.round(value || 0));
+  const productDisplayName = getDisplayProductName(product);
 
   const ingredientItems = useMemo(() => {
     const fallback = ['Roasted chana', 'Natural seasoning', 'Cold-pressed oil', 'Sea salt'];
@@ -140,11 +115,11 @@ const ProductDetail = () => {
   const enhancedDescription = useMemo(() => {
     if (product?.description) return product.description;
 
-    const base = `${displayName} is crafted for a satisfying crunch and bold taste.`;
+    const base = `${productDisplayName} is crafted for a satisfying crunch and bold taste.`;
     const flavourText = product?.flavour ? ` The ${product.flavour} profile makes it easy to enjoy as an anytime snack.` : '';
     const categoryText = product?.category ? ` A great pick from our ${product.category} collection.` : '';
     return `${base}${flavourText}${categoryText}`;
-  }, [displayName, product]);
+  }, [productDisplayName, product]);
 
   const whyLovePoints = useMemo(() => {
     const points = [];
@@ -173,6 +148,33 @@ const ProductDetail = () => {
 
     return points.slice(0, 3);
   }, [product]);
+
+  if (loading) {
+    return <div className="py-20 text-center text-muted-foreground">Loading product details...</div>;
+  }
+
+  if (!product) {
+    return (
+      <div className="py-20 text-center">
+        <p className="mb-4 text-lg font-semibold">Product not found.</p>
+        <Button onClick={() => navigate('/products')}>Back to Products</Button>
+      </div>
+    );
+  }
+
+  const displayName = productDisplayName;
+  const whatsappLink = buildWhatsAppEnquiryLink(product);
+  const activeSliderImage = safeImageGallery[activeImageIndex] || safeImageGallery[0] || '';
+  const hasRating = Number(product.rating) > 0;
+  const weights = product.weightOptions?.length ? product.weightOptions : product.weight ? [product.weight] : [];
+  const hasSingleWeight = weights.length === 1;
+  const unitPrice = Number(product.price) || 0;
+  const originalUnitPrice = Number(product.originalPrice) || 0;
+  const totalPrice = unitPrice * qty;
+  const totalOriginalPrice = originalUnitPrice * qty;
+  const savingsPercent = originalUnitPrice > unitPrice ? Math.round((1 - unitPrice / originalUnitPrice) * 100) : 0;
+
+  const formatPrice = (value) => new Intl.NumberFormat('en-IN').format(Math.round(value || 0));
 
   const goToImage = (index) => {
     if (!safeImageGallery.length) return;
