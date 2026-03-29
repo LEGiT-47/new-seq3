@@ -14,8 +14,9 @@ export const getImageUrl = (imagePath) => {
     return imagePath; // Already a full URL (e.g., from Unsplash)
   }
 
-  // For image paths like /images/products/*, return as-is (served from public folder)
-  if (imagePath.startsWith('/images/')) {
+  // Keep root-relative URLs on the current origin.
+  // This covers both public assets (/images/*) and bundled assets (/assets/*).
+  if (imagePath.startsWith('/')) {
     return imagePath;
   }
 
