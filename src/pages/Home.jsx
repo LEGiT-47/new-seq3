@@ -16,9 +16,56 @@ import heroTwo from '../assets/second.jpg';
 import heroThree from '../assets/partner.jpg';
 
 const categoryTabs = [
-  { id: 'snacks', label: 'Snacks', icon: '🍿', categories: ['nuts', 'jaggery', 'chocolates'] },
-  { id: 'dryfruits', label: 'Dry Fruits', icon: '🥜', categories: ['dryfruits', 'seeds'] },
-  { id: 'gifting', label: 'Gifting', icon: '🎁', categories: ['gifting', 'services'] },
+  { id: 'deliverable', label: 'Deliverable', icon: '🚚' },
+  { id: 'enquirable', label: 'Enquirable', icon: '💬' },
+];
+
+const deliverableCategoryTiles = [
+  {
+    id: 'gud-chana',
+    name: 'Gud Chana',
+    image: '/images/categories/Gemini_Generated_Image_1.png',
+    to: '/products?tab=order',
+  },
+  {
+    id: 'crunchy-chana',
+    name: 'Crunchy Chana',
+    image: '/images/categories/Gemini_Generated_Image_2.png',
+    to: '/products?tab=order',
+  },
+];
+
+const enquirableCategoryTiles = [
+  {
+    id: 'chocolates',
+    name: 'Chocolates',
+    image: '/images/categories/Gemini_Generated_Image_3.png',
+    to: '/products/chocolates',
+  },
+  {
+    id: 'seeds',
+    name: 'Seeds',
+    image: '/images/categories/Gemini_Generated_Image_4.png',
+    to: '/products/seeds',
+  },
+  {
+    id: 'nuts',
+    name: 'Flavoured Nuts',
+    image: '/images/categories/Gemini_Generated_Image_5.png',
+    to: '/products/nuts',
+  },
+  {
+    id: 'jaggery',
+    name: 'Jaggery Coated',
+    image: '/images/categories/Gemini_Generated_Image_6.png',
+    to: '/products/jaggery',
+  },
+  {
+    id: 'dryfruits',
+    name: 'Dry Fruits',
+    image: '/images/categories/Gemini_Generated_Image_7.png',
+    to: '/products/dryfruits',
+  },
 ];
 
 const reviewCards = [
@@ -45,7 +92,7 @@ const Home = () => {
   const { addToCart } = useCart();
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [activeCategoryTab, setActiveCategoryTab] = useState('snacks');
+  const [activeCategoryTab, setActiveCategoryTab] = useState('deliverable');
   const [selectedHomeFlavourByGroup, setSelectedHomeFlavourByGroup] = useState({});
   const occasionRef = useReveal();
   const heroRef = useReveal();
@@ -107,35 +154,8 @@ const Home = () => {
   }, [homeOrderGroups, selectedHomeFlavourByGroup]);
 
   const categoryTiles = useMemo(() => {
-    const selected = categoryTabs.find((tab) => tab.id === activeCategoryTab);
-    if (!selected) return [];
-
-    const grouped = selected.categories
-      .map((categoryId) => {
-        const product = products.find((p) => p.category === categoryId);
-        if (!product) return null;
-
-        const prettyName =
-          categoryId === 'dryfruits'
-            ? 'Dry Fruits'
-            : categoryId === 'nuts'
-              ? 'Flavoured Nuts'
-              : categoryId === 'jaggery'
-                ? 'Jaggery Coated'
-                : categoryId === 'services'
-                  ? 'Gifting Services'
-                  : categoryId.charAt(0).toUpperCase() + categoryId.slice(1);
-
-        return {
-          id: categoryId,
-          name: prettyName,
-          image: getImageUrl(product.image),
-        };
-      })
-      .filter(Boolean);
-
-    return grouped;
-  }, [activeCategoryTab, products]);
+    return activeCategoryTab === 'deliverable' ? deliverableCategoryTiles : enquirableCategoryTiles;
+  }, [activeCategoryTab]);
 
   const onAddHeroToCart = (product) => {
     addToCart(product, 1, { flavor: product.flavour || null });
@@ -328,7 +348,7 @@ const Home = () => {
             {categoryTiles.map((tile) => (
               <Link
                 key={tile.id}
-                to={`/products/${tile.id}`}
+                to={tile.to}
                 className="group relative block h-48 overflow-hidden rounded-3xl shadow-soft transition-all duration-300 hover:-translate-y-1.5 hover:shadow-medium"
               >
                 <img src={tile.image} alt={tile.name} className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105" />
@@ -337,6 +357,11 @@ const Home = () => {
               </Link>
             ))}
           </div>
+          {activeCategoryTab === 'enquirable' && (
+            <div className="mt-5 rounded-2xl border border-dashed border-[#E8762A]/40 bg-[#FDF6EC] px-4 py-3 text-sm font-medium text-[#1A0A00]">
+              Gifting products will be added soon.
+            </div>
+          )}
           </div>
         </div>
       </section>

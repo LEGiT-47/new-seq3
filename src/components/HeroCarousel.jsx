@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 const HeroCarousel = ({ slides }) => {
   const [current, setCurrent] = useState(0);
@@ -10,6 +11,16 @@ const HeroCarousel = ({ slides }) => {
     setCurrent(index);
     setTimeout(() => setIsTransitioning(false), 600);
   }, [isTransitioning]);
+
+  const goPrev = useCallback(() => {
+    if (!slides?.length) return;
+    goTo((current - 1 + slides.length) % slides.length);
+  }, [current, slides, goTo]);
+
+  const goNext = useCallback(() => {
+    if (!slides?.length) return;
+    goTo((current + 1) % slides.length);
+  }, [current, slides, goTo]);
 
   useEffect(() => {
     if (!slides?.length) return undefined;
@@ -95,6 +106,23 @@ const HeroCarousel = ({ slides }) => {
           </div>
         </div>
       </div>
+
+      <button
+        type="button"
+        onClick={goPrev}
+        aria-label="Previous slide"
+        className="absolute left-4 top-1/2 z-20 -translate-y-1/2 rounded-full border border-white/35 bg-black/25 p-2.5 text-white backdrop-blur-sm transition hover:bg-black/45 sm:left-6"
+      >
+        <ChevronLeft className="h-5 w-5" />
+      </button>
+      <button
+        type="button"
+        onClick={goNext}
+        aria-label="Next slide"
+        className="absolute right-4 top-1/2 z-20 -translate-y-1/2 rounded-full border border-white/35 bg-black/25 p-2.5 text-white backdrop-blur-sm transition hover:bg-black/45 sm:right-6"
+      >
+        <ChevronRight className="h-5 w-5" />
+      </button>
 
       <div className="absolute bottom-8 left-1/2 z-20 flex -translate-x-1/2 gap-2">
         {slides.map((_, i) => (

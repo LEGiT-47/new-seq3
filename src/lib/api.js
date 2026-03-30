@@ -140,6 +140,11 @@ const enrichProductsWithImages = async (products) => {
           Array.isArray(localProduct.images) && localProduct.images.length > 0
             ? localProduct.images
             : product.images,
+        ingredients: localProduct.ingredients || product.ingredients,
+        nutrition: localProduct.nutrition || product.nutrition,
+        storageInfo: localProduct.storageInfo || product.storageInfo,
+        shelfLife: localProduct.shelfLife || product.shelfLife,
+        netWeight: localProduct.netWeight || product.netWeight,
       });
     }
 
@@ -151,6 +156,11 @@ const enrichProductsWithImages = async (products) => {
           ...product,
           image: fallbackProduct.image || product.image,
           images: fallbackProduct.images || product.images,
+          ingredients: fallbackProduct.ingredients || product.ingredients,
+          nutrition: fallbackProduct.nutrition || product.nutrition,
+          storageInfo: fallbackProduct.storageInfo || product.storageInfo,
+          shelfLife: fallbackProduct.shelfLife || product.shelfLife,
+          netWeight: fallbackProduct.netWeight || product.netWeight,
         });
       }
     }

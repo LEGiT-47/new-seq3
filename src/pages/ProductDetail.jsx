@@ -53,7 +53,12 @@ const ProductDetail = () => {
   const relatedProducts = useMemo(() => {
     if (!product) return [];
     return allProducts
-      .filter((p) => p.category === product.category && (p._id || p.id) !== (product._id || product.id))
+      .filter(
+        (p) =>
+          p.productType === 'deliverable' &&
+          p.parentProduct &&
+          (p._id || p.id) !== (product._id || product.id)
+      )
       .slice(0, 4);
   }, [allProducts, product]);
 
@@ -200,7 +205,22 @@ const ProductDetail = () => {
         <div className="grid grid-cols-1 gap-10 lg:grid-cols-2">
           <div>
             <div className="relative overflow-hidden rounded-3xl bg-[#FDF6EC] shadow-strong">
-              <img src={activeSliderImage} alt={displayName} className="h-[480px] w-full object-cover" />
+              <div className="relative h-[480px] w-full">
+                {safeImageGallery.map((image, index) => (
+                  <img
+                    key={`${image}-${index}`}
+                    src={image}
+                    alt={displayName}
+                    className={`absolute inset-0 h-full w-full object-cover transition-all duration-500 ease-out ${
+                      index === activeImageIndex
+                        ? 'translate-x-0 scale-100 opacity-100'
+                        : index < activeImageIndex
+                          ? '-translate-x-2 scale-[1.01] opacity-0'
+                          : 'translate-x-2 scale-[1.01] opacity-0'
+                    }`}
+                  />
+                ))}
+              </div>
               {safeImageGallery.length > 1 && (
                 <>
                   <button
