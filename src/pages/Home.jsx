@@ -223,7 +223,7 @@ const Home = () => {
       <HeroCarousel slides={heroSlides} />
 
       <section ref={categoryRef} className="reveal bg-white py-5 px-2 sm:px-3 sm:py-8 lg:px-2">
-        <div className="mx-auto max-w-[110rem]">
+        <div className="mx-auto max-w-[100rem]">
           <div className="mb-5 text-center">
             <h2 className="font-display text-2xl font-bold text-[#1A0A00] sm:text-3xl">Shop By Category</h2>
             <div className="mx-auto mt-2 h-1 w-12 rounded-full bg-[#E8762A]" />
@@ -242,15 +242,17 @@ const Home = () => {
               </button>
             ))}
           </div>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:gap-4 xl:gap-5">
+          <div className="grid grid-cols-1 items-stretch gap-4 sm:grid-cols-2 lg:gap-4 xl:gap-5">
             {categoryTiles.map((tile) => (
               <Link
                 key={tile.id}
                 to={tile.to}
-                className="group relative block aspect-[2/1] min-h-[14rem] overflow-hidden rounded-3xl bg-[#f8f1e8] shadow-soft transition-all duration-300 hover:-translate-y-1.5 hover:shadow-medium sm:min-h-[18rem] lg:min-h-[24rem]"
+                className="group relative z-0 block h-full w-full overflow-hidden rounded-3xl bg-[#f8f1e8] shadow-soft transition-all duration-300 hover:-translate-y-1 hover:shadow-medium"
               >
-                <img src={tile.image} alt={tile.name} className="h-full w-full object-cover object-center transition-transform duration-300 group-hover:scale-[1.03]" />
-                <span className="absolute bottom-3 left-3 rounded-full bg-white/90 px-4 py-1.5 text-base font-semibold text-[#1A0A00] shadow-md backdrop-blur-sm">
+                <div className="aspect-[2/1] w-full">
+                  <img src={tile.image} alt={tile.name} className="h-full w-full object-contain object-center" />
+                </div>
+                <span className="absolute bottom-3 left-3 z-10 rounded-full bg-white/92 px-4 py-1.5 text-base font-semibold text-[#1A0A00] shadow-md backdrop-blur-sm">
                   {tile.name}
                 </span>
               </Link>
