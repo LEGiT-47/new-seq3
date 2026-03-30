@@ -247,9 +247,9 @@ const Home = () => {
               <Link
                 key={tile.id}
                 to={tile.to}
-                className="group relative block h-72 overflow-hidden rounded-3xl shadow-soft transition-all duration-300 hover:-translate-y-1.5 hover:shadow-medium sm:h-80 lg:h-[30rem] xl:h-[32rem]"
+                className="group relative block aspect-[2/1] min-h-[14rem] overflow-hidden rounded-3xl bg-[#f8f1e8] shadow-soft transition-all duration-300 hover:-translate-y-1.5 hover:shadow-medium sm:min-h-[18rem] lg:min-h-[24rem]"
               >
-                <img src={tile.image} alt={tile.name} className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105" />
+                <img src={tile.image} alt={tile.name} className="h-full w-full object-cover object-center transition-transform duration-300 group-hover:scale-[1.03]" />
                 <span className="absolute bottom-3 left-3 rounded-full bg-white/90 px-4 py-1.5 text-base font-semibold text-[#1A0A00] shadow-md backdrop-blur-sm">
                   {tile.name}
                 </span>
