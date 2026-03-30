@@ -162,7 +162,7 @@ const Cart = () => {
                         <SelectTrigger className="h-8 text-xs w-full">
                           <SelectValue placeholder="Select a coating" />
                         </SelectTrigger>
-                        <SelectContent sideOffset={6} className="z-[1200]">
+                        <SelectContent position="popper" side="top" sideOffset={8} className="z-[1200]">
                           <SelectItem value="__none__">No coating</SelectItem>
                           {item.coatings.map((coating) => (
                             <SelectItem key={coating} value={coating}>
@@ -190,7 +190,7 @@ const Cart = () => {
                         <SelectTrigger className="h-8 text-xs w-full">
                           <SelectValue placeholder="Select a flavor" />
                         </SelectTrigger>
-                        <SelectContent sideOffset={6} className="z-[1200]">
+                        <SelectContent position="popper" side="top" sideOffset={8} className="z-[1200]">
                           <SelectItem value="__none__">No flavor</SelectItem>
                           {item.flavors.map((flavor) => (
                             <SelectItem key={flavor} value={flavor}>

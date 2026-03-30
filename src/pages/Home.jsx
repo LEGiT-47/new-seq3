@@ -222,14 +222,14 @@ const Home = () => {
     <div className="min-h-screen bg-background">
       <HeroCarousel slides={heroSlides} />
 
-      <section ref={categoryRef} className="reveal bg-white py-6 px-4 sm:px-6 sm:py-10 lg:px-8">
-        <div className="mx-auto max-w-7xl">
-          <div className="mb-6 text-center">
+      <section ref={categoryRef} className="reveal bg-white py-5 px-2 sm:px-3 sm:py-8 lg:px-2">
+        <div className="mx-auto max-w-[110rem]">
+          <div className="mb-5 text-center">
             <h2 className="font-display text-2xl font-bold text-[#1A0A00] sm:text-3xl">Shop By Category</h2>
             <div className="mx-auto mt-2 h-1 w-12 rounded-full bg-[#E8762A]" />
           </div>
-          <div className="rounded-3xl border border-[#f0e3d4] bg-white p-4 shadow-soft transition-all duration-200 hover:shadow-md sm:p-5">
-          <div className="mb-5 flex flex-wrap items-center justify-center gap-2">
+          <div className="rounded-3xl border border-[#f0e3d4] bg-white p-2 shadow-soft transition-all duration-200 hover:shadow-md sm:p-3 lg:p-4">
+          <div className="mb-4 flex flex-wrap items-center justify-center gap-2">
             {categoryTabs.map((tab) => (
               <button
                 key={tab.id}
@@ -242,12 +242,12 @@ const Home = () => {
               </button>
             ))}
           </div>
-          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:gap-6">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:gap-4 xl:gap-5">
             {categoryTiles.map((tile) => (
               <Link
                 key={tile.id}
                 to={tile.to}
-                className="group relative block h-64 overflow-hidden rounded-3xl shadow-soft transition-all duration-300 hover:-translate-y-1.5 hover:shadow-medium sm:h-72 lg:h-80"
+                className="group relative block h-72 overflow-hidden rounded-3xl shadow-soft transition-all duration-300 hover:-translate-y-1.5 hover:shadow-medium sm:h-80 lg:h-[30rem] xl:h-[32rem]"
               >
                 <img src={tile.image} alt={tile.name} className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105" />
                 <span className="absolute bottom-3 left-3 rounded-full bg-white/90 px-4 py-1.5 text-base font-semibold text-[#1A0A00] shadow-md backdrop-blur-sm">
@@ -265,16 +265,16 @@ const Home = () => {
         </div>
       </section>
 
-      <section ref={occasionRef} className="reveal bg-white py-2 px-4 sm:px-6 sm:py-4 lg:px-8">
-        <div className="max-w-7xl mx-auto">
+      <section ref={occasionRef} className="reveal bg-white py-2 px-2 sm:px-4 sm:py-3 lg:px-5">
+        <div className="mx-auto max-w-[92rem]">
           <OccasionBanner />
         </div>
       </section>
 
-      <section ref={heroRef} className="reveal relative overflow-hidden bg-[#FDF6EC] py-6 px-4 sm:px-6 sm:py-10 lg:px-8">
+      <section ref={heroRef} className="reveal relative overflow-hidden bg-[#FDF6EC] py-5 px-2 sm:px-4 sm:py-8 lg:px-5">
         <div className="pointer-events-none absolute -right-32 -top-32 h-96 w-96 rounded-full bg-[#E8762A]/6 blur-3xl" />
         <div className="pointer-events-none absolute -left-20 bottom-0 h-64 w-64 rounded-full bg-[#2D5016]/5 blur-3xl" />
-        <div className="relative mx-auto max-w-7xl">
+        <div className="relative mx-auto max-w-[92rem]">
           <div className="mb-5 text-center">
             <h2 className="font-display text-2xl font-bold text-[#1A0A00] sm:text-3xl">Order Online - Delivered Fresh</h2>
             <div className="mx-auto mt-1 h-1 w-12 rounded-full bg-[#E8762A]" />
@@ -367,8 +367,8 @@ const Home = () => {
         </div>
       </section>
 
-      <section ref={trustRef} className="reveal bg-[#FDF6EC] py-4 px-4 sm:px-6 sm:py-8 lg:px-8">
-        <div className="mx-auto grid max-w-7xl grid-cols-2 gap-3 sm:grid-cols-4">
+      <section ref={trustRef} className="reveal bg-[#FDF6EC] py-3 px-2 sm:px-4 sm:py-6 lg:px-5">
+        <div className="mx-auto grid max-w-[92rem] grid-cols-2 gap-3 sm:grid-cols-4">
           {[
             { icon: <Leaf className="h-5 w-5" />, label: '100% Natural' },
             { icon: <Factory className="h-5 w-5" />, label: 'Made in India' },
@@ -383,8 +383,8 @@ const Home = () => {
         </div>
       </section>
 
-      <section ref={enquiryRef} className="reveal bg-[#FDF6EC] py-6 px-4 sm:px-6 sm:py-10 lg:px-8">
-        <div className="mx-auto max-w-7xl rounded-3xl bg-gradient-primary px-6 py-10 text-white shadow-medium sm:px-10">
+      <section ref={enquiryRef} className="reveal bg-[#FDF6EC] py-5 px-2 sm:px-4 sm:py-8 lg:px-5">
+        <div className="mx-auto max-w-[92rem] rounded-3xl bg-gradient-primary px-5 py-8 text-white shadow-medium sm:px-8">
           <p className="text-sm uppercase tracking-[0.2em] text-white/80">Premium Enquiry Collection</p>
           <h3 className="mt-2 font-display text-2xl font-bold sm:text-3xl">
             Looking for premium dry fruits, cashews, or custom bulk orders?
@@ -406,8 +406,8 @@ const Home = () => {
         </div>
       </section>
 
-        <section ref={giftingRef} className="reveal bg-white py-8 px-4 sm:px-6 sm:py-12 lg:px-8">
-          <div className="mx-auto grid max-w-7xl grid-cols-1 items-center gap-8 lg:grid-cols-2">
+        <section ref={giftingRef} className="reveal bg-white py-7 px-2 sm:px-4 sm:py-10 lg:px-5">
+          <div className="mx-auto grid max-w-[92rem] grid-cols-1 items-center gap-6 lg:grid-cols-2">
         <img
           src={heroVisual}
           alt="Gifting teaser"
@@ -425,8 +425,8 @@ const Home = () => {
         </div>
       </section>
 
-      <section ref={reviewsRef} className="reveal bg-[#FDF6EC] px-4 pb-6 pt-6 sm:px-6 sm:pb-10 sm:pt-10 lg:px-8">
-        <div className="mx-auto max-w-7xl">
+      <section ref={reviewsRef} className="reveal bg-[#FDF6EC] px-2 pb-6 pt-5 sm:px-4 sm:pb-8 sm:pt-8 lg:px-5">
+        <div className="mx-auto max-w-[92rem]">
           <h2 className="text-center font-display text-2xl font-bold text-[#1A0A00] sm:text-3xl">Loved by Snack Fans</h2>
           <div className="mx-auto mt-1 mb-6 h-1 w-12 rounded-full bg-[#E8762A]" />
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
