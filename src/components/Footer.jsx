@@ -54,8 +54,8 @@ const Footer = () => {
   return (
     <footer className="bg-secondary text-secondary-foreground mt-0">
       {/* Main Footer Content */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-16">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-10">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
           {/* Brand Section */}
           <div className="space-y-4">
             <div>
@@ -135,7 +135,7 @@ const Footer = () => {
         </div>
 
         {/* Divider */}
-        <div className="border-t border-secondary-foreground/20 my-8" />
+        <div className="border-t border-secondary-foreground/20 my-6" />
 
         {/* Bottom Footer */}
         <div className="flex flex-col md:flex-row justify-between items-center gap-4 text-sm opacity-75">

@@ -222,17 +222,60 @@ const Home = () => {
     <div className="min-h-screen bg-background">
       <HeroCarousel slides={heroSlides} />
 
-      <section ref={occasionRef} className="reveal bg-white py-8 px-4 sm:px-6 sm:py-10 lg:px-8">
+      <section ref={categoryRef} className="reveal bg-white py-6 px-4 sm:px-6 sm:py-10 lg:px-8">
+        <div className="mx-auto max-w-7xl">
+          <div className="mb-6 text-center">
+            <h2 className="font-display text-2xl font-bold text-[#1A0A00] sm:text-3xl">Shop By Category</h2>
+            <div className="mx-auto mt-2 h-1 w-12 rounded-full bg-[#E8762A]" />
+          </div>
+          <div className="rounded-3xl border border-[#f0e3d4] bg-white p-4 shadow-soft transition-all duration-200 hover:shadow-md sm:p-5">
+          <div className="mb-5 flex flex-wrap items-center justify-center gap-2">
+            {categoryTabs.map((tab) => (
+              <button
+                key={tab.id}
+                className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
+                  tab.id === activeCategoryTab ? 'bg-[#E8762A] text-white' : 'bg-muted text-muted-foreground hover:text-foreground'
+                }`}
+                onClick={() => setActiveCategoryTab(tab.id)}
+              >
+                {tab.icon} {tab.label}
+              </button>
+            ))}
+          </div>
+          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:gap-6">
+            {categoryTiles.map((tile) => (
+              <Link
+                key={tile.id}
+                to={tile.to}
+                className="group relative block h-64 overflow-hidden rounded-3xl shadow-soft transition-all duration-300 hover:-translate-y-1.5 hover:shadow-medium sm:h-72 lg:h-80"
+              >
+                <img src={tile.image} alt={tile.name} className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105" />
+                <span className="absolute bottom-3 left-3 rounded-full bg-white/90 px-4 py-1.5 text-base font-semibold text-[#1A0A00] shadow-md backdrop-blur-sm">
+                  {tile.name}
+                </span>
+              </Link>
+            ))}
+          </div>
+          {activeCategoryTab === 'enquirable' && (
+            <div className="mt-4 rounded-2xl border border-dashed border-[#E8762A]/40 bg-[#FDF6EC] px-4 py-3 text-sm font-medium text-[#1A0A00]">
+              Gifting products will be added soon.
+            </div>
+          )}
+          </div>
+        </div>
+      </section>
+
+      <section ref={occasionRef} className="reveal bg-white py-2 px-4 sm:px-6 sm:py-4 lg:px-8">
         <div className="max-w-7xl mx-auto">
           <OccasionBanner />
         </div>
       </section>
 
-      <section ref={heroRef} className="reveal relative overflow-hidden bg-[#FDF6EC] py-16 px-4 sm:px-6 sm:py-20 lg:px-8">
+      <section ref={heroRef} className="reveal relative overflow-hidden bg-[#FDF6EC] py-6 px-4 sm:px-6 sm:py-10 lg:px-8">
         <div className="pointer-events-none absolute -right-32 -top-32 h-96 w-96 rounded-full bg-[#E8762A]/6 blur-3xl" />
         <div className="pointer-events-none absolute -left-20 bottom-0 h-64 w-64 rounded-full bg-[#2D5016]/5 blur-3xl" />
         <div className="relative mx-auto max-w-7xl">
-          <div className="mb-8 text-center">
+          <div className="mb-5 text-center">
             <h2 className="font-display text-2xl font-bold text-[#1A0A00] sm:text-3xl">Order Online - Delivered Fresh</h2>
             <div className="mx-auto mt-1 h-1 w-12 rounded-full bg-[#E8762A]" />
             <p className="mx-auto mt-2 max-w-2xl text-sm text-muted-foreground sm:text-base">Our signature snacks, ready to ship straight to you.</p>
@@ -241,7 +284,7 @@ const Home = () => {
           {loading ? (
             <p className="py-10 text-center text-muted-foreground">Loading hero products...</p>
           ) : (
-            <div className="grid grid-flow-col auto-cols-[78%] gap-4 overflow-x-auto pb-2 sm:grid-flow-row sm:auto-cols-auto sm:grid-cols-2 lg:grid-cols-3">
+            <div className="mx-auto grid max-w-5xl grid-flow-col auto-cols-[82%] gap-4 overflow-x-auto pb-2 sm:grid-flow-row sm:auto-cols-auto sm:grid-cols-2 lg:grid-cols-2">
               {homeCards.map(({ key, products: groupedProducts, active }) => {
                 const displayName = getDisplayProductName(active);
                 const hasGroup = groupedProducts.length > 1;
@@ -257,16 +300,16 @@ const Home = () => {
                         <img
                           src={getImageUrl(active.image)}
                           alt={displayName}
-                          className="h-64 w-full object-cover transition-transform duration-500 group-hover:scale-108"
+                          className="h-56 w-full object-cover transition-transform duration-500 group-hover:scale-108"
                         />
                         <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-white to-transparent" />
                         <Badge className="absolute left-3 top-3 bg-[#2D5016] text-white">🚚 Deliverable</Badge>
                       </div>
                     </Link>
-                    <CardContent className="space-y-3 p-6">
+                    <CardContent className="space-y-2.5 p-4">
                       <div className="flex items-start justify-between gap-2">
-                        <h3 className="text-lg font-bold leading-tight text-[#1A0A00]">{displayName}</h3>
-                        <p className="text-2xl font-black text-[#E8762A]">Rs. {active.price}</p>
+                        <h3 className="text-base font-bold leading-tight text-[#1A0A00]">{displayName}</h3>
+                        <p className="text-xl font-black text-[#E8762A]">Rs. {active.price}</p>
                       </div>
 
                       {hasGroup && (
@@ -290,7 +333,7 @@ const Home = () => {
                       {activeWeightOptions.length > 0 && (
                         <div className="flex flex-wrap gap-2">
                           {activeWeightOptions.map((size) => (
-                            <span key={size} className="rounded-full border border-border px-3 py-1 text-xs font-medium">
+                            <span key={size} className="rounded-full border border-border px-2.5 py-1 text-xs font-medium">
                               {size}
                             </span>
                           ))}
@@ -298,11 +341,11 @@ const Home = () => {
                       )}
 
                       <div className="flex gap-2">
-                        <Button className="flex-1 rounded-full bg-[#E8762A] text-sm hover:bg-[#d76b20]" onClick={() => onAddHeroToCart(active)}>
+                        <Button className="flex-1 rounded-full bg-[#E8762A] text-xs hover:bg-[#d76b20]" onClick={() => onAddHeroToCart(active)}>
                           <ShoppingCart className="mr-1.5 h-3.5 w-3.5" />
                           Add to Cart
                         </Button>
-                        <Button variant="outline" className="rounded-full px-3 text-sm" asChild>
+                        <Button variant="outline" className="rounded-full px-3 text-xs" asChild>
                           <Link to={`/product/${active._id || active.id}`}>View</Link>
                         </Button>
                       </div>
@@ -316,7 +359,7 @@ const Home = () => {
             </div>
           )}
 
-          <div className="mt-6 text-center">
+          <div className="mt-3 text-center">
             <Link to="/products?tab=order" className="inline-flex items-center gap-1 text-sm font-semibold text-[#E8762A] hover:underline">
               View All Deliverable Products <ArrowRight className="h-4 w-4" />
             </Link>
@@ -324,49 +367,7 @@ const Home = () => {
         </div>
       </section>
 
-      <section ref={categoryRef} className="reveal bg-white py-12 px-4 sm:px-6 lg:px-8">
-        <div className="mx-auto max-w-7xl">
-          <div className="mb-8 text-center">
-            <h2 className="font-display text-2xl font-bold text-[#1A0A00] sm:text-3xl">Shop By Category</h2>
-            <div className="mx-auto mt-2 h-1 w-12 rounded-full bg-[#E8762A]" />
-          </div>
-          <div className="rounded-3xl border border-[#f0e3d4] bg-white p-6 shadow-soft transition-all duration-200 hover:-translate-y-1 hover:shadow-md">
-          <div className="mb-6 flex flex-wrap items-center justify-center gap-2">
-            {categoryTabs.map((tab) => (
-              <button
-                key={tab.id}
-                className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
-                  tab.id === activeCategoryTab ? 'bg-[#E8762A] text-white' : 'bg-muted text-muted-foreground hover:text-foreground'
-                }`}
-                onClick={() => setActiveCategoryTab(tab.id)}
-              >
-                {tab.icon} {tab.label}
-              </button>
-            ))}
-          </div>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {categoryTiles.map((tile) => (
-              <Link
-                key={tile.id}
-                to={tile.to}
-                className="group relative block h-48 overflow-hidden rounded-3xl shadow-soft transition-all duration-300 hover:-translate-y-1.5 hover:shadow-medium"
-              >
-                <img src={tile.image} alt={tile.name} className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105" />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/65 to-transparent" />
-                <span className="absolute bottom-3 left-3 text-lg font-semibold text-white">{tile.name}</span>
-              </Link>
-            ))}
-          </div>
-          {activeCategoryTab === 'enquirable' && (
-            <div className="mt-5 rounded-2xl border border-dashed border-[#E8762A]/40 bg-[#FDF6EC] px-4 py-3 text-sm font-medium text-[#1A0A00]">
-              Gifting products will be added soon.
-            </div>
-          )}
-          </div>
-        </div>
-      </section>
-
-      <section ref={trustRef} className="reveal bg-[#1A0A00] py-10 px-4 sm:px-6 lg:px-8">
+      <section ref={trustRef} className="reveal bg-[#FDF6EC] py-4 px-4 sm:px-6 sm:py-8 lg:px-8">
         <div className="mx-auto grid max-w-7xl grid-cols-2 gap-3 sm:grid-cols-4">
           {[
             { icon: <Leaf className="h-5 w-5" />, label: '100% Natural' },
@@ -374,7 +375,7 @@ const Home = () => {
             { icon: <Gift className="h-5 w-5" />, label: 'Custom Gifting' },
             { icon: <Truck className="h-5 w-5" />, label: 'Pan-India Delivery' },
           ].map((item) => (
-            <div key={item.label} className="flex items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/5 px-3 py-4 text-center text-sm font-semibold text-white">
+            <div key={item.label} className="flex items-center justify-center gap-2 rounded-2xl border border-[#ead8c3] bg-white px-3 py-4 text-center text-sm font-semibold text-[#1A0A00] shadow-sm">
               <span className="text-[#E8762A]">{item.icon}</span>
               <span>{item.label}</span>
             </div>
@@ -382,7 +383,7 @@ const Home = () => {
         </div>
       </section>
 
-      <section ref={enquiryRef} className="reveal bg-[#FDF6EC] py-12 px-4 sm:px-6 lg:px-8">
+      <section ref={enquiryRef} className="reveal bg-[#FDF6EC] py-6 px-4 sm:px-6 sm:py-10 lg:px-8">
         <div className="mx-auto max-w-7xl rounded-3xl bg-gradient-primary px-6 py-10 text-white shadow-medium sm:px-10">
           <p className="text-sm uppercase tracking-[0.2em] text-white/80">Premium Enquiry Collection</p>
           <h3 className="mt-2 font-display text-2xl font-bold sm:text-3xl">
@@ -405,7 +406,7 @@ const Home = () => {
         </div>
       </section>
 
-        <section ref={giftingRef} className="reveal bg-white py-16 px-4 sm:px-6 lg:px-8">
+        <section ref={giftingRef} className="reveal bg-white py-8 px-4 sm:px-6 sm:py-12 lg:px-8">
           <div className="mx-auto grid max-w-7xl grid-cols-1 items-center gap-8 lg:grid-cols-2">
         <img
           src={heroVisual}
@@ -424,7 +425,7 @@ const Home = () => {
         </div>
       </section>
 
-      <section ref={reviewsRef} className="reveal bg-[#FDF6EC] pb-16 pt-12 px-4 sm:px-6 lg:px-8">
+      <section ref={reviewsRef} className="reveal bg-[#FDF6EC] px-4 pb-6 pt-6 sm:px-6 sm:pb-10 sm:pt-10 lg:px-8">
         <div className="mx-auto max-w-7xl">
           <h2 className="text-center font-display text-2xl font-bold text-[#1A0A00] sm:text-3xl">Loved by Snack Fans</h2>
           <div className="mx-auto mt-1 mb-6 h-1 w-12 rounded-full bg-[#E8762A]" />
