@@ -298,7 +298,7 @@ const AdminDashboard = () => {
       {showModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
           <Card className="w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-            <CardHeader className="flex flex-row items-center justify-between sticky top-0 bg-background border-b">
+            <CardHeader className="sticky top-0 flex flex-row items-center justify-between border-b bg-card">
               <CardTitle>Order Details</CardTitle>
               <Button
                 variant="ghost"

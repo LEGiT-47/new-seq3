@@ -261,7 +261,7 @@ const Signup = () => {
             <form onSubmit={handleSendVerificationEmail} className="space-y-4">
               {/* Email Field */}
               <div className="space-y-2">
-                <label htmlFor="email" className="text-sm font-medium text-foreground">
+                <label htmlFor="email" className="text-sm font-medium text-[#0B1D35]">
                   Email Address *
                 </label>
                 <div className="relative">
@@ -281,7 +281,7 @@ const Signup = () => {
 
               {/* Name Field */}
               <div className="space-y-2">
-                <label htmlFor="name" className="text-sm font-medium text-foreground">
+                <label htmlFor="name" className="text-sm font-medium text-[#0B1D35]">
                   Full Name *
                 </label>
                 <div className="relative">
@@ -301,7 +301,7 @@ const Signup = () => {
 
               {/* Phone Field */}
               <div className="space-y-2">
-                <label htmlFor="phone" className="text-sm font-medium text-foreground">
+                <label htmlFor="phone" className="text-sm font-medium text-[#0B1D35]">
                   Mobile Number *
                 </label>
                 <div className="relative">
@@ -322,7 +322,7 @@ const Signup = () => {
 
               {/* Password Field */}
               <div className="space-y-2">
-                <label htmlFor="password" className="text-sm font-medium text-foreground">
+                <label htmlFor="password" className="text-sm font-medium text-[#0B1D35]">
                   Password *
                 </label>
                 <div className="relative">
@@ -340,7 +340,7 @@ const Signup = () => {
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-3 text-muted-foreground hover:text-foreground transition-colors disabled:opacity-50"
+                    className="absolute right-3 top-3 text-muted-foreground transition-colors hover:text-[#0B1D35] disabled:opacity-50"
                     disabled={loading}
                   >
                     {showPassword ? (
@@ -355,7 +355,7 @@ const Signup = () => {
 
               {/* Confirm Password Field */}
               <div className="space-y-2">
-                <label htmlFor="confirmPassword" className="text-sm font-medium text-foreground">
+                <label htmlFor="confirmPassword" className="text-sm font-medium text-[#0B1D35]">
                   Confirm Password *
                 </label>
                 <div className="relative">
@@ -373,7 +373,7 @@ const Signup = () => {
                   <button
                     type="button"
                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                    className="absolute right-3 top-3 text-muted-foreground hover:text-foreground transition-colors disabled:opacity-50"
+                    className="absolute right-3 top-3 text-muted-foreground transition-colors hover:text-[#0B1D35] disabled:opacity-50"
                     disabled={loading}
                   >
                     {showConfirmPassword ? (
@@ -412,7 +412,7 @@ const Signup = () => {
               </div>
 
               <div className="space-y-2">
-                <label htmlFor="token" className="text-sm font-medium text-foreground">
+                <label htmlFor="token" className="text-sm font-medium text-[#0B1D35]">
                   Verification Code/Token
                 </label>
                 <p className="text-xs text-muted-foreground mb-2">
@@ -484,7 +484,7 @@ const Signup = () => {
 
               {/* Street Address */}
               <div className="space-y-2">
-                <label htmlFor="street" className="text-sm font-medium text-foreground">
+                <label htmlFor="street" className="text-sm font-medium text-[#0B1D35]">
                   Street Address
                 </label>
                 <input
@@ -501,7 +501,7 @@ const Signup = () => {
 
               {/* City */}
               <div className="space-y-2">
-                <label htmlFor="city" className="text-sm font-medium text-foreground">
+                <label htmlFor="city" className="text-sm font-medium text-[#0B1D35]">
                   City
                 </label>
                 <input
@@ -518,7 +518,7 @@ const Signup = () => {
 
               {/* State */}
               <div className="space-y-2">
-                <label htmlFor="state" className="text-sm font-medium text-foreground">
+                <label htmlFor="state" className="text-sm font-medium text-[#0B1D35]">
                   State
                 </label>
                 <input
@@ -535,7 +535,7 @@ const Signup = () => {
 
               {/* Pincode */}
               <div className="space-y-2">
-                <label htmlFor="pincode" className="text-sm font-medium text-foreground">
+                <label htmlFor="pincode" className="text-sm font-medium text-[#0B1D35]">
                   Pincode
                 </label>
                 <input

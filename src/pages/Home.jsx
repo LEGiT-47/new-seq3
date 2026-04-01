@@ -10,10 +10,12 @@ import { toast } from 'sonner';
 import { ArrowRight, Star, Truck, Gift, Leaf, Factory, MessageCircle, ShoppingCart } from 'lucide-react';
 import HeroCarousel from '../components/HeroCarousel';
 import OccasionBanner from '../components/OccasionBanner';
+import { useOccasion } from '../context/OccasionContext';
 import { useReveal } from '../hooks/useReveal';
-import heroOne from '../assets/first.jpg';
-import heroTwo from '../assets/second.jpg';
-import heroThree from '../assets/partner.jpg';
+import heroOne from '../assets/first.png';
+import heroTwo from '../assets/second.png';
+import heroThree from '../assets/third.png';
+import giftingImage from '../assets/second.jpg';
 
 const categoryTabs = [
   { id: 'deliverable', label: 'Deliverable', icon: '🚚' },
@@ -90,6 +92,7 @@ const reviewCards = [
 const Home = () => {
   const navigate = useNavigate();
   const { addToCart } = useCart();
+  const { activeOccasion } = useOccasion();
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeCategoryTab, setActiveCategoryTab] = useState('deliverable');
@@ -162,7 +165,6 @@ const Home = () => {
     toast.success(`${getDisplayProductName(product)} added to cart`);
   };
 
-  const heroVisual = heroProducts[0] ? getImageUrl(heroProducts[0].image) : '';
   const heroSlides = useMemo(
     () => [
       {
@@ -219,22 +221,24 @@ const Home = () => {
   );
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-white">
       <HeroCarousel slides={heroSlides} />
 
-      <section ref={categoryRef} className="reveal bg-white py-5 px-2 sm:px-3 sm:py-8 lg:px-2">
+      <section ref={categoryRef} className="reveal bg-[#F9F9F7] px-4 pb-4 pt-8 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-[100rem]">
-          <div className="mb-5 text-center">
-            <h2 className="font-display text-2xl font-bold text-[#1A0A00] sm:text-3xl">Shop By Category</h2>
-            <div className="mx-auto mt-2 h-1 w-12 rounded-full bg-[#E8762A]" />
+          <div className="mb-6 text-center">
+            <h2 className="font-display text-4xl uppercase tracking-wide text-[#0B1D35] sm:text-5xl">Shop By Category</h2>
+            <div className="mx-auto mt-2 h-0.5 w-14 rounded-full bg-[#E8762A]" />
           </div>
-          <div className="rounded-3xl border border-[#f0e3d4] bg-white p-2 shadow-soft transition-all duration-200 hover:shadow-md sm:p-3 lg:p-4">
+          <div className="space-y-3">
           <div className="mb-4 flex flex-wrap items-center justify-center gap-2">
             {categoryTabs.map((tab) => (
               <button
                 key={tab.id}
-                className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
-                  tab.id === activeCategoryTab ? 'bg-[#E8762A] text-white' : 'bg-muted text-muted-foreground hover:text-foreground'
+                className={`rounded-full px-5 py-2 text-sm font-semibold transition ${
+                  tab.id === activeCategoryTab
+                    ? 'bg-[#0B1D35] text-white shadow-sm'
+                    : 'border border-gray-200 bg-white text-gray-600 hover:border-[#0B1D35] hover:text-[#0B1D35]'
                 }`}
                 onClick={() => setActiveCategoryTab(tab.id)}
               >
@@ -242,49 +246,49 @@ const Home = () => {
               </button>
             ))}
           </div>
-          <div className="grid grid-cols-1 items-stretch gap-4 sm:grid-cols-2 lg:gap-4 xl:gap-5">
+          <div className="grid grid-cols-1 items-stretch gap-4 sm:grid-cols-2 lg:gap-5 xl:gap-6">
             {categoryTiles.map((tile) => (
               <Link
                 key={tile.id}
                 to={tile.to}
-                className="group relative z-0 block h-full w-full overflow-hidden rounded-3xl bg-[#f8f1e8] shadow-soft transition-all duration-300 hover:-translate-y-1 hover:shadow-medium"
+                className="group relative z-0 block h-full w-full overflow-hidden rounded-3xl bg-[#FFFBF5] shadow-card transition-all duration-300 hover:-translate-y-1 hover:shadow-medium"
               >
                 <div className="aspect-[2/1] w-full">
                   <img src={tile.image} alt={tile.name} className="h-full w-full object-contain object-center" />
                 </div>
-                <span className="absolute bottom-3 left-3 z-10 rounded-full bg-white/92 px-4 py-1.5 text-base font-semibold text-[#1A0A00] shadow-md backdrop-blur-sm">
+                <span className="absolute bottom-3 left-3 z-10 rounded-full bg-[#FFFBF5]/92 px-4 py-1.5 text-base font-semibold text-[#0B1D35] shadow-md backdrop-blur-sm">
                   {tile.name}
                 </span>
               </Link>
             ))}
           </div>
           {activeCategoryTab === 'enquirable' && (
-            <div className="mt-4 rounded-2xl border border-dashed border-[#E8762A]/40 bg-[#FDF6EC] px-4 py-3 text-sm font-medium text-[#1A0A00]">
-              Gifting products will be added soon.
-            </div>
+            <p className="mt-4 text-center text-sm italic text-gray-400">
+              ✦ Gifting products will be added soon
+            </p>
           )}
           </div>
         </div>
       </section>
 
-      <section ref={occasionRef} className="reveal bg-white py-2 px-2 sm:px-4 sm:py-3 lg:px-5">
-        <div className="mx-auto max-w-[92rem]">
-          <OccasionBanner />
-        </div>
-      </section>
+      {activeOccasion && (
+        <section ref={occasionRef} className="reveal bg-white px-4 py-4 shadow-[inset_0_4px_12px_rgba(0,0,0,0.04)] sm:px-6 sm:py-6 lg:px-8">
+          <div className="mx-auto max-w-7xl">
+            <OccasionBanner />
+          </div>
+        </section>
+      )}
 
-      <section ref={heroRef} className="reveal relative overflow-hidden bg-[#FDF6EC] py-5 px-2 sm:px-4 sm:py-8 lg:px-5">
-        <div className="pointer-events-none absolute -right-32 -top-32 h-96 w-96 rounded-full bg-[#E8762A]/6 blur-3xl" />
-        <div className="pointer-events-none absolute -left-20 bottom-0 h-64 w-64 rounded-full bg-[#2D5016]/5 blur-3xl" />
-        <div className="relative mx-auto max-w-[92rem]">
+      <section ref={heroRef} className="reveal bg-white px-4 pb-10 pt-6 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-7xl">
           <div className="mb-5 text-center">
-            <h2 className="font-display text-2xl font-bold text-[#1A0A00] sm:text-3xl">Order Online - Delivered Fresh</h2>
-            <div className="mx-auto mt-1 h-1 w-12 rounded-full bg-[#E8762A]" />
-            <p className="mx-auto mt-2 max-w-2xl text-sm text-muted-foreground sm:text-base">Our signature snacks, ready to ship straight to you.</p>
+            <h2 className="font-display text-4xl uppercase tracking-wide text-[#0B1D35] sm:text-5xl">Order Online - Delivered Fresh</h2>
+            <div className="mx-auto mt-2 h-0.5 w-14 rounded-full bg-[#E8762A]" />
+            <p className="mx-auto mt-3 max-w-2xl text-base text-gray-500">Our signature snacks, ready to ship straight to you.</p>
           </div>
 
           {loading ? (
-            <p className="py-10 text-center text-muted-foreground">Loading hero products...</p>
+            <p className="py-10 text-center text-gray-500">Loading hero products...</p>
           ) : (
             <div className="mx-auto grid max-w-5xl grid-flow-col auto-cols-[82%] gap-4 overflow-x-auto pb-2 sm:grid-flow-row sm:auto-cols-auto sm:grid-cols-2 lg:grid-cols-2">
               {homeCards.map(({ key, products: groupedProducts, active }) => {
@@ -293,25 +297,26 @@ const Home = () => {
                 const activeWeightOptions = active.weightOptions?.length ? active.weightOptions : active.weight ? [active.weight] : [];
 
                 return (
-                  <Card
+                    <Card
                     key={key}
-                    className="group overflow-hidden rounded-3xl border-0 bg-white shadow-card transition-all duration-300 hover:-translate-y-2 hover:shadow-strong"
+                      className="group overflow-hidden rounded-3xl border-0 bg-[#FFFBF5] shadow-card transition-all duration-300 hover:-translate-y-2 hover:shadow-strong"
                   >
+                      <div className="h-1 w-full bg-gradient-to-r from-[#E8762A] to-[#DAC06E]" />
                     <Link to={`/product/${active._id || active.id}`}>
-                      <div className="relative overflow-hidden rounded-t-3xl">
+                      <div className="relative overflow-hidden rounded-t-3xl bg-[#FDF6EC]">
                         <img
                           src={getImageUrl(active.image)}
                           alt={displayName}
-                          className="h-56 w-full object-cover transition-transform duration-500 group-hover:scale-108"
+                          className="h-64 w-full object-cover transition-transform duration-500 group-hover:scale-105"
                         />
-                        <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-white to-transparent" />
-                        <Badge className="absolute left-3 top-3 bg-[#2D5016] text-white">🚚 Deliverable</Badge>
+                        <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-[#FFFBF5] to-transparent" />
+                        <Badge className="absolute left-3 top-3 bg-[#0B1D35] text-xs text-white">🚚 Deliverable</Badge>
                       </div>
                     </Link>
                     <CardContent className="space-y-2.5 p-4">
                       <div className="flex items-start justify-between gap-2">
-                        <h3 className="text-base font-bold leading-tight text-[#1A0A00]">{displayName}</h3>
-                        <p className="text-xl font-black text-[#E8762A]">Rs. {active.price}</p>
+                        <h3 className="font-sans text-lg font-bold leading-tight text-[#0B1D35]">{displayName}</h3>
+                        <p className="font-sans text-xl font-bold text-[#0B1D35]">Rs. {active.price}</p>
                       </div>
 
                       {hasGroup && (
@@ -321,8 +326,8 @@ const Home = () => {
                               key={fp._id || fp.id}
                               className={`rounded-full border px-2.5 py-1 text-xs font-medium transition ${
                                 (selectedHomeFlavourByGroup[key] || groupedProducts[0].flavour) === fp.flavour
-                                  ? 'border-[#E8762A] bg-[#E8762A] text-white'
-                                  : 'border-border text-muted-foreground hover:border-[#E8762A]'
+                                  ? 'border-[#C9A84C] bg-[#C9A84C] text-[#0B1D35]'
+                                  : 'border-[#26486E] text-[#0B1D35]/60 hover:border-[#C9A84C]'
                               }`}
                               onClick={() => setSelectedHomeFlavourByGroup((prev) => ({ ...prev, [key]: fp.flavour }))}
                             >
@@ -335,7 +340,7 @@ const Home = () => {
                       {activeWeightOptions.length > 0 && (
                         <div className="flex flex-wrap gap-2">
                           {activeWeightOptions.map((size) => (
-                            <span key={size} className="rounded-full border border-border px-2.5 py-1 text-xs font-medium">
+                                <span key={size} className="rounded-full border border-gray-200 px-2.5 py-1 text-xs font-medium text-gray-600">
                               {size}
                             </span>
                           ))}
@@ -343,7 +348,7 @@ const Home = () => {
                       )}
 
                       <div className="flex gap-2">
-                        <Button className="flex-1 rounded-full bg-[#E8762A] text-xs hover:bg-[#d76b20]" onClick={() => onAddHeroToCart(active)}>
+                        <Button className="flex-1 rounded-full bg-[#E8762A] text-xs font-bold hover:bg-[#D76219]" onClick={() => onAddHeroToCart(active)}>
                           <ShoppingCart className="mr-1.5 h-3.5 w-3.5" />
                           Add to Cart
                         </Button>
@@ -351,7 +356,7 @@ const Home = () => {
                           <Link to={`/product/${active._id || active.id}`}>View</Link>
                         </Button>
                       </div>
-                      <Link to={`/product/${active._id || active.id}`} className="inline-flex items-center gap-1 text-xs font-semibold text-[#E8762A] hover:underline">
+                      <Link to={`/product/${active._id || active.id}`} className="inline-flex items-center gap-1 font-sans text-xs font-semibold text-[#0B1D35] transition-colors hover:text-[#E8762A]">
                         View Details <ArrowRight className="h-3.5 w-3.5" />
                       </Link>
                     </CardContent>
@@ -362,36 +367,37 @@ const Home = () => {
           )}
 
           <div className="mt-3 text-center">
-            <Link to="/products?tab=order" className="inline-flex items-center gap-1 text-sm font-semibold text-[#E8762A] hover:underline">
+            <Link to="/products?tab=order" className="inline-flex items-center gap-1 font-sans text-sm font-semibold text-[#0B1D35] transition-colors hover:text-[#E8762A]">
               View All Deliverable Products <ArrowRight className="h-4 w-4" />
             </Link>
           </div>
         </div>
       </section>
 
-      <section ref={trustRef} className="reveal bg-[#FDF6EC] py-3 px-2 sm:px-4 sm:py-6 lg:px-5">
-        <div className="mx-auto grid max-w-[92rem] grid-cols-2 gap-3 sm:grid-cols-4">
+      <section ref={trustRef} className="reveal my-0 bg-[#C9A84C] px-4 py-4 sm:px-6 lg:px-8">
+        <div className="mx-auto grid max-w-7xl grid-cols-2 gap-3 sm:grid-cols-4">
           {[
             { icon: <Leaf className="h-5 w-5" />, label: '100% Natural' },
             { icon: <Factory className="h-5 w-5" />, label: 'Made in India' },
             { icon: <Gift className="h-5 w-5" />, label: 'Custom Gifting' },
             { icon: <Truck className="h-5 w-5" />, label: 'Pan-India Delivery' },
           ].map((item) => (
-            <div key={item.label} className="flex items-center justify-center gap-2 rounded-2xl border border-[#ead8c3] bg-white px-3 py-4 text-center text-sm font-semibold text-[#1A0A00] shadow-sm">
-              <span className="text-[#E8762A]">{item.icon}</span>
-              <span>{item.label}</span>
+            <div key={item.label} className="flex items-center justify-center gap-3 rounded-xl bg-[#0B1D35]/15 px-4 py-5 text-center font-semibold text-[#0B1D35]">
+              <span className="text-lg">{item.icon}</span>
+              <span className="text-sm tracking-wide">{item.label}</span>
             </div>
           ))}
         </div>
       </section>
 
-      <section ref={enquiryRef} className="reveal bg-[#FDF6EC] py-5 px-2 sm:px-4 sm:py-8 lg:px-5">
-        <div className="mx-auto max-w-[92rem] rounded-3xl bg-gradient-primary px-5 py-8 text-white shadow-medium sm:px-8">
-          <p className="text-sm uppercase tracking-[0.2em] text-white/80">Premium Enquiry Collection</p>
-          <h3 className="mt-2 font-display text-2xl font-bold sm:text-3xl">
+      <section ref={enquiryRef} className="reveal bg-white px-4 py-6 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-7xl">
+          <div className="rounded-3xl border-l-4 border-[#E8762A] bg-[#FFF8F0] px-8 py-8 shadow-soft">
+          <p className="text-xs font-bold uppercase tracking-widest text-[#E8762A]">Premium Enquiry Collection</p>
+          <h3 className="font-serif text-3xl font-bold text-[#0B1D35] sm:text-4xl">
             Looking for premium dry fruits, cashews, or custom bulk orders?
           </h3>
-          <p className="mt-2 max-w-3xl text-white/90">
+          <p className="mt-2 max-w-3xl text-gray-500">
             Our premium range is available on enquiry so we can share fresh pricing, stock, and packaging options.
           </p>
           <Button
@@ -405,43 +411,44 @@ const Home = () => {
             <MessageCircle className="mr-2 h-4 w-4" />
             Enquire on WhatsApp
           </Button>
+          </div>
         </div>
       </section>
 
-        <section ref={giftingRef} className="reveal bg-white py-7 px-2 sm:px-4 sm:py-10 lg:px-5">
-          <div className="mx-auto grid max-w-[92rem] grid-cols-1 items-center gap-6 lg:grid-cols-2">
+        <section ref={giftingRef} className="reveal bg-white px-4 py-8 sm:px-6 lg:px-8">
+          <div className="mx-auto grid max-w-7xl grid-cols-1 items-center gap-6 lg:grid-cols-2">
         <img
-          src={heroVisual}
-          alt="Gifting teaser"
-          className="h-72 w-full rounded-3xl object-cover shadow-soft"
+          src={giftingImage}
+          alt="Premium gifting hampers"
+          className="h-80 w-full rounded-3xl object-cover shadow-md"
         />
         <div>
-          <h3 className="font-display text-3xl font-bold text-[#1A0A00]">Gift Something Real</h3>
-          <p className="mt-3 max-w-xl text-muted-foreground">
+          <h3 className="font-serif text-3xl font-bold text-[#0B1D35] sm:text-4xl">Gift Something Real</h3>
+          <p className="mt-3 max-w-xl text-gray-500">
             Curated hampers for family, festive moments, and corporate teams with premium packaging and personalization.
           </p>
-          <Button className="mt-6 rounded-full bg-[#2D5016] hover:bg-[#243f12]" asChild>
-            <Link to="/gifting">Explore Gifting</Link>
+          <Button className="mt-6 rounded-full bg-[#0B1D35] font-bold text-white hover:bg-[#1A3555]" asChild>
+            <Link to="/gifting">Explore Gifting →</Link>
           </Button>
         </div>
         </div>
       </section>
 
-      <section ref={reviewsRef} className="reveal bg-[#FDF6EC] px-2 pb-6 pt-5 sm:px-4 sm:pb-8 sm:pt-8 lg:px-5">
-        <div className="mx-auto max-w-[92rem]">
-          <h2 className="text-center font-display text-2xl font-bold text-[#1A0A00] sm:text-3xl">Loved by Snack Fans</h2>
-          <div className="mx-auto mt-1 mb-6 h-1 w-12 rounded-full bg-[#E8762A]" />
+      <section ref={reviewsRef} className="reveal bg-[#F9F9F7] px-4 pb-10 pt-8 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-7xl">
+          <h2 className="text-center font-display text-4xl uppercase tracking-wide text-[#0B1D35] sm:text-5xl">Loved by Snack Fans</h2>
+          <div className="mx-auto mb-8 mt-2 h-0.5 w-14 rounded-full bg-[#E8762A]" />
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {reviewCards.map((review) => (
-              <Card key={review.name} className="rounded-3xl border-0 bg-white shadow-card transition-all duration-300 hover:-translate-y-1.5 hover:shadow-medium">
-                <CardContent className="p-5">
+              <Card key={review.name} className="rounded-2xl border border-gray-200 bg-white shadow-md transition-all duration-200 hover:-translate-y-1 hover:shadow-lg">
+                <CardContent className="p-6">
                   <div className="mb-3 flex items-center gap-1 text-[#E8762A]">
                     {[...Array(5)].map((_, index) => (
                       <Star key={index} className="h-4 w-4 fill-current" />
                     ))}
                   </div>
-                  <p className="text-sm text-muted-foreground">"{review.quote}"</p>
-                  <p className="mt-4 text-sm font-semibold text-[#1A0A00]">{review.name}</p>
+                  <p className="text-sm leading-relaxed text-gray-500">"{review.quote}"</p>
+                  <p className="mt-4 text-sm font-bold text-[#0B1D35]">{review.name}</p>
                 </CardContent>
               </Card>
             ))}

@@ -1,27 +1,53 @@
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;800;900&family=DM+Sans:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Playfair+Display:wght@700;800;900&family=DM+Sans:wght@400;500;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-
 @layer base {
   :root {
-    --brand-amber: 232 118 42;
-    --brand-green: 45 80 22;
-    --brand-dark: 26 10 0;
-    --brand-cream: 253 246 236;
+    /* Core Brand Tokens */
+    --navy-900: 11 29 53;
+    --navy-800: 16 40 72;
+    --navy-700: 26 53 85;
+    --navy-600: 38 72 110;
+    --navy-100: 184 200 216;
+    --navy-50: 232 240 248;
 
-    --background: 253 246 236;
-    --foreground: 26 10 0;
-    --card: 255 251 245;
-    --card-foreground: 26 10 0;
-    --muted: 245 239 230;
-    --muted-foreground: 120 80 50;
-    --border: 230 210 190;
-    --primary: 232 118 42;
-    --primary-foreground: 255 255 255;
-    --radius: 0.75rem;
+    --gold-600: 201 168 76;
+    --gold-400: 218 192 110;
+    --gold-100: 247 238 210;
+
+    --amber: 232 118 42;
+    --amber-dk: 215 98 25;
+
+    --cream: 248 244 236;
+    --offwhite: 255 251 245;
+    --dark-text: 11 29 53;
+
+    /* Semantic Tokens */
+    --background: 255 255 255;
+    --foreground: 17 24 39;
+
+    --card: 255 255 255;
+    --card-foreground: 17 24 39;
+
+    --muted: 249 249 247;
+    --muted-foreground: 107 114 128;
+
+    --border: 229 231 235;
+    --input: 243 244 246;
+
+    --primary: 201 168 76;
+    --primary-foreground: 11 29 53;
+
+    --secondary: 26 53 85;
+    --secondary-foreground: 248 244 236;
+
+    --accent: 232 118 42;
+    --accent-foreground: 255 255 255;
+
+    --radius: 0.875rem;
   }
 }
 
@@ -31,15 +57,24 @@
   }
 
   body {
-    @apply bg-background text-foreground font-sans;
-    font-feature-settings: 'rlig' 1, 'calt' 1;
+    background-color: #ffffff;
+    color: #111827;
+    font-family: 'DM Sans', Inter, sans-serif;
+    font-feature-settings: "rlig" 1, "calt" 1;
   }
 
   h1,
   h2,
-  h3 {
-    @apply font-display;
-    letter-spacing: -0.01em;
+  h3,
+  h4 {
+    font-family: 'Playfair Display', Georgia, serif;
+    letter-spacing: -0.015em;
+  }
+
+  .bg-card,
+  [class*='bg-card'] {
+    background-color: #ffffff !important;
+    color: #0B1D35 !important;
   }
 }
 
@@ -48,17 +83,21 @@ html {
 }
 
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 5px;
+  height: 5px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #fdf6ec;
+  background: #0B1D35;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #e8762a;
+  background: #C9A84C;
   border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #DAC06E;
 }
 
 .line-clamp-2 {

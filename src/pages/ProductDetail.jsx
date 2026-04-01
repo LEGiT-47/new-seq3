@@ -155,7 +155,7 @@ const ProductDetail = () => {
   }, [product]);
 
   if (loading) {
-    return <div className="py-20 text-center text-muted-foreground">Loading product details...</div>;
+    return <div className="py-20 text-center text-gray-500">Loading product details...</div>;
   }
 
   if (!product) {
@@ -194,16 +194,16 @@ const ProductDetail = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background py-8 pb-24 lg:pb-0">
+    <div className="min-h-screen bg-white py-8 pb-24 lg:pb-0">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="mb-6 text-sm text-muted-foreground">
+        <div className="mb-6 text-sm text-gray-400">
           <button onClick={() => navigate('/products')} className="transition-colors hover:text-[#E8762A]">Products</button>
           <span className="mx-2">/</span>
-          <span>{displayName}</span>
+          <span className="text-gray-600">{displayName}</span>
         </div>
 
-        <div className="grid grid-cols-1 gap-10 lg:grid-cols-2">
-          <div>
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+          <div className="rounded-3xl border border-[#26486E] bg-[#FFFBF5] p-5 sm:p-6">
             <div className="relative overflow-hidden rounded-3xl bg-[#FDF6EC] shadow-strong">
               <div className="relative h-[480px] w-full">
                 {safeImageGallery.map((image, index) => (
@@ -260,13 +260,13 @@ const ProductDetail = () => {
           </div>
 
           <div>
-            <p className="inline-flex items-center gap-2 rounded-full bg-[#2D5016]/10 px-3 py-1 text-xs font-bold uppercase tracking-widest text-[#2D5016]">
-              <span className="h-1.5 w-1.5 rounded-full bg-[#2D5016]" />
+            <p className="inline-flex items-center gap-2 rounded-full border border-[#0B1D35]/15 bg-[#0B1D35]/[0.08] px-3 py-1 text-xs font-bold uppercase tracking-widest text-[#0B1D35]">
+              <span className="h-1.5 w-1.5 rounded-full bg-[#0B1D35]" />
               Sequeira Foods
             </p>
-            <h1 className="mt-3 font-display text-4xl font-black leading-tight text-[#1A0A00] sm:text-5xl">{displayName}</h1>
+            <h1 className="mt-3 font-serif text-4xl font-bold leading-tight text-[#0B1D35] sm:text-5xl">{displayName}</h1>
             {(product.tagline || product.shortDescription) && (
-              <p className="mt-2 max-w-xl text-muted-foreground">{product.tagline || product.shortDescription}</p>
+              <p className="mt-2 max-w-xl text-gray-500">{product.tagline || product.shortDescription}</p>
             )}
 
             {hasRating && (
@@ -277,17 +277,17 @@ const ProductDetail = () => {
                     className={`h-4 w-4 ${i < Math.round(product.rating) ? 'fill-current' : 'stroke-current fill-none opacity-40'}`}
                   />
                 ))}
-                <span className="text-sm text-muted-foreground">({product.reviewCount || 0} ratings)</span>
+                <span className="text-sm text-gray-500">({product.reviewCount || 0} ratings)</span>
               </div>
             )}
 
             {weights.length > 0 && (
               <div className="mt-6">
-                <p className="mb-2 text-sm font-semibold text-[#1A0A00]">Size</p>
+                <p className="mb-2 text-sm font-semibold text-[#0B1D35]">Size</p>
                 <div className="flex flex-wrap gap-2">
                   {weights.map((size) =>
                     hasSingleWeight ? (
-                      <span key={size} className="rounded-full border border-[#E8762A] bg-[#E8762A]/10 px-4 py-1.5 text-sm font-medium text-[#1A0A00]">
+                      <span key={size} className="rounded-full border border-[#E8762A] bg-[#E8762A] px-4 py-1.5 text-sm font-medium text-white">
                         {size}
                       </span>
                     ) : (
@@ -296,7 +296,7 @@ const ProductDetail = () => {
                         className={`rounded-full border px-4 py-1.5 text-sm font-medium transition ${
                           selectedWeight === size
                             ? 'border-[#E8762A] bg-[#E8762A] text-white'
-                            : 'border-border text-muted-foreground hover:border-[#E8762A]'
+                            : 'border-gray-200 text-gray-500 hover:border-[#E8762A]'
                         }`}
                         onClick={() => setSelectedWeight(size)}
                       >
@@ -317,11 +317,11 @@ const ProductDetail = () => {
 
               return (
                 <div className="mt-5">
-                  <p className="mb-2 text-sm font-semibold text-[#1A0A00]">Flavour</p>
+                  <p className="mb-2 text-sm font-semibold text-[#0B1D35]">Flavour</p>
                   <div className="flex flex-wrap gap-2">
                     {allFlavours.map((fp) => {
                       const isActive = (fp._id || fp.id) === (product._id || product.id);
-                      const colorClass = flavorColorMap[fp.flavour] || 'border-border bg-muted text-foreground';
+                      const colorClass = flavorColorMap[fp.flavour] || 'border-gray-200 bg-gray-50 text-[#0B1D35]';
 
                       return (
                         <button
@@ -329,8 +329,8 @@ const ProductDetail = () => {
                           onClick={() => navigate(`/product/${fp._id || fp.id}`)}
                           className={`rounded-full border px-3 py-1 text-sm font-semibold transition ${
                             isActive
-                              ? `${colorClass} ring-2 ring-[#E8762A] ring-offset-2`
-                              : 'border-border bg-muted text-muted-foreground hover:border-[#E8762A]'
+                              ? `${colorClass} ring-2 ring-[#C9A84C] ring-offset-2`
+                              : 'border-gray-200 bg-gray-50 text-gray-500 hover:border-[#E8762A]'
                           }`}
                         >
                           {fp.flavour}
@@ -343,10 +343,10 @@ const ProductDetail = () => {
             })()}
 
             <div className="mt-6 flex flex-wrap items-baseline gap-3">
-              <p className="font-display text-5xl font-black text-[#1A0A00]">Rs. {formatPrice(totalPrice)}</p>
+              <p className="font-serif text-5xl font-bold text-[#0B1D35]">Rs. {formatPrice(totalPrice)}</p>
               {originalUnitPrice > unitPrice && (
                 <>
-                  <p className="text-lg text-muted-foreground line-through">Rs. {formatPrice(totalOriginalPrice)}</p>
+                  <p className="text-lg text-gray-500 line-through">Rs. {formatPrice(totalOriginalPrice)}</p>
                   <span className="rounded-full bg-green-100 px-2 py-0.5 text-sm font-semibold text-green-700">
                     {savingsPercent}% OFF
                   </span>
@@ -354,17 +354,17 @@ const ProductDetail = () => {
               )}
             </div>
             {product.productType === 'deliverable' && (
-              <p className="mt-1 text-sm text-muted-foreground">
-                Rs. {formatPrice(unitPrice)} x {qty} = <span className="font-semibold text-[#1A0A00]">Rs. {formatPrice(totalPrice)}</span>
+              <p className="mt-1 text-sm text-gray-500">
+                Rs. {formatPrice(unitPrice)} x {qty} = <span className="font-semibold text-[#0B1D35]">Rs. {formatPrice(totalPrice)}</span>
               </p>
             )}
-            <p className="mt-2 inline-flex items-center rounded-full bg-muted px-3 py-1 text-sm text-muted-foreground">
+            <p className="mt-2 inline-flex items-center rounded-full bg-gray-100 px-3 py-1 text-sm text-gray-500">
               {product.productType === 'deliverable' ? 'Usually ships in 2-3 days' : 'Enquire for Price'}
             </p>
 
             <div className="mt-5 flex items-center gap-3">
-              <p className="text-sm font-semibold text-[#1A0A00]">Quantity</p>
-              <div className="flex items-center rounded-full border border-border">
+              <p className="text-sm font-semibold text-[#0B1D35]">Quantity</p>
+              <div className="flex items-center rounded-full border border-gray-200 text-[#0B1D35]">
                 <button className="px-3 py-1.5" onClick={() => setQty((q) => Math.max(1, q - 1))}>
                   <Minus className="h-4 w-4" />
                 </button>
@@ -379,7 +379,7 @@ const ProductDetail = () => {
               {product.productType === 'deliverable' ? (
                 <>
                   <Button
-                    className="w-full rounded-full bg-[#E8762A] py-6 text-base font-bold shadow-medium transition-all duration-200 hover:scale-[1.02] hover:bg-[#d76b20] hover:shadow-strong active:scale-[0.98]"
+                    className="w-full rounded-full bg-[#E8762A] py-6 text-base font-bold shadow-medium transition-all duration-200 hover:scale-[1.02] hover:bg-[#D76219] hover:shadow-strong active:scale-[0.98]"
                     size="lg"
                     onClick={onAddToCart}
                   >
@@ -405,90 +405,90 @@ const ProductDetail = () => {
             </div>
 
             <div className="mt-7 grid grid-cols-1 gap-3 sm:grid-cols-3">
-              <div className="inline-flex items-center gap-3 rounded-xl border border-border bg-card p-3 shadow-soft">
+              <div className="inline-flex items-center gap-3 rounded-xl border border-gray-100 bg-gray-50 p-3">
                 <ShieldCheck className="h-5 w-5 text-[#2D5016]" />
-                <span className="text-sm font-semibold text-[#1A0A00]">100% Natural</span>
+                <span className="text-sm font-semibold text-[#0B1D35]">100% Natural</span>
               </div>
-              <div className="inline-flex items-center gap-3 rounded-xl border border-border bg-card p-3 shadow-soft">
+              <div className="inline-flex items-center gap-3 rounded-xl border border-gray-100 bg-gray-50 p-3">
                 <PackageCheck className="h-5 w-5 text-[#2D5016]" />
-                <span className="text-sm font-semibold text-[#1A0A00]">Secure Packaging</span>
+                <span className="text-sm font-semibold text-[#0B1D35]">Secure Packaging</span>
               </div>
-              <div className="inline-flex items-center gap-3 rounded-xl border border-border bg-card p-3 shadow-soft">
+              <div className="inline-flex items-center gap-3 rounded-xl border border-gray-100 bg-gray-50 p-3">
                 <Truck className="h-5 w-5 text-[#2D5016]" />
-                <span className="text-sm font-semibold text-[#1A0A00]">Fast Dispatch</span>
+                <span className="text-sm font-semibold text-[#0B1D35]">Fast Dispatch</span>
               </div>
             </div>
 
-            <div className="mt-6 space-y-2 rounded-xl border border-border bg-muted/40 p-4 text-sm">
+            <div className="mt-6 space-y-2 rounded-xl border border-gray-100 bg-gray-50 p-4 text-sm">
               {product.ingredients && (
                 <div className="flex gap-2">
-                  <span className="min-w-[120px] font-semibold text-[#1A0A00]">Ingredients</span>
-                  <span className="text-muted-foreground">{Array.isArray(product.ingredients) ? product.ingredients.join(', ') : product.ingredients}</span>
+                  <span className="min-w-[120px] font-semibold text-[#0B1D35]">Ingredients</span>
+                  <span className="text-gray-500">{Array.isArray(product.ingredients) ? product.ingredients.join(', ') : product.ingredients}</span>
                 </div>
               )}
               {product.shelfLife && (
                 <div className="flex gap-2">
-                  <span className="min-w-[120px] font-semibold text-[#1A0A00]">Shelf Life</span>
-                  <span className="text-muted-foreground">{product.shelfLife}</span>
+                  <span className="min-w-[120px] font-semibold text-[#0B1D35]">Shelf Life</span>
+                  <span className="text-gray-500">{product.shelfLife}</span>
                 </div>
               )}
               {product.netWeight && (
                 <div className="flex gap-2">
-                  <span className="min-w-[120px] font-semibold text-[#1A0A00]">Net Weight</span>
-                  <span className="text-muted-foreground">{product.netWeight}</span>
+                  <span className="min-w-[120px] font-semibold text-[#0B1D35]">Net Weight</span>
+                  <span className="text-gray-500">{product.netWeight}</span>
                 </div>
               )}
               {product.countryOfOrigin && (
                 <div className="flex gap-2">
-                  <span className="min-w-[120px] font-semibold text-[#1A0A00]">Country of Origin</span>
-                  <span className="text-muted-foreground">{product.countryOfOrigin}</span>
+                  <span className="min-w-[120px] font-semibold text-[#0B1D35]">Country of Origin</span>
+                  <span className="text-gray-500">{product.countryOfOrigin}</span>
                 </div>
               )}
               {product.manufacturer && (
                 <div className="flex gap-2">
-                  <span className="min-w-[120px] font-semibold text-[#1A0A00]">Manufactured by</span>
-                  <span className="text-muted-foreground">{product.manufacturer}</span>
+                  <span className="min-w-[120px] font-semibold text-[#0B1D35]">Manufactured by</span>
+                  <span className="text-gray-500">{product.manufacturer}</span>
                 </div>
               )}
             </div>
           </div>
         </div>
 
-        <div className="mt-12 border-b border-border">
+        <div className="mt-8 border-b border-gray-100">
           <div className="flex gap-0 overflow-x-auto">
             {['description', 'ingredients', 'nutrition', 'storage'].map((tab) => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
-                className={`-mb-px whitespace-nowrap border-b-2 px-5 py-3 text-sm font-semibold capitalize transition-all duration-200 ${
+                className={`font-display -mb-px whitespace-nowrap border-b-2 px-5 py-3 text-sm tracking-wider uppercase transition-all duration-200 ${
                   activeTab === tab
                     ? 'border-[#E8762A] text-[#E8762A]'
-                    : 'border-transparent text-muted-foreground hover:text-[#1A0A00]'
+                    : 'border-transparent text-gray-400 hover:text-[#0B1D35]'
                 }`}
               >
-                {tab === 'storage' ? 'How to Store' : tab}
+                {tab === 'storage' ? 'HOW TO STORE' : tab.toUpperCase()}
               </button>
             ))}
           </div>
         </div>
 
         {activeTab === 'description' && (
-          <div className="mt-4 rounded-2xl border border-border bg-card p-6">
-            <h3 className="text-2xl font-bold text-[#1A0A00]">About {displayName}</h3>
-            <p className="mt-3 text-base leading-relaxed text-muted-foreground">{enhancedDescription}</p>
+          <div className="mt-4 rounded-2xl border border-gray-100 bg-gray-50 p-6">
+            <h3 className="font-serif text-xl font-bold text-[#0B1D35]">About {displayName}</h3>
+            <p className="mt-3 text-base leading-relaxed text-gray-500">{enhancedDescription}</p>
 
             <div className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-2">
-              <div className="rounded-xl border border-border bg-muted/60 p-4">
-                <h4 className="text-lg font-semibold text-[#1A0A00]">Why You Will Love It</h4>
-                <ul className="mt-3 space-y-2 text-sm text-muted-foreground">
+              <div className="rounded-xl border border-gray-100 bg-white p-4">
+                <h4 className="text-lg font-semibold text-[#0B1D35]">Why You Will Love It</h4>
+                <ul className="mt-3 space-y-2 text-sm text-gray-500">
                   {whyLovePoints.map((point) => (
                     <li key={point}>• {point}</li>
                   ))}
                 </ul>
               </div>
-              <div className="rounded-xl border border-border bg-muted/60 p-4">
-                <h4 className="text-lg font-semibold text-[#1A0A00]">Best For</h4>
-                <ul className="mt-3 space-y-2 text-sm text-muted-foreground">
+              <div className="rounded-xl border border-gray-100 bg-white p-4">
+                <h4 className="text-lg font-semibold text-[#0B1D35]">Best For</h4>
+                <ul className="mt-3 space-y-2 text-sm text-gray-500">
                   {bestForPoints.map((point) => (
                     <li key={point}>• {point}</li>
                   ))}
@@ -498,12 +498,12 @@ const ProductDetail = () => {
           </div>
         )}
         {activeTab === 'ingredients' && (
-          <div className="mt-4 rounded-2xl border border-border bg-card p-6">
-            <h3 className="text-2xl font-bold text-[#1A0A00]">Premium Ingredients</h3>
-            <p className="mt-2 text-sm text-muted-foreground">Each ingredient is carefully selected for quality and nutritional value</p>
+          <div className="mt-4 rounded-2xl border border-gray-100 bg-gray-50 p-6">
+            <h3 className="text-2xl font-bold text-[#0B1D35]">Premium Ingredients</h3>
+            <p className="mt-2 text-sm text-gray-500">Each ingredient is carefully selected for quality and nutritional value</p>
             <ul className="mt-6 space-y-3 text-base">
               {ingredientItems.map((item) => (
-                <li key={item} className="rounded-lg border border-border/50 bg-gradient-to-r from-muted/40 to-transparent p-4 text-muted-foreground hover:border-[#E8762A]/30 hover:bg-muted/60 transition-all">
+                <li key={item} className="rounded-lg border border-gray-100 bg-white p-4 text-gray-500 transition-all hover:border-[#E8762A]/30">
                   <span className="block">{item}</span>
                 </li>
               ))}
@@ -511,15 +511,15 @@ const ProductDetail = () => {
           </div>
         )}
         {activeTab === 'storage' && (
-          <div className="mt-4 rounded-2xl border border-border bg-card p-6">
-            <h3 className="text-2xl font-bold text-[#1A0A00] mb-4">How to Store</h3>
-            <div className="prose prose-sm max-w-none text-base text-muted-foreground leading-relaxed">
+          <div className="mt-4 rounded-2xl border border-gray-100 bg-gray-50 p-6">
+            <h3 className="mb-4 text-2xl font-bold text-[#0B1D35]">How to Store</h3>
+            <div className="prose prose-sm max-w-none text-base leading-relaxed text-gray-500">
               {product.storageInfo ? (
                 <p className="whitespace-pre-wrap">
                   {product.storageInfo.split(/(\*\*[^*]+\*\*)/g).map((part, idx) => {
                     if (part.startsWith('**') && part.endsWith('**')) {
                       return (
-                        <span key={idx} className="font-bold text-[#1A0A00]">
+                        <span key={idx} className="font-bold text-[#0B1D35]">
                           {part.slice(2, -2)}
                         </span>
                       );
@@ -531,19 +531,19 @@ const ProductDetail = () => {
                 'Store in a cool, dry place away from direct sunlight. Keep sealed after opening for best freshness.'
               )}
             </div>
-            <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="rounded-lg border border-border bg-muted/30 p-4">
-                <p className="font-semibold text-[#1A0A00] mb-2">✓ Storage Tips</p>
-                <ul className="text-sm text-muted-foreground space-y-1">
+            <div className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-2">
+              <div className="rounded-lg border border-gray-100 bg-white p-4">
+                <p className="mb-2 font-semibold text-[#0B1D35]">✓ Storage Tips</p>
+                <ul className="space-y-1 text-sm text-gray-500">
                   <li>• Use airtight containers</li>
                   <li>• Maintain cool temperature</li>
                   <li>• Avoid moisture and humidity</li>
                   <li>• Keep away from heat sources</li>
                 </ul>
               </div>
-              <div className="rounded-lg border border-border bg-muted/30 p-4">
-                <p className="font-semibold text-[#1A0A00] mb-2">✗ Avoid</p>
-                <ul className="text-sm text-muted-foreground space-y-1">
+              <div className="rounded-lg border border-gray-100 bg-white p-4">
+                <p className="mb-2 font-semibold text-[#0B1D35]">✗ Avoid</p>
+                <ul className="space-y-1 text-sm text-gray-500">
                   <li>• Direct sunlight exposure</li>
                   <li>• Refrigeration/Freezing</li>
                   <li>• Damp environments</li>
@@ -554,9 +554,9 @@ const ProductDetail = () => {
           </div>
         )}
 
-        <section className="mt-12">
-          <h2 className="font-display text-2xl font-bold text-[#1A0A00] sm:text-3xl">You May Also Like</h2>
-          <div className="mt-1 mb-4 h-1 w-12 rounded-full bg-[#E8762A]" />
+        <section className="mt-8">
+          <h2 className="font-serif text-2xl font-bold text-[#0B1D35] sm:text-3xl">You May Also Like</h2>
+          <div className="mb-5 mt-1 h-0.5 w-12 rounded-full bg-[#E8762A]" />
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {relatedProducts.map((item) => (
               <Link key={item._id || item.id} to={`/product/${item._id || item.id}`}>
@@ -570,8 +570,8 @@ const ProductDetail = () => {
                     />
                   </div>
                   <CardContent className="p-4">
-                    <p className="font-semibold text-[#1A0A00]">{getDisplayProductName(item)}</p>
-                    <p className="mt-1 text-sm font-bold text-[#E8762A]">Rs. {item.price}</p>
+                    <p className="font-sans text-lg font-bold text-[#0B1D35]">{getDisplayProductName(item)}</p>
+                    <p className="mt-1 text-base font-bold text-[#0B1D35]">Rs. {item.price}</p>
                     {item.productType === 'deliverable' ? (
                       <Button
                         className="mt-3 w-full rounded-full bg-[#E8762A] hover:bg-[#d76b20]"
@@ -597,10 +597,10 @@ const ProductDetail = () => {
         </section>
 
         {product.parentProduct === 'crunchy-chana' && flavourStoryItems.length > 0 && (
-          <section className="mt-12 pb-8">
-            <h2 className="font-display text-2xl font-bold text-[#1A0A00] sm:text-3xl">Choose Your Crunch</h2>
-            <div className="mt-1 mb-2 h-1 w-12 rounded-full bg-[#E8762A]" />
-            <p className="mb-4 text-sm text-muted-foreground">Tap a flavour to explore its product page.</p>
+          <section className="mt-8 pb-16">
+            <h2 className="font-serif text-2xl font-bold text-[#0B1D35] sm:text-3xl">Choose Your Crunch</h2>
+            <div className="mb-2 mt-1 h-0.5 w-12 rounded-full bg-[#E8762A]" />
+            <p className="mb-4 text-sm text-gray-500">Tap a flavour to explore its product page.</p>
             <div className="grid grid-flow-col auto-cols-[78%] gap-4 overflow-x-auto pb-2 sm:grid-flow-row sm:auto-cols-auto sm:grid-cols-3 lg:grid-cols-5">
               {flavourStoryItems.map((item) => (
                 <Link
@@ -619,11 +619,11 @@ const ProductDetail = () => {
                     className="h-32 w-full object-cover transition-transform duration-500 group-hover:scale-108"
                   />
                   <div className="p-3">
-                    <span className={`inline-flex rounded-full border px-3 py-1 text-xs font-semibold ${flavorColorMap[item.flavour] || 'border-border bg-muted'}`}>
+                    <span className={`inline-flex rounded-full border px-3 py-1 text-xs font-semibold ${flavorColorMap[item.flavour] || 'border-gray-200 bg-gray-50 text-[#0B1D35]'}`}>
                       {item.flavour}
                     </span>
-                    <p className="mt-2 text-sm font-semibold text-[#1A0A00]">{getDisplayProductName(item)}</p>
-                    <p className="mt-1 text-xs text-muted-foreground">{item.story}</p>
+                    <p className="mt-2 font-sans text-lg font-bold text-[#0B1D35]">{getDisplayProductName(item)}</p>
+                    <p className="mt-1 text-xs text-gray-500">{item.story}</p>
                   </div>
                 </Link>
               ))}
@@ -633,21 +633,21 @@ const ProductDetail = () => {
       </div>
 
       {product.productType === 'deliverable' ? (
-        <div className="fixed bottom-0 left-0 right-0 z-50 border-t border-border bg-background p-3 shadow-lg lg:hidden">
+        <div className="fixed bottom-0 left-0 right-0 z-50 border-t border-gray-100 bg-white p-3 pb-[max(12px,env(safe-area-inset-bottom))] shadow-strong lg:hidden">
           <div className="flex items-center gap-3">
             <div>
-              <p className="text-xs text-muted-foreground">Total ({qty})</p>
-              <p className="text-lg font-bold text-[#1A0A00]">Rs. {formatPrice(totalPrice)}</p>
+              <p className="text-xs text-gray-400">Price</p>
+              <p className="text-lg font-bold text-[#0B1D35]">Rs. {formatPrice(totalPrice)}</p>
             </div>
-            <Button className="flex-1 bg-[#E8762A] hover:bg-[#d76b20]" size="lg" onClick={onAddToCart}>
+            <Button className="flex-1 rounded-full bg-[#E8762A] font-bold text-white hover:bg-[#D76219]" size="lg" onClick={onAddToCart}>
               <ShoppingCart className="mr-2 h-4 w-4" />
               Add to Cart
             </Button>
           </div>
         </div>
       ) : (
-        <div className="fixed bottom-0 left-0 right-0 z-50 border-t border-border bg-background p-3 shadow-lg lg:hidden">
-          <Button className="w-full bg-[#25D366] hover:bg-[#1fa959]" size="lg" asChild>
+        <div className="fixed bottom-0 left-0 right-0 z-50 border-t border-gray-100 bg-white p-3 pb-[max(12px,env(safe-area-inset-bottom))] shadow-strong lg:hidden">
+          <Button className="w-full rounded-full bg-[#25D366] font-bold hover:bg-[#1fa959]" size="lg" asChild>
             <a href={whatsappLink} target="_blank" rel="noreferrer">
               <MessageCircle className="mr-2 h-4 w-4" />
               Enquire on WhatsApp

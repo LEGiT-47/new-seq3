@@ -64,11 +64,11 @@ const OrderHistory = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background py-8 sm:py-12">
+    <div className="min-h-screen bg-background py-8 text-[#F8F4EC] sm:py-12">
       <div className="w-full px-4 sm:px-6 lg:px-8">
         <div className="max-w-4xl mx-auto">
           {/* Header */}
-          <div className="mb-8">
+          <div className="mb-6">
             <Button
               variant="ghost"
               onClick={() => navigate('/')}

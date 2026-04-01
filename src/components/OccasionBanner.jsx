@@ -14,7 +14,7 @@ const OccasionBanner = () => {
 
   return (
     <div
-      className={`bg-gradient-to-r ${activeOccasion.bgColor} text-white py-12 sm:py-16 px-4 sm:px-6 lg:px-8 rounded-lg overflow-hidden relative`}
+      className={`bg-gradient-to-r ${activeOccasion.bgColor} text-white px-4 py-8 sm:px-6 sm:py-10 lg:px-8 rounded-lg overflow-hidden relative`}
     >
       {/* Decorative elements */}
       <div className="absolute top-0 right-0 opacity-10 text-6xl">

@@ -52,14 +52,14 @@ const Footer = () => {
   };
 
   return (
-    <footer className="bg-secondary text-secondary-foreground mt-0">
+    <footer className="mt-0 border-t border-[#26486E] bg-[#0B1D35] text-[#B8C8D8]">
       {/* Main Footer Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-10">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
           {/* Brand Section */}
           <div className="space-y-4">
             <div>
-              <h2 className="font-display text-2xl font-bold text-primary-glow mb-2">
+              <h2 className="mb-2 font-display text-2xl font-bold text-[#F8F4EC]">
                 Sequeira Foods
               </h2>
               <p className="text-sm opacity-90">
@@ -73,13 +73,13 @@ const Footer = () => {
 
           {/* Quick Links */}
           <div>
-            <h3 className="font-semibold text-lg mb-4 text-primary-glow">Quick Links</h3>
+            <h3 className="mb-4 text-lg font-bold text-[#F8F4EC]">Quick Links</h3>
             <ul className="space-y-2">
               {quickLinks.map((link) => (
                 <li key={link.label}>
                   <Link 
                     to={link.path}
-                    className="text-sm opacity-80 hover:opacity-100 hover:text-primary transition-colors"
+                    className="text-sm opacity-80 transition-colors hover:text-[#C9A84C] hover:opacity-100"
                   >
                     {link.label}
                   </Link>
@@ -90,13 +90,13 @@ const Footer = () => {
 
           {/* Product Categories */}
           <div>
-            <h3 className="font-semibold text-lg mb-4 text-primary-glow">Categories</h3>
+            <h3 className="mb-4 text-lg font-bold text-[#F8F4EC]">Categories</h3>
             <ul className="space-y-2">
               {productCategories.map((category) => (
                 <li key={category.label}>
                   <Link 
                     to={category.path}
-                    className="text-sm opacity-80 hover:opacity-100 hover:text-primary transition-colors"
+                    className="text-sm opacity-80 transition-colors hover:text-[#C9A84C] hover:opacity-100"
                   >
                     {category.label}
                   </Link>
@@ -107,13 +107,13 @@ const Footer = () => {
 
           {/* Contact Info */}
           <div>
-            <h3 className="font-semibold text-lg mb-4 text-primary-glow">Contact Us</h3>
+            <h3 className="mb-4 text-lg font-bold text-[#F8F4EC]">Contact Us</h3>
             <ul className="space-y-3">
               {contactInfo.map((info) => (
                 <li key={info.label}>
                   <a 
                     href={info.action || '#'}
-                    className="flex items-center gap-2 text-sm opacity-80 hover:opacity-100 hover:text-primary transition-colors"
+                    className="flex items-center gap-2 text-sm opacity-80 transition-colors hover:text-[#C9A84C] hover:opacity-100"
                   >
                     {info.icon}
                     <span>{info.value}</span>
@@ -125,7 +125,7 @@ const Footer = () => {
             {/* WhatsApp CTA */}
             <Button 
               onClick={handleWhatsApp}
-              className="w-full mt-4 bg-[#25D366] hover:bg-[#128C7E] text-white"
+              className="mt-4 w-full rounded-full bg-[#25D366] font-bold text-white hover:bg-[#128C7E]"
               size="sm"
             >
               <MessageCircle className="h-4 w-4 mr-2" />
@@ -135,7 +135,7 @@ const Footer = () => {
         </div>
 
         {/* Divider */}
-        <div className="border-t border-secondary-foreground/20 my-6" />
+        <div className="my-6 border-t border-[#26486E]" />
 
         {/* Bottom Footer */}
         <div className="flex flex-col md:flex-row justify-between items-center gap-4 text-sm opacity-75">

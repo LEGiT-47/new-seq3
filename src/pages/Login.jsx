@@ -81,7 +81,7 @@ const Login = () => {
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Phone Number Field */}
             <div className="space-y-2">
-              <label htmlFor="phone" className="text-sm font-medium text-foreground">
+              <label htmlFor="phone" className="text-sm font-medium text-[#0B1D35]">
                 Mobile Number
               </label>
               <div className="relative">
@@ -101,7 +101,7 @@ const Login = () => {
 
             {/* Password Field */}
             <div className="space-y-2">
-              <label htmlFor="password" className="text-sm font-medium text-foreground">
+              <label htmlFor="password" className="text-sm font-medium text-[#0B1D35]">
                 Password
               </label>
               <div className="relative">
@@ -118,7 +118,7 @@ const Login = () => {
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-3 text-muted-foreground hover:text-foreground transition-colors disabled:opacity-50"
+                  className="absolute right-3 top-3 text-muted-foreground transition-colors hover:text-[#0B1D35] disabled:opacity-50"
                   disabled={loading}
                 >
                   {showPassword ? (

@@ -78,7 +78,7 @@ const LocationWithMap = () => {
           <div className="flex-1">
             <h3 className="font-semibold mb-2 text-sm sm:text-base">Location</h3>
             <div className="text-xs sm:text-sm text-muted-foreground space-y-1">
-              <p className="font-semibold text-foreground">Sequeira Foods Pvt. Ltd.</p>
+              <p className="font-semibold text-[#0B1D35]">Sequeira Foods Pvt. Ltd.</p>
               <p>Office no 15, 1st Floor,</p>
               <p>Saidham Shopping Plaza,</p>
               <p>P.K Road, Mulund West,</p>
@@ -207,11 +207,11 @@ Please get back to me. Thank you!`;
   ];
 
   return (
-    <div className="min-h-screen py-6 sm:py-8">
+    <div className="min-h-screen bg-[#0B1D35] py-6 text-[#F8F4EC] sm:py-8">
       <div className="w-full px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
           {/* Header */}
-          <div className="text-center mb-12 sm:mb-16">
+          <div className="text-center mb-6 sm:mb-16">
             <Badge className="mb-4 bg-gradient-primary border-0 text-primary-foreground text-xs sm:text-sm">
               Get in Touch
             </Badge>
@@ -228,7 +228,7 @@ Please get back to me. Thank you!`;
           <h2 className="font-display text-xl sm:text-2xl font-bold mb-4 sm:mb-6">Contact Information</h2>
 
           {/* Location and Follow Us Row */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8 mb-8">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-6 mb-6">
             {/* Location Card with Map */}
             <LocationWithMap />
 
@@ -299,7 +299,7 @@ Please get back to me. Thank you!`;
 
 
           {/* Main Section with Form and Assistance */}
-          <div className="flex flex-col lg:grid lg:grid-cols-2 gap-6 sm:gap-8 mb-12">
+          <div className="flex flex-col lg:grid lg:grid-cols-2 gap-6 sm:gap-6 mb-6">
             {/* Contact Form */}
             <Card className="shadow-medium lg:order-1 order-2">
               <CardHeader>
@@ -453,14 +453,14 @@ Please get back to me. Thank you!`;
 
           {/* FAQ Section */}
           <section className="bg-muted/30 rounded-xl sm:rounded-2xl p-6 sm:p-8 md:p-12">
-            <div className="text-center mb-8">
+            <div className="text-center mb-6">
               <h2 className="font-display text-2xl sm:text-3xl md:text-4xl font-bold mb-3 sm:mb-4">Frequently Asked Questions</h2>
               <p className="text-sm sm:text-base md:text-lg text-muted-foreground px-2">
                 Quick answers to common questions about our products and services
               </p>
             </div>
             
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 sm:gap-8 max-w-4xl mx-auto">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 sm:gap-6 max-w-4xl mx-auto">
               <div>
                 <h3 className="font-semibold mb-2 text-sm sm:text-base">Do you offer bulk discounts?</h3>
                 <p className="text-xs sm:text-sm text-muted-foreground mb-4">

@@ -124,23 +124,23 @@ const Products = () => {
     const hasFlavorGroup = Boolean(group && group.products.length > 1);
 
     return (
-      <Card key={product._id || product.id} className="group overflow-hidden rounded-3xl border-0 bg-white shadow-card transition-all duration-300 hover:-translate-y-2 hover:shadow-strong">
-        <div className="h-1 w-full bg-gradient-to-r from-[#E8762A] to-[#f0943a]" />
-        <div className="relative overflow-hidden">
+      <Card key={product._id || product.id} className="group overflow-hidden rounded-3xl border border-gray-100 bg-white shadow-soft transition-all duration-300 hover:-translate-y-2 hover:shadow-md">
+        <div className="h-1 w-full bg-gradient-to-r from-[#E8762A] to-[#C9A84C]" />
+        <div className="relative overflow-hidden bg-[#FDF6EC]">
           <Link to={`/product/${product._id || product.id}`}>
             <img
               src={getImageUrl(product.image)}
               alt={getDisplayProductName(product)}
-              className="h-60 w-full object-cover transition-transform duration-500 group-hover:scale-108"
+              className="h-64 w-full object-cover transition-transform duration-500 group-hover:scale-108"
             />
             <div className="absolute inset-0 bg-white/0 transition-all duration-300 group-hover:bg-white/5" />
           </Link>
-          <Badge className="absolute left-3 top-3 bg-[#2D5016] text-white">Deliverable</Badge>
+          <Badge className="absolute left-3 top-3 bg-[#0B1D35] text-white">Deliverable</Badge>
         </div>
         <CardContent className="space-y-4 p-5">
           <div>
-            <h3 className="text-lg font-bold text-[#1A0A00]">{getDisplayProductName(product)}</h3>
-            <p className="line-clamp-2 text-sm text-muted-foreground">{product.description}</p>
+            <h3 className="font-sans text-lg font-bold text-[#0B1D35]">{getDisplayProductName(product)}</h3>
+            <p className="line-clamp-2 text-sm text-gray-500">{product.description}</p>
           </div>
 
           {hasFlavorGroup && (
@@ -150,8 +150,8 @@ const Products = () => {
                   key={flavorProduct._id || flavorProduct.id}
                   className={`rounded-full border px-3 py-1 text-xs font-medium transition ${
                     (selectedFlavorByParent[groupKey] || group.products[0].flavour) === flavorProduct.flavour
-                      ? 'border-[#E8762A] bg-[#E8762A] text-white'
-                      : 'border-border text-muted-foreground'
+                      ? 'border-[#C9A84C] bg-[#C9A84C] text-[#0B1D35]'
+                      : 'border-gray-200 text-gray-500 hover:border-[#0B1D35] hover:text-[#0B1D35]'
                   }`}
                   onClick={() =>
                     setSelectedFlavorByParent((prev) => ({
@@ -167,8 +167,8 @@ const Products = () => {
           )}
 
           <div className="flex items-center justify-between">
-            <p className="text-xl font-bold text-[#1A0A00]">Rs. {product.price}</p>
-            <p className="text-xs text-muted-foreground">{product.weight}</p>
+            <p className="text-xl font-bold text-[#0B1D35]">Rs. {product.price}</p>
+            <p className="text-xs text-gray-500">{product.weight}</p>
           </div>
 
           <Button className="w-full rounded-full bg-[#E8762A] hover:bg-[#d76b20]" onClick={() => onAddToCart(product)}>
@@ -183,35 +183,35 @@ const Products = () => {
   const renderEnquiryCard = (product) => {
     const link = buildWhatsAppEnquiryLink(product);
     return (
-      <Card key={product._id || product.id} className="group overflow-hidden rounded-3xl border-0 bg-white shadow-card transition-all duration-300 hover:-translate-y-2 hover:shadow-strong">
-        <div className="h-1 w-full bg-gradient-to-r from-[#2D5016] to-[#4a7a24]" />
-        <div className="relative overflow-hidden">
+      <Card key={product._id || product.id} className="group overflow-hidden rounded-3xl border border-gray-100 bg-white shadow-soft transition-all duration-300 hover:-translate-y-2 hover:shadow-md">
+        <div className="h-1 w-full bg-gradient-to-r from-[#1A3555] to-[#26486E]" />
+        <div className="relative overflow-hidden bg-[#FDF6EC]">
           <Link to={`/product/${product._id || product.id}`}>
             <img
               src={getImageUrl(product.image)}
               alt={product.name}
-              className="h-60 w-full object-cover transition-transform duration-500 group-hover:scale-108"
+              className="h-64 w-full object-cover transition-transform duration-500 group-hover:scale-108"
             />
             <div className="absolute inset-0 bg-white/0 transition-all duration-300 group-hover:bg-white/5" />
           </Link>
-          <Badge className="absolute left-3 top-3 bg-stone-500 text-white">Enquiry Only</Badge>
+          <Badge className="absolute left-3 top-3 bg-[#1A3555] text-[#B8C8D8]">Enquiry Only</Badge>
         </div>
         <CardContent className="space-y-4 p-5">
           <div>
-            <h3 className="text-lg font-bold text-[#1A0A00]">{product.name}</h3>
-            <p className="line-clamp-2 text-sm text-muted-foreground">{product.description}</p>
+            <h3 className="font-sans text-lg font-bold text-[#0B1D35]">{product.name}</h3>
+            <p className="line-clamp-2 text-sm text-gray-500">{product.description}</p>
           </div>
 
           {product.coatings?.length > 0 && (
-            <p className="text-xs text-muted-foreground">Coatings: {product.coatings.slice(0, 3).join(', ')}</p>
+            <p className="text-xs text-gray-500">Coatings: {product.coatings.slice(0, 3).join(', ')}</p>
           )}
           {product.flavors?.length > 0 && (
-            <p className="text-xs text-muted-foreground">Flavours: {product.flavors.slice(0, 4).join(', ')}</p>
+            <p className="text-xs text-gray-500">Flavours: {product.flavors.slice(0, 4).join(', ')}</p>
           )}
 
           <div className="flex items-center justify-between">
-            <p className="text-xl font-bold text-[#1A0A00]">Rs. {product.price}</p>
-            <p className="text-xs text-muted-foreground">{product.weight}</p>
+            <p className="text-xl font-bold text-[#0B1D35]">Rs. {product.price}</p>
+            <p className="text-xs text-gray-500">{product.weight}</p>
           </div>
 
           <Button className="w-full rounded-full bg-[#25D366] hover:bg-[#1fa959]" asChild>
@@ -226,16 +226,16 @@ const Products = () => {
   };
 
   return (
-    <div className="min-h-screen">
-      <div className="bg-[#1A0A00] px-4 py-14 text-center sm:py-20">
-        <p className="mb-2 text-xs font-bold uppercase tracking-widest text-[#E8762A]">Everything We Make</p>
-        <h1 className="font-display text-4xl font-black text-white sm:text-5xl lg:text-6xl">Our Products</h1>
-        <p className="mx-auto mt-3 max-w-2xl text-base text-white/70">
+    <div className="min-h-screen bg-white">
+      <div className="bg-[#0B1D35] px-4 py-14 text-center sm:py-20">
+        <p className="mb-3 text-xs font-bold uppercase tracking-widest text-[#C9A84C]">Everything We Make</p>
+        <h1 className="font-display text-5xl uppercase tracking-widest text-white sm:text-7xl">Our Products</h1>
+        <p className="mx-auto mt-4 max-w-xl text-base text-[#B8C8D8]">
           Choose between ready-to-ship hero snacks and our premium enquiry-only collection.
         </p>
       </div>
 
-      <div className="mt-0 border-b-2 border-border bg-white px-4 sm:px-6 lg:px-8">
+      <div className="sticky top-0 z-20 border-b-2 border-gray-100 bg-white px-4 shadow-sm sm:px-6 lg:px-8">
         <div className="mx-auto flex max-w-7xl gap-0 overflow-x-auto">
           {[
             { id: 'order', label: '🛒 Order Now', sub: 'Ready to deliver' },
@@ -245,7 +245,7 @@ const Products = () => {
               key={tab.id}
               onClick={() => setActiveMainTab(tab.id)}
               className={`relative flex min-w-fit flex-col items-start px-6 py-4 transition-colors sm:px-8 ${
-                activeMainTab === tab.id ? 'text-[#E8762A]' : 'text-muted-foreground hover:text-[#1A0A00]'
+                activeMainTab === tab.id ? 'text-[#0B1D35]' : 'text-gray-400 hover:text-gray-700'
               }`}
             >
               <span className="text-base font-bold">{tab.label}</span>
@@ -258,9 +258,10 @@ const Products = () => {
         </div>
       </div>
 
-      <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
+      <div className="bg-white px-4 py-8 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-7xl">
         {loading ? (
-          <p className="py-12 text-center text-muted-foreground">Loading products...</p>
+          <p className="py-12 text-center text-gray-500">Loading products...</p>
         ) : error ? (
           <p className="py-12 text-center text-red-600">{error}</p>
         ) : (
@@ -269,30 +270,30 @@ const Products = () => {
               <div className="space-y-8 pt-2">
                 {heroSpotlight.length > 0 && (
                   <section>
-                    <h2 className="font-display text-2xl font-bold text-[#1A0A00] sm:text-3xl">Hero Flavour Spotlight</h2>
-                    <div className="mt-1 mb-3 h-1 w-12 rounded-full bg-[#E8762A]" />
+                    <h2 className="font-display text-3xl uppercase tracking-wide text-[#0B1D35] sm:text-4xl">Hero Flavour Spotlight</h2>
+                    <div className="mb-4 mt-1 h-0.5 w-12 rounded-full bg-[#E8762A]" />
                     <div className="grid grid-flow-col auto-cols-[78%] gap-4 overflow-x-auto pb-2 sm:grid-flow-row sm:auto-cols-auto sm:grid-cols-2 lg:grid-cols-5">
                       {heroSpotlight.map((product) => {
-                        const colorClass = flavorColorMap[product.flavour] || 'border-border bg-muted text-foreground';
+                        const colorClass = flavorColorMap[product.flavour] || 'border-gray-200 bg-gray-50 text-[#0B1D35]';
                         return (
                           <div
                             key={product._id || product.id}
-                            className="group flex flex-col overflow-hidden rounded-3xl border-0 bg-white shadow-card transition-all duration-300 hover:-translate-y-2 hover:shadow-strong"
+                            className="group flex flex-col overflow-hidden rounded-3xl border border-gray-100 bg-white shadow-soft transition-all duration-300 hover:-translate-y-2 hover:shadow-md"
                           >
-                            <div className="h-1 w-full bg-gradient-to-r from-[#E8762A] to-[#f0943a]" />
+                            <div className="h-1 w-full bg-gradient-to-r from-[#E8762A] to-[#DAC06E]" />
                             <Link to={`/product/${product._id || product.id}`} className="block overflow-hidden">
                               <img
                                 src={getImageUrl(product.image)}
                                 alt={getDisplayProductName(product)}
-                                className="h-40 w-full object-cover transition-transform duration-500 group-hover:scale-108"
+                                className="h-48 w-full object-cover transition-transform duration-500 group-hover:scale-108"
                               />
                             </Link>
                             <div className="flex flex-1 flex-col gap-2 p-3">
                               <span className={`self-start rounded-full border px-2.5 py-0.5 text-xs font-semibold ${colorClass}`}>
                                 {product.flavour}
                               </span>
-                              <p className="text-sm font-semibold leading-snug text-[#1A0A00]">{getDisplayProductName(product)}</p>
-                              <p className="text-sm font-bold text-[#E8762A]">Rs. {product.price}</p>
+                              <p className="font-sans text-sm font-bold leading-snug text-[#0B1D35]">{getDisplayProductName(product)}</p>
+                              <p className="font-sans text-sm font-bold text-[#0B1D35]">Rs. {product.price}</p>
                               <Button
                                 size="sm"
                                 className="mt-auto w-full bg-[#E8762A] text-xs hover:bg-[#d76b20]"
@@ -310,7 +311,7 @@ const Products = () => {
                 )}
 
                 <div className="flex flex-wrap items-center gap-3">
-                  <span className="flex items-center gap-1 text-sm text-muted-foreground">
+                  <span className="flex items-center gap-1 text-sm text-gray-500">
                     <Filter className="h-4 w-4" /> Filter:
                   </span>
                   {[
@@ -322,8 +323,8 @@ const Products = () => {
                       key={item.id}
                       className={`rounded-full border px-3 py-1 text-sm font-medium transition ${
                         orderFilter === item.id
-                          ? 'border-[#E8762A] bg-[#E8762A] text-white'
-                          : 'border-border bg-muted text-muted-foreground hover:border-[#E8762A]'
+                          ? 'border-[#0B1D35] bg-[#0B1D35] text-white'
+                          : 'border-gray-200 text-gray-500 hover:border-[#0B1D35] hover:text-[#0B1D35]'
                       }`}
                       onClick={() => setOrderFilter(item.id)}
                     >
@@ -339,7 +340,7 @@ const Products = () => {
             {activeMainTab === 'enquire' && (
               <div className="space-y-8 pt-2">
                 <div className="flex flex-wrap items-center gap-3">
-                  <span className="flex items-center gap-1 text-sm text-muted-foreground">
+                  <span className="flex items-center gap-1 text-sm text-gray-500">
                     <Filter className="h-4 w-4" /> Filter:
                   </span>
                   {enquiryCategories.map((categoryId) => (
@@ -347,8 +348,8 @@ const Products = () => {
                       key={categoryId}
                       className={`rounded-full border px-3 py-1 text-sm font-medium transition ${
                         enquiryFilter === categoryId
-                          ? 'border-[#E8762A] bg-[#E8762A] text-white'
-                          : 'border-border bg-muted text-muted-foreground hover:border-[#E8762A]'
+                          ? 'border-[#0B1D35] bg-[#0B1D35] text-white'
+                          : 'border-gray-200 text-gray-500 hover:border-[#0B1D35] hover:text-[#0B1D35]'
                       }`}
                       onClick={() => setEnquiryFilter(categoryId)}
                     >
@@ -359,10 +360,10 @@ const Products = () => {
 
                 <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
                   {filteredEnquiryProducts.length === 0 ? (
-                    <div className="col-span-full py-16 text-center">
-                      <p className="text-muted-foreground">No products in this category yet.</p>
+                    <div className="col-span-full py-12 text-center">
+                      <p className="text-gray-500">No products in this category yet.</p>
                       <button
-                        className="mt-3 text-sm font-semibold text-[#E8762A] hover:underline"
+                        className="mt-3 text-sm font-semibold text-[#0B1D35] transition-colors hover:text-[#E8762A]"
                         onClick={() => setEnquiryFilter('all')}
                       >
                         View all enquiry products →
@@ -376,6 +377,7 @@ const Products = () => {
             )}
           </>
         )}
+      </div>
       </div>
     </div>
   );

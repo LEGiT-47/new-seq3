@@ -42,7 +42,7 @@ const Navigation = () => {
   };
 
   return (
-    <nav className="sticky top-9 z-40 bg-card/95 backdrop-blur-sm border-b border-border shadow-soft">
+    <nav className="sticky top-9 z-40 border-b border-[#26486E] bg-[#0B1D35]/95 backdrop-blur-sm shadow-soft">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
@@ -66,7 +66,7 @@ const Navigation = () => {
                 S
               </span>
             </div>
-            <span className="font-display font-bold text-xl text-foreground">SEQUEIRA FOODS</span>
+            <span className="font-display text-xl font-bold text-[#F8F4EC]">SEQUEIRA FOODS</span>
           </Link>
 
           {/* Desktop Navigation */}
@@ -75,10 +75,10 @@ const Navigation = () => {
               <Link
                 key={item.name}
                 to={item.path}
-                className={`text-sm font-medium transition-colors hover:text-primary ${
-                  isActive(item.path) 
-                    ? 'text-primary border-b-2 border-primary' 
-                    : 'text-muted-foreground'
+                className={`text-sm transition-colors ${
+                  isActive(item.path)
+                    ? 'font-semibold text-[#C9A84C]'
+                    : 'text-[#B8C8D8] hover:text-[#F8F4EC]'
                 }`}
               >
                 {item.name}
@@ -91,7 +91,7 @@ const Navigation = () => {
             {/* Phone */}
             <a
               href="tel:+919930709557"
-              className="hidden sm:flex items-center space-x-2 text-muted-foreground hover:text-primary transition-colors"
+              className="hidden items-center space-x-2 text-[#B8C8D8] transition-colors hover:text-[#C9A84C] sm:flex"
             >
               <Phone className="h-4 w-4" />
               <span className="text-sm font-medium">+91 99307 09557</span>
@@ -154,7 +154,7 @@ const Navigation = () => {
                 </Button>
                 <Button
                   size="sm"
-                  className="bg-primary hover:bg-primary/90 text-white"
+                  className="rounded-full bg-[#C9A84C] px-4 py-1.5 text-sm font-bold text-[#0B1D35] transition-colors hover:bg-[#DAC06E]"
                   asChild
                 >
                   <Link to="/signup">Sign up</Link>

@@ -35,21 +35,29 @@ const HeroCarousel = ({ slides }) => {
   const slide = slides[current];
 
   return (
-    <div className="relative h-[92vh] min-h-[560px] max-h-[780px] w-full overflow-hidden">
+    <div className="relative h-[92vh] min-h-[560px] max-h-[780px] w-full overflow-hidden bg-[#0B1D35]">
       {slides.map((s, i) => (
         <div
           key={i}
           className="absolute inset-0 transition-opacity duration-700"
           style={{ opacity: i === current ? 1 : 0 }}
         >
-          <img
-            src={s.image}
-            alt=""
-            className="h-full w-full object-cover object-center"
-            style={{ transform: i === current ? 'scale(1.04)' : 'scale(1)', transition: 'transform 6s ease' }}
-          />
-          <div className="absolute inset-0 bg-gradient-to-r from-black/75 via-black/45 to-black/10" />
-          <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-[#1A0A00]/60 to-transparent" />
+          {s.image ? (
+            <img
+              src={s.image}
+              alt=""
+              className="h-full w-full object-cover object-center"
+              style={{ transform: i === current ? 'scale(1.04)' : 'scale(1)', transition: 'transform 6s ease' }}
+            />
+          ) : (
+            <div className="h-full w-full bg-gradient-to-br from-[#0B1D35] via-[#1A3555] to-[#0B1D35]">
+              <div className="absolute inset-0 flex items-center justify-end pr-16 opacity-10">
+                <div className="h-96 w-96 rounded-full border-2 border-[#C9A84C]" />
+              </div>
+            </div>
+          )}
+          <div className="absolute inset-0 bg-gradient-to-r from-[#0B1D35]/80 via-[#0B1D35]/40 to-transparent" />
+          <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-[#0B1D35]/70 to-transparent" />
         </div>
       ))}
 
@@ -64,12 +72,12 @@ const HeroCarousel = ({ slides }) => {
             }}
           >
             {slide.badge && (
-              <span className="mb-4 inline-flex items-center rounded-full bg-[#E8762A]/90 px-4 py-1.5 text-xs font-bold uppercase tracking-widest text-white backdrop-blur-sm">
+              <span className="mb-4 inline-flex items-center rounded-full bg-[#C9A84C]/85 px-4 py-1.5 text-xs font-bold uppercase tracking-widest text-[#0B1D35] backdrop-blur-sm">
                 {slide.badge}
               </span>
             )}
 
-            <h1 className="font-display text-5xl font-black leading-[1.05] text-white sm:text-6xl lg:text-7xl">
+            <h1 className="font-display text-6xl font-normal uppercase tracking-wide leading-none text-white sm:text-7xl lg:text-8xl">
               {slide.title}
               {slide.subtitle && (
                 <>
@@ -89,7 +97,7 @@ const HeroCarousel = ({ slides }) => {
               {slide.ctaButton && (
                 <button
                   onClick={slide.ctaButton.onClick}
-                  className="rounded-full bg-[#E8762A] px-7 py-3.5 text-sm font-bold text-white shadow-strong transition-all duration-200 hover:scale-105 hover:bg-[#d76b20] active:scale-95"
+                  className="rounded-full bg-[#C9A84C] px-7 py-3.5 text-sm font-bold text-[#0B1D35] shadow-strong transition-all duration-200 hover:scale-105 hover:bg-[#DAC06E]"
                 >
                   {slide.ctaButton.label} →
                 </button>
@@ -97,7 +105,7 @@ const HeroCarousel = ({ slides }) => {
               {slide.quoteButton && (
                 <button
                   onClick={slide.quoteButton.onClick}
-                  className="rounded-full border-2 border-white/60 bg-white/10 px-7 py-3.5 text-sm font-bold text-white backdrop-blur-sm transition-all duration-200 hover:bg-white/20"
+                  className="rounded-full border-2 border-[#C9A84C]/60 bg-[#C9A84C]/10 px-7 py-3.5 text-sm font-bold text-[#F8F4EC] backdrop-blur-sm transition-all duration-200 hover:bg-[#C9A84C]/20"
                 >
                   {slide.quoteButton.label}
                 </button>
@@ -130,7 +138,7 @@ const HeroCarousel = ({ slides }) => {
             key={i}
             onClick={() => goTo(i)}
             className={`rounded-full transition-all duration-300 ${
-              i === current ? 'h-2 w-8 bg-[#E8762A]' : 'h-2 w-2 bg-white/50 hover:bg-white/80'
+              i === current ? 'h-2 w-8 bg-[#C9A84C]' : 'h-2 w-2 bg-white/40 hover:bg-white/80'
             }`}
           />
         ))}

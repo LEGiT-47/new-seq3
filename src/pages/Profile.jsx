@@ -98,10 +98,10 @@ const Profile = () => {
   }
 
   return (
-    <div className="min-h-screen py-8 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-2xl mx-auto">
+    <div className="min-h-screen bg-[#0B1D35] px-4 py-8 text-[#F8F4EC] sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-2xl">
         {/* Header */}
-        <div className="mb-8">
+        <div className="mb-6">
           <h1 className="text-3xl font-bold mb-2">My Profile</h1>
           <p className="text-muted-foreground">Manage your account information and addresses</p>
         </div>

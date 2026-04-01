@@ -192,10 +192,10 @@ const Checkout = () => {
 
 
   return (
-    <div className="min-h-screen py-6 sm:py-8 bg-background">
+    <div className="min-h-screen bg-background py-6 text-[#F8F4EC] sm:py-8">
       <div className="w-full px-4 sm:px-6 lg:px-8">
         <div className="max-w-4xl mx-auto">
-          <h1 className="text-3xl font-bold mb-8">Checkout</h1>
+          <h1 className="text-3xl font-bold mb-6">Checkout</h1>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Main Checkout Form */}
@@ -211,7 +211,7 @@ const Checkout = () => {
                       <h3 className="font-semibold mb-3">Delivery Address</h3>
                       {selectedAddress ? (
                         <div className="text-sm text-muted-foreground space-y-1">
-                          <p className="font-medium text-foreground">{selectedAddress.name}</p>
+                          <p className="font-medium text-[#0B1D35]">{selectedAddress.name}</p>
                           <p>{selectedAddress.street}</p>
                           <p>{selectedAddress.city}, {selectedAddress.state} {selectedAddress.pincode}</p>
                           <p>Phone: {selectedAddress.phone}</p>

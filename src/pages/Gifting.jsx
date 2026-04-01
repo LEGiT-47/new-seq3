@@ -88,11 +88,11 @@ const Gifting = () => {
   };
 
   return (
-    <div className="min-h-screen py-6 sm:py-8">
+    <div className="min-h-screen bg-[#0B1D35] py-6 text-[#F8F4EC] sm:py-8">
       <div className="w-full px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
           {/* Header */}
-          <div className="text-center mb-8 sm:mb-12">
+          <div className="text-center mb-6 sm:mb-6">
             <div className="inline-block mb-4">
               <Gift className="h-10 w-10 sm:h-12 sm:w-12 text-primary" />
             </div>
@@ -104,7 +104,7 @@ const Gifting = () => {
           </div>
 
           {/* Services with Selection Dropdowns */}
-          <div className="space-y-4 sm:space-y-6 mb-12">
+          <div className="space-y-4 sm:space-y-6 mb-6">
             {giftingServices.length > 0 ? (
               giftingServices.map((service) => (
                 <div key={service.id} className="bg-card border border-border rounded-lg p-4 sm:p-6">
@@ -149,7 +149,7 @@ const Gifting = () => {
                           value={serviceSelections[service.id]?.otherOccasion || ''}
                           onChange={(e) => handleServiceSelection(service.id, 'otherOccasion', e.target.value)}
                           placeholder="Enter your occasion"
-                          className="w-full h-9 sm:h-10 px-3 rounded-md border border-input bg-background text-xs sm:text-sm"
+                          className="h-9 w-full rounded-md border border-input bg-[#FFFBF5] px-3 text-xs text-[#0B1D35] sm:h-10 sm:text-sm"
                         />
                       </div>
                     )}
@@ -220,7 +220,7 @@ const Gifting = () => {
                 </div>
               ))
             ) : (
-              <div className="text-center py-12 sm:py-16">
+              <div className="text-center py-12 sm:py-12">
                 <Gift className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
                 <h3 className="text-lg sm:text-xl font-semibold mb-2">No services available</h3>
                 <p className="text-muted-foreground text-sm">Please check back soon for specialized gifting services.</p>
@@ -229,7 +229,7 @@ const Gifting = () => {
           </div>
 
           {/* Bottom CTA */}
-          <div className="mt-12 text-center p-6 sm:p-8 bg-gradient-primary text-primary-foreground rounded-lg">
+          <div className="mt-8 text-center p-6 sm:p-8 bg-gradient-primary text-primary-foreground rounded-lg">
             <h3 className="text-lg sm:text-2xl font-semibold mb-2">Ready to Send the Perfect Gift?</h3>
             <p className="text-xs sm:text-base mb-4 opacity-90 px-2">
               Contact us for bulk orders, custom packaging, and personalized gifting solutions.

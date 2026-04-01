@@ -60,11 +60,11 @@ const About = () => {
   ];
 
   return (
-    <div className="min-h-screen py-6 sm:py-8">
+    <div className="min-h-screen bg-[#0B1D35] py-6 text-[#F8F4EC] sm:py-8">
       <div className="w-full px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
           {/* Header */}
-          <div className="text-center mb-12 sm:mb-16">
+          <div className="text-center mb-6 sm:mb-16">
             <Badge className="mb-4 bg-gradient-primary border-0 text-primary-foreground text-xs sm:text-sm">
               About Sequeira Foods
             </Badge>
@@ -77,7 +77,7 @@ const About = () => {
           </div>
 
           {/* Hero Image */}
-                  <div className="mb-12 sm:mb-16">
+                  <div className="mb-6 sm:mb-16">
                   <div className="h-48 sm:h-64 md:h-96 rounded-xl sm:rounded-2xl relative overflow-hidden bg-transparent">
                     <img src={about} alt="Sequeira Foods" className="w-full h-full object-cover" />
                     <div className="absolute inset-0 bg-black/50 z-10" />
@@ -91,7 +91,7 @@ const About = () => {
                   </div>
 
                   {/* Stats */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-8 mb-12 sm:mb-16">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-6 mb-6 sm:mb-16">
             {stats.map((stat, index) => (
               <div key={index} className="text-center">
                 <div className="text-2xl sm:text-3xl font-bold text-primary mb-1 sm:mb-2">{stat.number}</div>
@@ -101,8 +101,8 @@ const About = () => {
           </div>
 
           {/* Mission & Values */}
-          <section className="mb-12 sm:mb-16">
-            <div className="text-center mb-8 sm:mb-12">
+          <section className="mb-6 sm:mb-16">
+            <div className="text-center mb-6 sm:mb-6">
               <h2 className="font-display text-2xl sm:text-3xl md:text-4xl font-bold mb-3 sm:mb-4">Our Mission & Values</h2>
               <p className="text-sm sm:text-base md:text-lg text-muted-foreground max-w-2xl mx-auto px-2">
                 We believe in delivering excellence through quality, innovation, and customer satisfaction.
@@ -125,8 +125,8 @@ const About = () => {
           </section>
 
           {/* Why Choose Us */}
-          <section className="mb-12 sm:mb-16">
-            <div className="text-center mb-8 sm:mb-12">
+          <section className="mb-6 sm:mb-16">
+            <div className="text-center mb-6 sm:mb-6">
               <h2 className="font-display text-2xl sm:text-3xl md:text-4xl font-bold mb-3 sm:mb-4">Why Choose Us</h2>
               <p className="text-sm sm:text-base md:text-lg text-muted-foreground max-w-2xl mx-auto px-2">
                 Discover what makes Sequeira Foods the preferred choice for premium food products.
@@ -149,7 +149,7 @@ const About = () => {
           </section>
 
           {/* Company Story */}
-          <section className="mb-12 sm:mb-16 bg-gradient-warm rounded-xl sm:rounded-2xl p-6 sm:p-8 md:p-12">
+          <section className="mb-6 sm:mb-16 bg-gradient-warm rounded-xl sm:rounded-2xl p-6 sm:p-8 md:p-12">
             <div className="max-w-4xl mx-auto text-center">
               <h2 className="font-display text-2xl sm:text-3xl md:text-4xl font-bold mb-4 sm:mb-6">Our Story</h2>
               <div className="space-y-3 sm:space-y-4 text-sm sm:text-base text-muted-foreground">
@@ -167,8 +167,8 @@ const About = () => {
           </section>
 
           {/* Trusted By */}
-          <section className="mb-12 sm:mb-16">
-            <div className="text-center mb-8 sm:mb-12">
+          <section className="mb-6 sm:mb-16">
+            <div className="text-center mb-6 sm:mb-6">
               <h2 className="font-display text-2xl sm:text-3xl md:text-4xl font-bold mb-3 sm:mb-4">Trusted By</h2>
               <p className="text-sm sm:text-base text-muted-foreground px-2">
                 We are proud to serve a diverse range of customers including:
@@ -215,7 +215,7 @@ const About = () => {
             <h2 className="font-display text-2xl sm:text-3xl md:text-4xl font-bold mb-3 sm:mb-4">
               Ready to Experience Premium Quality?
             </h2>
-            <p className="text-sm sm:text-base md:text-lg mb-6 sm:mb-8 opacity-90 px-2">
+            <p className="text-sm sm:text-base md:text-lg mb-6 sm:mb-6 opacity-90 px-2">
               Get in touch with us to discuss your requirements or place an order.
             </p>
             

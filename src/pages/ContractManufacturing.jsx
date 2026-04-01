@@ -37,11 +37,11 @@ const ContractManufacturing = () => {
   };
 
   return (
-    <div className="min-h-screen py-6 sm:py-8">
+    <div className="min-h-screen bg-[#0B1D35] py-6 text-[#F8F4EC] sm:py-8">
       <div className="w-full px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
           {/* Header */}
-          <div className="text-center mb-12 sm:mb-16">
+          <div className="text-center mb-6 sm:mb-16">
             <Badge className="mb-4 bg-gradient-primary border-0 text-primary-foreground text-xs sm:text-sm">
               Contract Manufacturing
             </Badge>
@@ -51,7 +51,7 @@ const ContractManufacturing = () => {
           </div>
 
           {/* Main Content */}
-          <div className="max-w-4xl mx-auto mb-12 sm:mb-16 space-y-6">
+          <div className="max-w-4xl mx-auto mb-6 sm:mb-16 space-y-6">
             <div className="space-y-4 sm:space-y-6">
               <p className="text-sm sm:text-base md:text-lg text-muted-foreground leading-relaxed">
                 Many companies have a strong marketing and distribution network but prefer not to manage their own production facilities or are looking for additional processing capacities for nuts. If that's the case, our company is the ideal partner to collaborate with - whether to process your existing product range or to develop new products on an exclusive basis.
@@ -64,8 +64,8 @@ const ContractManufacturing = () => {
           </div>
 
           {/* Contact Section */}
-          <div className="max-w-2xl mx-auto mb-12 sm:mb-16 text-center p-6 sm:p-8 bg-muted/30 rounded-xl sm:rounded-2xl">
-            <h2 className="font-display text-2xl sm:text-3xl font-bold mb-6 sm:mb-8">Get in Touch</h2>
+          <div className="max-w-2xl mx-auto mb-6 sm:mb-16 text-center p-6 sm:p-8 bg-muted/30 rounded-xl sm:rounded-2xl">
+            <h2 className="font-display text-2xl sm:text-3xl font-bold mb-6 sm:mb-6">Get in Touch</h2>
 
             <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center mb-6">
               <Button
@@ -107,7 +107,7 @@ const ContractManufacturing = () => {
 
           {/* Why Companies Trust Us */}
           <section className="bg-gradient-warm rounded-xl sm:rounded-2xl p-6 sm:p-8 md:p-12">
-            <div className="text-center mb-8 sm:mb-12">
+            <div className="text-center mb-6 sm:mb-6">
               <h2 className="font-display text-2xl sm:text-3xl md:text-4xl font-bold mb-3 sm:mb-4">
                 Why Companies Trust Us
               </h2>
