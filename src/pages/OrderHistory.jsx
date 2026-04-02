@@ -64,7 +64,7 @@ const OrderHistory = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background py-8 text-[#F8F4EC] sm:py-12">
+    <div className="min-h-screen bg-white py-8 text-[#0B1D35] sm:py-12">
       <div className="w-full px-4 sm:px-6 lg:px-8">
         <div className="max-w-4xl mx-auto">
           {/* Header */}

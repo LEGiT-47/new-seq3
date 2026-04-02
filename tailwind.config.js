@@ -54,8 +54,8 @@ export default {
                 ring: 'rgb(var(--primary) / <alpha-value>)',
             },
             fontFamily: {
-                display: ['"Bebas Neue"', 'Impact', 'sans-serif'],
-                serif: ['"Playfair Display"', 'Georgia', 'serif'],
+                display: ['"Unbounded"', '"DM Sans"', 'sans-serif'],
+                serif: ['"Fraunces"', 'Georgia', 'serif'],
                 sans: ['"DM Sans"', 'Inter', 'sans-serif'],
                 body: ['"DM Sans"', 'Inter', 'sans-serif'],
             },

@@ -392,25 +392,32 @@ const Home = () => {
 
       <section ref={enquiryRef} className="reveal bg-white px-4 py-6 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-7xl">
-          <div className="rounded-3xl border-l-4 border-[#E8762A] bg-[#FFF8F0] px-8 py-8 shadow-soft">
-          <p className="text-xs font-bold uppercase tracking-widest text-[#E8762A]">Premium Enquiry Collection</p>
-          <h3 className="font-serif text-3xl font-bold text-[#0B1D35] sm:text-4xl">
-            Looking for premium dry fruits, cashews, or custom bulk orders?
-          </h3>
-          <p className="mt-2 max-w-3xl text-gray-500">
-            Our premium range is available on enquiry so we can share fresh pricing, stock, and packaging options.
-          </p>
-          <Button
-            className="mt-6 rounded-full bg-[#25D366] text-white hover:bg-[#1fa959]"
-            onClick={() => {
-              if (enquiryProducts[0]) {
-                openWhatsAppEnquiry(enquiryProducts[0]);
-              }
-            }}
-          >
-            <MessageCircle className="mr-2 h-4 w-4" />
-            Enquire on WhatsApp
-          </Button>
+          <div className="rounded-3xl border-l-4 border-[#E8762A] bg-[#FFF8F0] px-8 py-10 shadow-soft">
+            <div className="flex items-start gap-4">
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[#E8762A]">
+                <MessageCircle className="h-6 w-6 text-white" />
+              </div>
+              <div>
+                <p className="text-xs font-bold uppercase tracking-widest text-[#E8762A]">Premium Enquiry Collection</p>
+                <h3 className="mt-1 font-display text-2xl tracking-wide text-[#0B1D35] sm:text-3xl">
+                  Looking for premium dry fruits, cashews, or custom bulk orders?
+                </h3>
+                <p className="mt-2 max-w-2xl text-gray-500">
+                  Our premium range is available on enquiry so we can share fresh pricing, stock, and packaging options.
+                </p>
+                <Button
+                  className="mt-5 rounded-full bg-[#25D366] px-6 font-bold text-white hover:bg-[#1fa959]"
+                  onClick={() => {
+                    if (enquiryProducts[0]) {
+                      openWhatsAppEnquiry(enquiryProducts[0]);
+                    }
+                  }}
+                >
+                  <MessageCircle className="mr-2 h-4 w-4" />
+                  Enquire on WhatsApp
+                </Button>
+              </div>
+            </div>
           </div>
         </div>
       </section>
@@ -419,7 +426,7 @@ const Home = () => {
           <div className="mx-auto grid max-w-7xl grid-cols-1 items-center gap-6 lg:grid-cols-2">
         <img
           src={giftingImage}
-          alt="Premium gifting hampers"
+          alt="Premium gift hampers by Sequeira Foods"
           className="h-80 w-full rounded-3xl object-cover shadow-md"
         />
         <div>
@@ -448,7 +455,12 @@ const Home = () => {
                     ))}
                   </div>
                   <p className="text-sm leading-relaxed text-gray-500">"{review.quote}"</p>
-                  <p className="mt-4 text-sm font-bold text-[#0B1D35]">{review.name}</p>
+                  <div className="mt-4 flex items-center gap-2">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#0B1D35] text-xs font-bold text-white">
+                      {review.name.charAt(0)}
+                    </div>
+                    <p className="text-sm font-bold text-[#0B1D35]">{review.name}</p>
+                  </div>
                 </CardContent>
               </Card>
             ))}

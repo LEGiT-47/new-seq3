@@ -77,7 +77,7 @@ const HeroCarousel = ({ slides }) => {
               </span>
             )}
 
-            <h1 className="font-display text-6xl font-normal uppercase tracking-wide leading-none text-white sm:text-7xl lg:text-8xl">
+            <h1 className="font-display text-4xl font-normal uppercase tracking-wide leading-none text-white sm:text-5xl lg:text-6xl">
               {slide.title}
               {slide.subtitle && (
                 <>

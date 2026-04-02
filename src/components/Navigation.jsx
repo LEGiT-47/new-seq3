@@ -66,7 +66,7 @@ const Navigation = () => {
                 S
               </span>
             </div>
-            <span className="font-display text-xl font-bold text-[#F8F4EC]">SEQUEIRA FOODS</span>
+            <span className="font-display text-xl font-normal tracking-wide text-[#F8F4EC]">SEQUEIRA FOODS</span>
           </Link>
 
           {/* Desktop Navigation */}
@@ -101,10 +101,10 @@ const Navigation = () => {
             <Button
               variant="ghost"
               size="sm"
-              className="relative"
+              className="relative text-[#F8F4EC] hover:bg-white/10 hover:text-white"
               onClick={() => setIsCartOpen(true)}
             >
-              <ShoppingCart className="h-5 w-5" />
+              <ShoppingCart className="h-5 w-5 text-[#F8F4EC]" />
               {getTotalItems() > 0 && (
                 <Badge
                   variant="destructive"
@@ -119,8 +119,8 @@ const Navigation = () => {
             {isAuthenticated && user ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="sm" className="hidden sm:flex gap-2">
-                    <User className="h-4 w-4" />
+                  <Button variant="outline" size="sm" className="hidden gap-2 border-white/20 bg-white/10 text-[#F8F4EC] hover:bg-white/20 hover:text-white sm:flex">
+                    <User className="h-4 w-4 text-[#F8F4EC]" />
                     <span className="text-xs md:text-sm">{user.name?.split(' ')[0]}</span>
                   </Button>
                 </DropdownMenuTrigger>
@@ -148,13 +148,14 @@ const Navigation = () => {
                 <Button
                   variant="ghost"
                   size="sm"
+                  className="text-[#F8F4EC] hover:bg-white/10 hover:text-white"
                   asChild
                 >
                   <Link to="/login">Login</Link>
                 </Button>
                 <Button
                   size="sm"
-                  className="rounded-full bg-[#C9A84C] px-4 py-1.5 text-sm font-bold text-[#0B1D35] transition-colors hover:bg-[#DAC06E]"
+                  className="rounded-full bg-[#C9A84C] px-4 py-1.5 text-sm font-semibold text-[#0B1D35] transition-colors hover:bg-[#DAC06E]"
                   asChild
                 >
                   <Link to="/signup">Sign up</Link>
@@ -165,8 +166,8 @@ const Navigation = () => {
             {/* Mobile Menu */}
             <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
               <SheetTrigger asChild>
-                <Button variant="ghost" size="sm" className="md:hidden">
-                  <Menu className="h-5 w-5" />
+                <Button variant="ghost" size="sm" className="text-[#F8F4EC] hover:bg-white/10 hover:text-white md:hidden">
+                  <Menu className="h-5 w-5 text-[#F8F4EC]" />
                 </Button>
               </SheetTrigger>
               <SheetContent side="right" className="w-80">
@@ -213,7 +214,7 @@ const Navigation = () => {
                         </Link>
                         <Button
                           variant="outline"
-                          className="w-full"
+                          className="w-full border-white/20 bg-white/10 text-[#F8F4EC] hover:bg-white/20 hover:text-white"
                           onClick={() => {
                             handleLogout();
                             setIsMobileMenuOpen(false);
@@ -227,14 +228,14 @@ const Navigation = () => {
                       <div className="space-y-2">
                         <Button
                           variant="outline"
-                          className="w-full"
+                          className="w-full border-white/20 bg-white/10 text-[#F8F4EC] hover:bg-white/20 hover:text-white"
                           asChild
                           onClick={() => setIsMobileMenuOpen(false)}
                         >
                           <Link to="/login">Login</Link>
                         </Button>
                         <Button
-                          className="w-full bg-primary hover:bg-primary/90 text-white"
+                          className="w-full bg-[#C9A84C] text-[#0B1D35] hover:bg-[#DAC06E]"
                           asChild
                           onClick={() => setIsMobileMenuOpen(false)}
                         >

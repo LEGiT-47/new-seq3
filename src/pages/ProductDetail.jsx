@@ -557,7 +557,7 @@ const ProductDetail = () => {
         <section className="mt-8">
           <h2 className="font-serif text-2xl font-bold text-[#0B1D35] sm:text-3xl">You May Also Like</h2>
           <div className="mb-5 mt-1 h-0.5 w-12 rounded-full bg-[#E8762A]" />
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid grid-flow-col auto-cols-[82%] gap-4 overflow-x-auto pb-2 sm:grid-flow-row sm:auto-cols-auto sm:grid-cols-2 lg:grid-cols-4">
             {relatedProducts.map((item) => (
               <Link key={item._id || item.id} to={`/product/${item._id || item.id}`}>
                 <Card className="group overflow-hidden rounded-3xl border-0 bg-white shadow-card transition-all duration-300 hover:-translate-y-2 hover:shadow-strong">

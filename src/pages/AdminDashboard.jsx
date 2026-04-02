@@ -139,7 +139,7 @@ const AdminDashboard = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-white text-[#0B1D35]">
       {/* Header */}
       <div className="border-b bg-card">
         <div className="px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">

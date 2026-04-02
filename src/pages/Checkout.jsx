@@ -192,7 +192,7 @@ const Checkout = () => {
 
 
   return (
-    <div className="min-h-screen bg-background py-6 text-[#F8F4EC] sm:py-8">
+    <div className="min-h-screen bg-white py-6 text-[#0B1D35] sm:py-8">
       <div className="w-full px-4 sm:px-6 lg:px-8">
         <div className="max-w-4xl mx-auto">
           <h1 className="text-3xl font-bold mb-6">Checkout</h1>

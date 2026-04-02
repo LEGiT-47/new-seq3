@@ -281,11 +281,11 @@ const Products = () => {
                             className="group flex flex-col overflow-hidden rounded-3xl border border-gray-100 bg-white shadow-soft transition-all duration-300 hover:-translate-y-2 hover:shadow-md"
                           >
                             <div className="h-1 w-full bg-gradient-to-r from-[#E8762A] to-[#DAC06E]" />
-                            <Link to={`/product/${product._id || product.id}`} className="block overflow-hidden">
+                            <Link to={`/product/${product._id || product.id}`} className="block overflow-hidden bg-[#FDF6EC]">
                               <img
                                 src={getImageUrl(product.image)}
                                 alt={getDisplayProductName(product)}
-                                className="h-48 w-full object-cover transition-transform duration-500 group-hover:scale-108"
+                                className="h-52 w-full object-cover transition-transform duration-500 group-hover:scale-108"
                               />
                             </Link>
                             <div className="flex flex-1 flex-col gap-2 p-3">
@@ -360,10 +360,13 @@ const Products = () => {
 
                 <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
                   {filteredEnquiryProducts.length === 0 ? (
-                    <div className="col-span-full py-12 text-center">
-                      <p className="text-gray-500">No products in this category yet.</p>
+                    <div className="col-span-full py-20 text-center">
+                      <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-[#F9F9F7]">
+                        <MessageCircle className="h-8 w-8 text-gray-300" />
+                      </div>
+                      <p className="font-semibold text-gray-400">No products in this category yet.</p>
                       <button
-                        className="mt-3 text-sm font-semibold text-[#0B1D35] transition-colors hover:text-[#E8762A]"
+                        className="mt-3 text-sm font-semibold text-[#E8762A] hover:underline"
                         onClick={() => setEnquiryFilter('all')}
                       >
                         View all enquiry products →

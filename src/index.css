@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Playfair+Display:wght@700;800;900&family=DM+Sans:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Unbounded:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=DM+Sans:wght@400;500;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -67,7 +67,7 @@
   h2,
   h3,
   h4 {
-    font-family: 'Playfair Display', Georgia, serif;
+    font-family: 'Unbounded', 'DM Sans', sans-serif;
     letter-spacing: -0.015em;
   }
 
