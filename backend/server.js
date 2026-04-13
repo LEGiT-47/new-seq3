@@ -17,6 +17,7 @@ import adminAuthRoutes from './routes/adminAuth.js';
 import productRoutes from './routes/products.js';
 import orderRoutes from './routes/orders.js';
 import adminOrderRoutes from './routes/adminOrders.js';
+import adminProductRoutes from './routes/adminProducts.js';
 import paymentRoutes from './routes/payments.js';
 import cartRoutes from './routes/cart.js';
 import giftingRoutes from './routes/gifting.js';
@@ -247,6 +248,198 @@ const seedProductsIfEmpty = async () => {
       await Product.insertMany(products);
       console.log(`✓ Database seeded with ${products.length} products`);
     }
+
+    const savouryVariantConfigs = [
+      {
+        name: 'Savory Makhana',
+        parentProduct: 'savory-makhana',
+        description: 'Roasted makhana with bold Indian savory seasoning.',
+        image: '/images/products/MAKHANA_FN.JPG',
+        price: 249,
+        weight: '90g',
+        stockQuantity: 40,
+        flavours: ['Peri Peri', 'Barbeque', 'Cream & Onion', 'Cheese', 'Cheese Herbs', 'Pudina', 'Tangy Tomato', 'Lime & Chilli', 'Black Pepper', 'Tandoori Masala', 'Himalayan Pink Salt', 'Salt & Pepper'],
+      },
+      {
+        name: 'Savory Cashew',
+        parentProduct: 'savory-cashew',
+        description: 'Roasted cashew with rich and crunchy savory flavour profiles.',
+        image: '/images/products/cashew_peri.JPG',
+        price: 289,
+        weight: '120g',
+        stockQuantity: 40,
+        flavours: ['Peri Peri', 'Barbeque', 'Chatpata', 'Smokey Garlic', 'Black Pepper', 'Salted Cashew', 'Pepper & Salt', 'Mint', 'Pudina', 'Cream & Onion'],
+      },
+      {
+        name: 'Savory Almond',
+        parentProduct: 'savory-almond',
+        description: 'Roasted almond range with popular Indian savory flavour choices.',
+        image: '/images/products/salted_almond.JPG',
+        price: 299,
+        weight: '120g',
+        stockQuantity: 40,
+        flavours: ['Peri-Peri', 'Cream & Onion', 'Cheese & Herbs', 'Tandoori Masala', 'Smoky BBQ', 'Jalapeno Cheese', 'Chilli Lime', 'Chatpata Chaat Masala', 'Maggi Masala', 'Peri-Peri Protein', 'Tandoori Smoky', 'Green Chutney'],
+      },
+      {
+        name: 'Savory Peanut',
+        parentProduct: 'savory-peanut',
+        description: 'Roasted peanuts with classic spicy and tangy masala options.',
+        image: '/images/products/peanut.jpg',
+        price: 199,
+        weight: '150g',
+        stockQuantity: 40,
+        flavours: ['Hing Jeera', 'Masala', 'Chilli Garlic', 'Tandoori', 'Chatpata', 'Salted'],
+      },
+      {
+        name: 'Savory Chana',
+        parentProduct: 'savory-chana',
+        description: 'Protein-rich roasted chana in top-selling Indian savory flavours.',
+        image: '/images/products/CHICPEAS_JAGGERY.JPG',
+        price: 229,
+        weight: '120g',
+        stockQuantity: 40,
+        flavours: ['Classic Masala', 'Chatpata', 'Peri Peri', 'Punjabi Tadka', 'Chilli Garlic', 'Nimbu', 'Pudina', 'Lime & Chilli', 'Hing Jeera', 'Salted', 'Lightly Spiced', 'Cheese Masala', 'Cream & Onion', 'BBQ', 'Smoky', 'Pizza'],
+      },
+    ];
+
+    let savouryProductId = 111;
+    const mustHaveSavoryProducts = savouryVariantConfigs.flatMap((config) =>
+      config.flavours.map((flavour) => ({
+        productId: savouryProductId++,
+        name: config.name,
+        category: 'nuts',
+        description: `${config.description} Flavour: ${flavour}.`,
+        image: config.image,
+        price: config.price,
+        weight: config.weight,
+        productType: 'deliverable',
+        isDeliverable: true,
+        parentProduct: config.parentProduct,
+        flavour,
+        stockQuantity: config.stockQuantity,
+        flavors: [],
+      }))
+    );
+
+    await Promise.all(
+      mustHaveSavoryProducts.map((product) =>
+        Product.updateOne(
+          { productId: product.productId },
+          {
+            $set: {
+              name: product.name,
+              category: product.category,
+              description: product.description,
+              image: product.image,
+              weight: product.weight,
+              productType: 'deliverable',
+              isDeliverable: true,
+              parentProduct: product.parentProduct,
+              flavour: product.flavour,
+              isHidden: false,
+            },
+            $setOnInsert: {
+              price: product.price,
+              stockQuantity: product.stockQuantity,
+              flavors: [],
+            },
+          },
+          { upsert: true }
+        )
+      )
+    );
+
+    // Hide deprecated single-mix products so only flavour variants are shown.
+    await Product.updateMany(
+      { productId: { $in: [106, 107, 108, 109, 110] } },
+      { $set: { isHidden: true } }
+    );
+
+    // Hide malformed variant rows that have a parent product but no flavour.
+    await Product.updateMany(
+      {
+        parentProduct: { $exists: true, $nin: ['', null] },
+        $or: [
+          { flavour: { $exists: false } },
+          { flavour: '' },
+          { flavour: null },
+          { flavour: { $not: { $regex: '[A-Za-z0-9]' } } },
+        ],
+      },
+      { $set: { isHidden: true } }
+    );
+
+    // Backfill missing ingredients for existing DB products.
+    const ingredientTemplatesByCategory = {
+      chocolates: [
+        'Premium roasted base ingredient',
+        'Dark/Milk chocolate compound',
+        'Natural cocoa solids',
+        'Cane sugar',
+        'Cocoa butter or vegetable fat blend',
+        'Natural flavouring',
+      ],
+      nuts: [
+        'Premium roasted nut/seed base',
+        'Signature seasoning blend',
+        'Cold-pressed edible oil (light coating)',
+        'Sea salt or rock salt',
+        'Natural spice extracts',
+        'Herbs and dehydrated aromatics',
+      ],
+      jaggery: [
+        'Premium roasted base ingredient',
+        'Organic jaggery',
+        'Sesame or poppy seed coating',
+        'Cold-pressed edible oil',
+        'Rock salt',
+        'Natural spice blend',
+      ],
+      dryfruits: [
+        'Premium sorted whole ingredient',
+        'Natural antioxidants',
+        'No artificial colours',
+        'No synthetic flavours',
+        'Food-grade moisture barrier pack',
+        'Natural taste profile',
+      ],
+      seeds: [
+        'Premium cleaned seeds',
+        'Natural omega-rich seed oils',
+        'Rock salt (lightly salted variants)',
+        'Natural spice blend (where applicable)',
+        'Food-grade freshness lock pack',
+        'No synthetic flavours',
+      ],
+      gifting: [
+        'Assorted premium nuts and dry fruits',
+        'Selected savory snack components',
+        'Chocolate-coated assortment (selected packs)',
+        'Natural seasoning components',
+        'Food-grade freshness pouches',
+        'Gift-grade packaging materials',
+      ],
+      services: [
+        'Curated product assortment as per requirement',
+        'Premium nuts and dry fruits',
+        'Savory and festive snack options',
+        'Custom packaging components',
+        'Food-grade protective inner packs',
+        'Branding and gifting accessories',
+      ],
+    };
+
+    await Promise.all(
+      Object.entries(ingredientTemplatesByCategory).map(([category, ingredients]) =>
+        Product.updateMany(
+          {
+            category,
+            $or: [{ ingredients: { $exists: false } }, { ingredients: { $size: 0 } }],
+          },
+          { $set: { ingredients } }
+        )
+      )
+    );
   } catch (error) {
     console.error('Error seeding products:', error.message);
   }
@@ -275,6 +468,7 @@ app.use('/api/products', productRoutes);
 app.use('/api/gifting', giftingRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/admin/orders', adminOrderRoutes);
+app.use('/api/admin/products', adminProductRoutes);
 app.use('/api/payments', paymentRoutes);
 app.use('/api', cartRoutes);
 

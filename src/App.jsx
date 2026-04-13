@@ -42,6 +42,44 @@ function ScrollToTop() {
   return null;
 }
 
+function AppLayout() {
+  const location = useLocation();
+
+  return (
+    <>
+      <ScrollToTop />
+      <AnnouncementBar />
+      <Navigation />
+      <div key={location.pathname} className="flex-grow page-transition">
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/products" element={<Products />} />
+          <Route path="/products/:category" element={<Products />} />
+          <Route path="/product/:id" element={<ProductDetail />} />
+          <Route path="/checkout" element={<Checkout />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/signup" element={<Signup />} />
+          <Route path="/profile" element={<Profile />} />
+          <Route path="/orders" element={<OrderHistory />} />
+          <Route path="/select-address" element={<AddressSelection />} />
+          <Route path="/gifting" element={<Gifting />} />
+          <Route path="/about" element={<About />} />
+          <Route path="/contact" element={<Contact />} />
+          <Route path="/contract-manufacturing" element={<ContractManufacturing />} />
+          <Route path="/admin/login" element={<AdminLogin />} />
+          <Route path="/admin/dashboard" element={<AdminDashboard />} />
+          <Route path="/admin/dashboard/stock" element={<AdminDashboard />} />
+        </Routes>
+      </div>
+      <Footer />
+      <Cart />
+      <WhatsAppFloat />
+      {/* <FestivePopup /> */}
+      <Toaster position="top-center" />
+    </>
+  );
+}
+
 function App() {
   return (
     <AuthProvider>
@@ -49,37 +87,10 @@ function App() {
         <CartProvider>
           <LoadingScreen minDuration={1000} />
           <div className="App min-h-screen bg-background flex flex-col">
-        <BrowserRouter>
-          <ScrollToTop />
-          <AnnouncementBar />
-          <Navigation />
-          <div className="flex-grow">
-            <Routes>
-              <Route path="/" element={<Home />} />
-              <Route path="/products" element={<Products />} />
-              <Route path="/products/:category" element={<Products />} />
-              <Route path="/product/:id" element={<ProductDetail />} />
-              <Route path="/checkout" element={<Checkout />} />
-              <Route path="/login" element={<Login />} />
-              <Route path="/signup" element={<Signup />} />
-              <Route path="/profile" element={<Profile />} />
-              <Route path="/orders" element={<OrderHistory />} />
-              <Route path="/select-address" element={<AddressSelection />} />
-              <Route path="/gifting" element={<Gifting />} />
-              <Route path="/about" element={<About />} />
-              <Route path="/contact" element={<Contact />} />
-              <Route path="/contract-manufacturing" element={<ContractManufacturing />} />
-              <Route path="/admin/login" element={<AdminLogin />} />
-              <Route path="/admin/dashboard" element={<AdminDashboard />} />
-            </Routes>
+            <BrowserRouter>
+              <AppLayout />
+            </BrowserRouter>
           </div>
-          <Footer />
-          <Cart />
-          <WhatsAppFloat />
-          {/* <FestivePopup /> */}
-          <Toaster position="top-center" />
-        </BrowserRouter>
-      </div>
         </CartProvider>
       </OccasionProvider>
     </AuthProvider>

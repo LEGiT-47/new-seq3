@@ -6,6 +6,7 @@ import { Card, CardContent } from '../components/ui/card';
 import { productAPI, getImageUrl } from '../lib/api';
 import { useCart } from '../context/CartContext';
 import { buildWhatsAppEnquiryLink, getDisplayProductName } from '../lib/productUtils';
+import { getFlavourColorClass } from '../lib/flavourStyles';
 import { toast } from 'sonner';
 import { Filter, MessageCircle, ShoppingCart } from 'lucide-react';
 
@@ -17,12 +18,9 @@ const categoryNameMap = {
   seeds: 'Seeds',
 };
 
-const flavorColorMap = {
-  BBQ: 'bg-red-500 text-white border-red-500',
-  Cheese: 'bg-yellow-400 text-black border-yellow-400',
-  'Cream & Onion': 'bg-lime-300 text-black border-lime-300',
-  'Peri Peri': 'bg-orange-500 text-white border-orange-500',
-  Pudina: 'bg-green-500 text-white border-green-500',
+const isValidFlavour = (value) => {
+  const normalized = String(value || '').trim();
+  return normalized.length > 0 && /[A-Za-z0-9]/.test(normalized);
 };
 
 const Products = () => {
@@ -79,7 +77,12 @@ const Products = () => {
     });
 
     return Array.from(groups.entries()).map(([key, list]) => {
-      const sorted = [...list].sort((a, b) => getDisplayProductName(a).localeCompare(getDisplayProductName(b)));
+      const hasVariantSet = list.length > 1;
+      const sanitizedList = hasVariantSet
+        ? list.filter((item) => isValidFlavour(item.flavour))
+        : list;
+      const finalList = sanitizedList.length > 0 ? sanitizedList : list;
+      const sorted = [...finalList].sort((a, b) => getDisplayProductName(a).localeCompare(getDisplayProductName(b)));
       return { key, products: sorted };
     });
   }, [orderProducts]);
@@ -114,6 +117,11 @@ const Products = () => {
   );
 
   const onAddToCart = (product) => {
+    if ((product.stockQuantity ?? 0) <= 0) {
+      toast.error(`${getDisplayProductName(product)} is out of stock`);
+      return;
+    }
+
     addToCart(product, 1, { flavor: product.flavour || null });
     toast.success(`${getDisplayProductName(product)} added to cart`);
   };
@@ -136,6 +144,9 @@ const Products = () => {
             <div className="absolute inset-0 bg-white/0 transition-all duration-300 group-hover:bg-white/5" />
           </Link>
           <Badge className="absolute left-3 top-3 bg-[#0B1D35] text-white">Deliverable</Badge>
+          {(product.stockQuantity ?? 0) > 0 && (product.stockQuantity ?? 0) <= 10 && (
+            <Badge className="absolute right-3 top-3 bg-amber-500 text-white">Low Stock</Badge>
+          )}
         </div>
         <CardContent className="space-y-4 p-5">
           <div>
@@ -146,12 +157,16 @@ const Products = () => {
           {hasFlavorGroup && (
             <div className="flex flex-wrap gap-2">
               {group.products.map((flavorProduct) => (
+                (() => {
+                  const colorClass = getFlavourColorClass(flavorProduct.flavour);
+                  const isActive = (selectedFlavorByParent[groupKey] || group.products[0].flavour) === flavorProduct.flavour;
+                  return (
                 <button
                   key={flavorProduct._id || flavorProduct.id}
                   className={`rounded-full border px-3 py-1 text-xs font-medium transition ${
-                    (selectedFlavorByParent[groupKey] || group.products[0].flavour) === flavorProduct.flavour
-                      ? 'border-[#C9A84C] bg-[#C9A84C] text-[#0B1D35]'
-                      : 'border-gray-200 text-gray-500 hover:border-[#0B1D35] hover:text-[#0B1D35]'
+                    isActive
+                      ? `${colorClass} ring-2 ring-[#C9A84C] ring-offset-1`
+                      : 'border-gray-200 bg-gray-50 text-gray-600 hover:border-[#0B1D35] hover:text-[#0B1D35]'
                   }`}
                   onClick={() =>
                     setSelectedFlavorByParent((prev) => ({
@@ -162,7 +177,27 @@ const Products = () => {
                 >
                   {flavorProduct.flavour}
                 </button>
+                  );
+                })()
               ))}
+            </div>
+          )}
+
+          {!hasFlavorGroup && Array.isArray(product.flavors) && product.flavors.length > 0 && (
+            <div className="flex flex-wrap gap-2">
+              {product.flavors.filter(isValidFlavour).slice(0, 4).map((flavour) => (
+                <span
+                  key={flavour}
+                  className="rounded-full border border-gray-200 bg-gray-50 px-2.5 py-1 text-[11px] font-semibold text-gray-600"
+                >
+                  {flavour}
+                </span>
+              ))}
+              {product.flavors.filter(isValidFlavour).length > 4 && (
+                <span className="rounded-full border border-gray-200 bg-gray-50 px-2.5 py-1 text-[11px] font-semibold text-gray-600">
+                  +{product.flavors.filter(isValidFlavour).length - 4}
+                </span>
+              )}
             </div>
           )}
 
@@ -171,9 +206,17 @@ const Products = () => {
             <p className="text-xs text-gray-500">{product.weight}</p>
           </div>
 
-          <Button className="w-full rounded-full bg-[#E8762A] hover:bg-[#d76b20]" onClick={() => onAddToCart(product)}>
+          <p className="text-xs font-medium text-gray-500">
+            Stock left: <span className="text-[#0B1D35]">{product.stockQuantity ?? 0}</span>
+          </p>
+
+          <Button
+            className="w-full rounded-full bg-[#E8762A] hover:bg-[#d76b20] disabled:cursor-not-allowed disabled:bg-gray-300"
+            onClick={() => onAddToCart(product)}
+            disabled={(product.stockQuantity ?? 0) <= 0}
+          >
             <ShoppingCart className="mr-2 h-4 w-4" />
-            Add to Cart
+            {(product.stockQuantity ?? 0) <= 0 ? 'Out of Stock' : 'Add to Cart'}
           </Button>
         </CardContent>
       </Card>
@@ -274,7 +317,7 @@ const Products = () => {
                     <div className="mb-4 mt-1 h-0.5 w-12 rounded-full bg-[#E8762A]" />
                     <div className="grid grid-flow-col auto-cols-[78%] gap-4 overflow-x-auto pb-2 sm:grid-flow-row sm:auto-cols-auto sm:grid-cols-2 lg:grid-cols-5">
                       {heroSpotlight.map((product) => {
-                        const colorClass = flavorColorMap[product.flavour] || 'border-gray-200 bg-gray-50 text-[#0B1D35]';
+                        const colorClass = getFlavourColorClass(product.flavour);
                         return (
                           <div
                             key={product._id || product.id}

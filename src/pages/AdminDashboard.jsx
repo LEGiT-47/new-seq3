@@ -1,16 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { Button } from '../components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
 import { Badge } from '../components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
-import { adminAuthAPI, adminOrderAPI } from '../lib/api';
+import { adminAuthAPI, adminOrderAPI, adminProductAPI } from '../lib/api';
 import { toast } from 'sonner';
-import { LogOut, TrendingUp, Package, DollarSign, Clock, CheckCircle, Loader2, Search, X } from 'lucide-react';
+import { LogOut, Package, DollarSign, Clock, CheckCircle, Loader2, Search, X, Boxes } from 'lucide-react';
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [loading, setLoading] = useState(true);
   const [analytics, setAnalytics] = useState(null);
   const [orders, setOrders] = useState([]);
@@ -22,6 +23,11 @@ const AdminDashboard = () => {
   const [statusFilter, setStatusFilter] = useState('all');
   const [paymentFilter, setPaymentFilter] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
+  const [inventoryProducts, setInventoryProducts] = useState([]);
+  const [inventoryLoading, setInventoryLoading] = useState(false);
+  const [savingInventoryId, setSavingInventoryId] = useState(null);
+  const [inventorySearch, setInventorySearch] = useState('');
+  const [activeTab, setActiveTab] = useState('all');
 
   const adminToken = localStorage.getItem('adminToken');
 
@@ -39,6 +45,15 @@ const AdminDashboard = () => {
     loadDashboardData();
   }, [adminToken, navigate]);
 
+  useEffect(() => {
+    if (location.pathname.endsWith('/stock')) {
+      setActiveTab('inventory');
+      return;
+    }
+
+    setActiveTab('all');
+  }, [location.pathname]);
+
   const loadDashboardData = async () => {
     setLoading(true);
     try {
@@ -53,6 +68,11 @@ const AdminDashboard = () => {
       const ordersRes = await adminOrderAPI.getAll({ limit: 100 });
       setOrders(ordersRes.data.data.orders || []);
       setFilteredOrders(ordersRes.data.data.orders || []);
+
+      // Load inventory products
+      setInventoryLoading(true);
+      const productsRes = await adminProductAPI.getAll();
+      setInventoryProducts(productsRes.data.data || []);
     } catch (error) {
       console.error('Dashboard load error:', error);
       if (error.response?.status === 401) {
@@ -63,6 +83,7 @@ const AdminDashboard = () => {
         toast.error('Failed to load dashboard');
       }
     } finally {
+      setInventoryLoading(false);
       setLoading(false);
     }
   };
@@ -130,6 +151,65 @@ const AdminDashboard = () => {
     }
   };
 
+  const handleInventoryFieldChange = (productId, field, value) => {
+    setInventoryProducts((prev) =>
+      prev.map((product) =>
+        product.productId === productId
+          ? {
+              ...product,
+              [field]: value,
+            }
+          : product
+      )
+    );
+  };
+
+  const handleInventorySave = async (product) => {
+    const payload = {
+      stockQuantity: Number(product.stockQuantity),
+      price: Number(product.price),
+    };
+
+    if (!Number.isFinite(payload.stockQuantity) || payload.stockQuantity < 0) {
+      toast.error('Stock must be a non-negative number');
+      return;
+    }
+
+    if (!Number.isFinite(payload.price) || payload.price < 0) {
+      toast.error('Price must be a non-negative number');
+      return;
+    }
+
+    setSavingInventoryId(product.productId);
+    try {
+      await adminProductAPI.updateInventory(product.productId, payload);
+      toast.success(`Updated ${product.name}${product.flavour ? ` - ${product.flavour}` : ''}`);
+    } catch (error) {
+      toast.error(error.response?.data?.error || 'Failed to update inventory');
+    } finally {
+      setSavingInventoryId(null);
+    }
+  };
+
+  const visibleInventoryProducts = inventoryProducts.filter(
+    (product) =>
+      !product.isHidden &&
+      (product.productType === 'deliverable' || product.isDeliverable || product.isHeroProduct) &&
+      (!product.parentProduct || /[A-Za-z0-9]/.test(String(product.flavour || '').trim()))
+  );
+
+  const filteredInventoryProducts = visibleInventoryProducts.filter((product) => {
+    if (!inventorySearch.trim()) return true;
+
+    const q = inventorySearch.toLowerCase();
+    return (
+      String(product.name || '').toLowerCase().includes(q) ||
+      String(product.flavour || '').toLowerCase().includes(q) ||
+      String(product.category || '').toLowerCase().includes(q) ||
+      String(product.productId || '').includes(q)
+    );
+  });
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -149,10 +229,22 @@ const AdminDashboard = () => {
               Welcome, {admin?.username}
             </p>
           </div>
-          <Button variant="outline" onClick={handleLogout}>
-            <LogOut className="h-4 w-4 mr-2" />
-            Logout
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="default"
+              onClick={() => {
+                setActiveTab('inventory');
+                navigate('/admin/dashboard/stock');
+              }}
+            >
+              <Boxes className="h-4 w-4 mr-2" />
+              Manage Stock
+            </Button>
+            <Button variant="outline" onClick={handleLogout}>
+              <LogOut className="h-4 w-4 mr-2" />
+              Logout
+            </Button>
+          </div>
         </div>
       </div>
 
@@ -217,17 +309,22 @@ const AdminDashboard = () => {
           )}
 
           {/* Orders Section */}
-          <Tabs defaultValue="all" className="w-full">
+          <Tabs value={activeTab} onValueChange={(value) => {
+            setActiveTab(value);
+            navigate(value === 'inventory' ? '/admin/dashboard/stock' : '/admin/dashboard');
+          }} className="w-full">
             <div className="flex flex-col gap-4">
               <div className="flex items-center gap-2 flex-wrap">
-                <TabsList className="grid w-auto grid-cols-3">
+                <TabsList className="grid w-full grid-cols-2 sm:w-auto sm:grid-cols-4">
                   <TabsTrigger value="all">All Orders</TabsTrigger>
                   <TabsTrigger value="pending">Pending Delivery</TabsTrigger>
                   <TabsTrigger value="shipped">Shipped</TabsTrigger>
+                  <TabsTrigger value="inventory">Inventory</TabsTrigger>
                 </TabsList>
               </div>
 
               {/* Filters */}
+              {activeTab !== 'inventory' && (
               <div className="flex flex-col sm:flex-row gap-3">
                 <div className="flex-1 relative">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -265,6 +362,7 @@ const AdminDashboard = () => {
                   </SelectContent>
                 </Select>
               </div>
+              )}
             </div>
 
             <TabsContent value="all" className="space-y-4 mt-4">
@@ -289,6 +387,106 @@ const AdminDashboard = () => {
                 onStatusChange={handleOrderStatusUpdate}
                 onViewDetails={handleViewDetails}
               />
+            </TabsContent>
+
+            <TabsContent value="inventory" className="space-y-4 mt-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Product Inventory</CardTitle>
+                  <CardDescription>
+                    Manage live stock and prices shown on the storefront.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="mb-4">
+                    <input
+                      type="text"
+                      placeholder="Search by product, flavour, category, or ID..."
+                      value={inventorySearch}
+                      onChange={(e) => setInventorySearch(e.target.value)}
+                      className="w-full max-w-md rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                    />
+                  </div>
+                  {inventoryLoading ? (
+                    <div className="flex items-center justify-center py-8">
+                      <Loader2 className="h-6 w-6 animate-spin" />
+                    </div>
+                  ) : (
+                    <div className="overflow-x-auto rounded-lg border">
+                      <table className="w-full text-sm">
+                        <thead className="bg-muted border-b">
+                          <tr>
+                            <th className="px-4 py-3 text-left font-semibold">Product</th>
+                            <th className="px-4 py-3 text-left font-semibold">Category</th>
+                            <th className="px-4 py-3 text-left font-semibold">Price (Rs.)</th>
+                            <th className="px-4 py-3 text-left font-semibold">Stock</th>
+                            <th className="px-4 py-3 text-left font-semibold">Status</th>
+                            <th className="px-4 py-3 text-left font-semibold">Action</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {filteredInventoryProducts.map((product) => {
+                            const isSaving = savingInventoryId === product.productId;
+                            const stockQty = Number(product.stockQuantity || 0);
+                            const threshold = Number(product.lowStockThreshold || 10);
+                            const stockStatus = stockQty <= 0 ? 'Out of stock' : stockQty <= threshold ? 'Low stock' : 'In stock';
+
+                            return (
+                              <tr key={product.productId} className="border-b hover:bg-muted/30">
+                                <td className="px-4 py-3">
+                                  <p className="font-medium">{product.name}{product.flavour ? ` - ${product.flavour}` : ''}</p>
+                                  <p className="text-xs text-muted-foreground">ID: {product.productId}</p>
+                                </td>
+                                <td className="px-4 py-3 capitalize">{product.category}</td>
+                                <td className="px-4 py-3">
+                                  <input
+                                    type="number"
+                                    min="0"
+                                    value={product.price}
+                                    onChange={(e) => handleInventoryFieldChange(product.productId, 'price', e.target.value)}
+                                    className="w-28 rounded border px-2 py-1"
+                                  />
+                                </td>
+                                <td className="px-4 py-3">
+                                  <input
+                                    type="number"
+                                    min="0"
+                                    value={product.stockQuantity}
+                                    onChange={(e) => handleInventoryFieldChange(product.productId, 'stockQuantity', e.target.value)}
+                                    className="w-24 rounded border px-2 py-1"
+                                  />
+                                </td>
+                                <td className="px-4 py-3">
+                                  <Badge variant={stockQty <= 0 ? 'destructive' : stockQty <= threshold ? 'secondary' : 'default'}>
+                                    {stockStatus}
+                                  </Badge>
+                                </td>
+                                <td className="px-4 py-3">
+                                  <Button
+                                    size="sm"
+                                    onClick={() => handleInventorySave(product)}
+                                    disabled={isSaving}
+                                  >
+                                    {isSaving && <Loader2 className="mr-2 h-3 w-3 animate-spin" />}
+                                    Save
+                                  </Button>
+                                </td>
+                              </tr>
+                            );
+                          })}
+                          {filteredInventoryProducts.length === 0 && (
+                            <tr>
+                              <td colSpan="6" className="px-4 py-8 text-center text-muted-foreground">
+                                No inventory products found for this search.
+                              </td>
+                            </tr>
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
             </TabsContent>
           </Tabs>
         </div>

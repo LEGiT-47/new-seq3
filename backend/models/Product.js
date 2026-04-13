@@ -27,6 +27,16 @@ const productSchema = new mongoose.Schema(
       type: Number,
       required: true,
     },
+    stockQuantity: {
+      type: Number,
+      default: 40,
+      min: 0,
+    },
+    lowStockThreshold: {
+      type: Number,
+      default: 10,
+      min: 0,
+    },
     weight: {
       type: String,
       required: true,

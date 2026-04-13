@@ -5,15 +5,13 @@ import { Card, CardContent } from '../components/ui/card';
 import { useCart } from '../context/CartContext';
 import { productAPI, getImageUrl } from '../lib/api';
 import { buildWhatsAppEnquiryLink, getDisplayProductName } from '../lib/productUtils';
+import { getFlavourColorClass } from '../lib/flavourStyles';
 import { toast } from 'sonner';
 import { ShoppingCart, Truck, ShieldCheck, PackageCheck, Plus, Minus, Star, MessageCircle, ChevronLeft, ChevronRight } from 'lucide-react';
 
-const flavorColorMap = {
-  BBQ: 'bg-red-500 text-white border-red-500',
-  Cheese: 'bg-yellow-400 text-black border-yellow-400',
-  'Cream & Onion': 'bg-lime-300 text-black border-lime-300',
-  'Peri Peri': 'bg-orange-500 text-white border-orange-500',
-  Pudina: 'bg-green-500 text-white border-green-500',
+const isValidFlavour = (value) => {
+  const normalized = String(value || '').trim();
+  return normalized.length > 0 && /[A-Za-z0-9]/.test(normalized);
 };
 
 const ProductDetail = () => {
@@ -131,7 +129,7 @@ const ProductDetail = () => {
 
     if (ingredientItems.length) points.push('Made using carefully selected ingredients.');
     if (product?.weight || product?.netWeight) points.push(`Packed in ${product.netWeight || product.weight} for consistent portioning.`);
-    if (product?.productType === 'deliverable') points.push('Ready to ship with secure packaging and quick dispatch.');
+    if (product?.productType === 'deliverable') points.push('Healthy snacks, no oil and all, crafted for cleaner everyday snacking.');
     if (product?.flavour) points.push(`${product.flavour} flavour profile for balanced everyday snacking.`);
 
     if (!points.length) {
@@ -178,6 +176,8 @@ const ProductDetail = () => {
   const totalPrice = unitPrice * qty;
   const totalOriginalPrice = originalUnitPrice * qty;
   const savingsPercent = originalUnitPrice > unitPrice ? Math.round((1 - unitPrice / originalUnitPrice) * 100) : 0;
+  const stockQuantity = Number(product.stockQuantity ?? 0);
+  const isOutOfStock = stockQuantity <= 0;
 
   const formatPrice = (value) => new Intl.NumberFormat('en-IN').format(Math.round(value || 0));
 
@@ -189,6 +189,11 @@ const ProductDetail = () => {
   };
 
   const onAddToCart = () => {
+    if (isOutOfStock) {
+      toast.error(`${displayName} is out of stock`);
+      return;
+    }
+
     addToCart(product, qty, { flavor: product.flavour || null, weight: selectedWeight || product.weight || null });
     toast.success(`${displayName} added to cart`);
   };
@@ -312,7 +317,9 @@ const ProductDetail = () => {
               const siblings = allProducts.filter(
                 (p) => p.parentProduct === product.parentProduct && (p._id || p.id) !== (product._id || product.id)
               );
-              const allFlavours = [product, ...siblings].sort((a, b) => (a.flavour || '').localeCompare(b.flavour || ''));
+              const allFlavours = [product, ...siblings]
+                .filter((p) => isValidFlavour(p.flavour))
+                .sort((a, b) => (a.flavour || '').localeCompare(b.flavour || ''));
               if (allFlavours.length <= 1) return null;
 
               return (
@@ -321,7 +328,7 @@ const ProductDetail = () => {
                   <div className="flex flex-wrap gap-2">
                     {allFlavours.map((fp) => {
                       const isActive = (fp._id || fp.id) === (product._id || product.id);
-                      const colorClass = flavorColorMap[fp.flavour] || 'border-gray-200 bg-gray-50 text-[#0B1D35]';
+                      const colorClass = getFlavourColorClass(fp.flavour);
 
                       return (
                         <button
@@ -330,7 +337,7 @@ const ProductDetail = () => {
                           className={`rounded-full border px-3 py-1 text-sm font-semibold transition ${
                             isActive
                               ? `${colorClass} ring-2 ring-[#C9A84C] ring-offset-2`
-                              : 'border-gray-200 bg-gray-50 text-gray-500 hover:border-[#E8762A]'
+                              : 'border-gray-200 bg-gray-50 text-gray-600 hover:border-[#E8762A] hover:text-[#0B1D35]'
                           }`}
                         >
                           {fp.flavour}
@@ -361,6 +368,11 @@ const ProductDetail = () => {
             <p className="mt-2 inline-flex items-center rounded-full bg-gray-100 px-3 py-1 text-sm text-gray-500">
               {product.productType === 'deliverable' ? 'Usually ships in 2-3 days' : 'Enquire for Price'}
             </p>
+            {product.productType === 'deliverable' && (
+              <p className="mt-2 text-sm font-medium text-gray-500">
+                Live stock: <span className="text-[#0B1D35]">{stockQuantity}</span>
+              </p>
+            )}
 
             <div className="mt-5 flex items-center gap-3">
               <p className="text-sm font-semibold text-[#0B1D35]">Quantity</p>
@@ -369,7 +381,11 @@ const ProductDetail = () => {
                   <Minus className="h-4 w-4" />
                 </button>
                 <span className="w-8 text-center text-sm font-semibold">{qty}</span>
-                <button className="px-3 py-1.5" onClick={() => setQty((q) => q + 1)}>
+                <button
+                  className="px-3 py-1.5 disabled:cursor-not-allowed disabled:opacity-40"
+                  onClick={() => setQty((q) => Math.min(stockQuantity || 1, q + 1))}
+                  disabled={isOutOfStock || qty >= stockQuantity}
+                >
                   <Plus className="h-4 w-4" />
                 </button>
               </div>
@@ -379,14 +395,24 @@ const ProductDetail = () => {
               {product.productType === 'deliverable' ? (
                 <>
                   <Button
-                    className="w-full rounded-full bg-[#E8762A] py-6 text-base font-bold shadow-medium transition-all duration-200 hover:scale-[1.02] hover:bg-[#D76219] hover:shadow-strong active:scale-[0.98]"
+                    className="w-full rounded-full bg-[#E8762A] py-6 text-base font-bold shadow-medium transition-all duration-200 hover:scale-[1.02] hover:bg-[#D76219] hover:shadow-strong active:scale-[0.98] disabled:cursor-not-allowed disabled:bg-gray-300"
                     size="lg"
                     onClick={onAddToCart}
+                    disabled={isOutOfStock}
                   >
                     <ShoppingCart className="mr-2 h-5 w-5" />
-                    Add to Cart
+                    {isOutOfStock ? 'Out of Stock' : 'Add to Cart'}
                   </Button>
-                  <Button variant="outline" className="w-full rounded-full py-6 text-base font-bold" size="lg" onClick={() => { onAddToCart(); navigate('/checkout'); }}>
+                  <Button
+                    variant="outline"
+                    className="w-full rounded-full py-6 text-base font-bold"
+                    size="lg"
+                    disabled={isOutOfStock}
+                    onClick={() => {
+                      onAddToCart();
+                      if (!isOutOfStock) navigate('/checkout');
+                    }}
+                  >
                     Buy Now
                   </Button>
                 </>
@@ -411,7 +437,7 @@ const ProductDetail = () => {
               </div>
               <div className="inline-flex items-center gap-3 rounded-xl border border-gray-100 bg-gray-50 p-3">
                 <PackageCheck className="h-5 w-5 text-[#2D5016]" />
-                <span className="text-sm font-semibold text-[#0B1D35]">Secure Packaging</span>
+                <span className="text-sm font-semibold text-[#0B1D35]">Healthy Snacks, No Oil and All</span>
               </div>
               <div className="inline-flex items-center gap-3 rounded-xl border border-gray-100 bg-gray-50 p-3">
                 <Truck className="h-5 w-5 text-[#2D5016]" />

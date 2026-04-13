@@ -13,9 +13,25 @@ router.get('/cart', verifyUserToken, async (req, res) => {
       return res.status(404).json({ error: 'User not found' });
     }
 
+    const productIds = (user.cart || []).map((item) => item.productId);
+    const productStocks = await Product.find({ productId: { $in: productIds } })
+      .select('productId stockQuantity price')
+      .lean();
+
+    const stockMap = new Map(productStocks.map((product) => [product.productId, product]));
+
+    const syncedCart = (user.cart || []).map((item) => {
+      const latestProduct = stockMap.get(item.productId);
+      return {
+        ...item.toObject(),
+        stockQuantity: latestProduct?.stockQuantity ?? item.stockQuantity ?? 0,
+        price: latestProduct?.price ?? item.price,
+      };
+    });
+
     res.json({
       success: true,
-      data: user.cart || []
+      data: syncedCart
     });
   } catch (error) {
     console.error('Error fetching cart:', error);
@@ -56,8 +72,27 @@ router.post('/cart/add', verifyUserToken, async (req, res) => {
 
     if (existingItemIndex > -1) {
       // Update quantity if item exists
-      user.cart[existingItemIndex].quantity += quantity;
+      const updatedQuantity = user.cart[existingItemIndex].quantity + quantity;
+      const availableStock = product.stockQuantity ?? 0;
+
+      if (updatedQuantity > availableStock) {
+        return res.status(400).json({
+          error: `Only ${availableStock} units available in stock`,
+          availableStock,
+        });
+      }
+
+      user.cart[existingItemIndex].quantity = updatedQuantity;
+      user.cart[existingItemIndex].stockQuantity = availableStock;
     } else {
+      const availableStock = product.stockQuantity ?? 0;
+      if (quantity > availableStock) {
+        return res.status(400).json({
+          error: `Only ${availableStock} units available in stock`,
+          availableStock,
+        });
+      }
+
       // Add new item
       user.cart.push({
         productId,
@@ -69,6 +104,7 @@ router.post('/cart/add', verifyUserToken, async (req, res) => {
         image: product.image,
         category: product.category,
         isDeliverable: product.isDeliverable || false,
+        stockQuantity: availableStock,
       });
     }
 
@@ -91,6 +127,13 @@ router.patch('/cart/update/:productId', verifyUserToken, async (req, res) => {
     const { productId } = req.params;
     const { quantity, selectedCoating, selectedFlavor } = req.body;
 
+    const product = await Product.findOne({ productId: parseInt(productId) }).select('stockQuantity');
+    if (!product) {
+      return res.status(404).json({ error: 'Product not found' });
+    }
+
+    const availableStock = product.stockQuantity ?? 0;
+
     const user = await User.findById(req.userId);
     if (!user) {
       return res.status(404).json({ error: 'User not found' });
@@ -111,7 +154,15 @@ router.patch('/cart/update/:productId', verifyUserToken, async (req, res) => {
       // Remove item if quantity is 0 or less
       user.cart.splice(itemIndex, 1);
     } else {
+      if (quantity > availableStock) {
+        return res.status(400).json({
+          error: `Only ${availableStock} units available in stock`,
+          availableStock,
+        });
+      }
+
       user.cart[itemIndex].quantity = quantity;
+      user.cart[itemIndex].stockQuantity = availableStock;
     }
 
     await user.save();

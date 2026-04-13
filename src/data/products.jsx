@@ -95,6 +95,80 @@ export const categories = [
   // }
 ];
 
+const savouryVariantConfigs = [
+  {
+    name: 'Savory Makhana',
+    parentProduct: 'savory-makhana',
+    description: 'Roasted makhana with bold Indian savory seasoning.',
+    image: Makhana_fn,
+    price: 249,
+    weight: '90g',
+    stockQuantity: 40,
+    flavours: ['Peri Peri', 'Barbeque', 'Cream & Onion', 'Cheese', 'Cheese Herbs', 'Pudina', 'Tangy Tomato', 'Lime & Chilli', 'Black Pepper', 'Tandoori Masala', 'Himalayan Pink Salt', 'Salt & Pepper'],
+  },
+  {
+    name: 'Savory Cashew',
+    parentProduct: 'savory-cashew',
+    description: 'Roasted cashew with rich and crunchy savory flavour profiles.',
+    image: cashew_peri,
+    price: 289,
+    weight: '120g',
+    stockQuantity: 40,
+    flavours: ['Peri Peri', 'Barbeque', 'Chatpata', 'Smokey Garlic', 'Black Pepper', 'Salted Cashew', 'Pepper & Salt', 'Mint', 'Pudina', 'Cream & Onion'],
+  },
+  {
+    name: 'Savory Almond',
+    parentProduct: 'savory-almond',
+    description: 'Roasted almond range with popular Indian savory flavour choices.',
+    image: salted_almond,
+    price: 299,
+    weight: '120g',
+    stockQuantity: 40,
+    flavours: ['Peri-Peri', 'Cream & Onion', 'Cheese & Herbs', 'Tandoori Masala', 'Smoky BBQ', 'Jalapeno Cheese', 'Chilli Lime', 'Chatpata Chaat Masala', 'Maggi Masala', 'Peri-Peri Protein', 'Tandoori Smoky', 'Green Chutney'],
+  },
+  {
+    name: 'Savory Peanut',
+    parentProduct: 'savory-peanut',
+    description: 'Roasted peanuts with classic spicy and tangy masala options.',
+    image: peanut,
+    price: 199,
+    weight: '150g',
+    stockQuantity: 40,
+    flavours: ['Hing Jeera', 'Masala', 'Chilli Garlic', 'Tandoori', 'Chatpata', 'Salted'],
+  },
+  {
+    name: 'Savory Chana',
+    parentProduct: 'savory-chana',
+    description: 'Protein-rich roasted chana in top-selling Indian savory flavours.',
+    image: Chicpeas_jaggery,
+    price: 229,
+    weight: '120g',
+    stockQuantity: 40,
+    flavours: ['Classic Masala', 'Chatpata', 'Peri Peri', 'Punjabi Tadka', 'Chilli Garlic', 'Nimbu', 'Pudina', 'Lime & Chilli', 'Hing Jeera', 'Salted', 'Lightly Spiced', 'Cheese Masala', 'Cream & Onion', 'BBQ', 'Smoky', 'Pizza'],
+  },
+];
+
+let savouryVariantId = 111;
+const savouryVariantProducts = savouryVariantConfigs.flatMap((config) =>
+  config.flavours.map((flavour) => ({
+    id: savouryVariantId++,
+    name: config.name,
+    category: 'nuts',
+    description: `${config.description} Flavour: ${flavour}.`,
+    image: config.image,
+    price: config.price,
+    weight: config.weight,
+    bestseller: true,
+    productType: 'deliverable',
+    isDeliverable: true,
+    parentProduct: config.parentProduct,
+    flavour,
+    stockQuantity: config.stockQuantity,
+    coatings: [],
+    flavors: [],
+  }))
+);
+
 export const products = [
   {
     id: 100,
@@ -354,6 +428,7 @@ export const products = [
     },
     storageInfo: 'Store in a **cool, dry place** in an **airtight container** at **room temperature**. Keep away from direct sunlight and heat sources which can fade the refreshing mint flavor. **Store away from moisture** as pudina masala is sensitive to humidity. Best consumed within **2 months** of opening for optimal **minty freshness and masala aroma**. Seal the container tightly after each use to preserve the delicate mint essence and prevent flavor dissipation.'
   },
+  ...savouryVariantProducts,
   // CHOCOLATES (8 products)
   {
     id: 1,
@@ -1062,6 +1137,85 @@ export const products = [
     flavors: []
   }
 ];
+
+const inferIngredientsForProduct = (product) => {
+  const flavourText = product.flavour ? `${product.flavour} seasoning blend` : 'Signature seasoning blend';
+
+  const categoryDefaults = {
+    chocolates: [
+      `${product.name} - Premium roasted base ingredient`,
+      'Dark/Milk chocolate compound',
+      'Natural cocoa solids',
+      'Cane sugar',
+      'Cocoa butter or vegetable fat blend',
+      'Natural flavouring',
+    ],
+    nuts: [
+      `${product.name} - Premium roasted nut/seed base`,
+      flavourText,
+      'Cold-pressed edible oil (light coating)',
+      'Sea salt or rock salt',
+      'Natural spice extracts',
+      'Herbs and dehydrated aromatics',
+    ],
+    jaggery: [
+      `${product.name} - Premium roasted base ingredient`,
+      'Organic jaggery',
+      'Sesame or poppy seed coating',
+      'Cold-pressed edible oil',
+      'Rock salt',
+      'Natural spice blend',
+    ],
+    dryfruits: [
+      `${product.name} - Premium sorted whole ingredient`,
+      'Natural antioxidants',
+      'No artificial colours',
+      'No synthetic flavours',
+      'Food-grade moisture barrier pack',
+      'Natural taste profile',
+    ],
+    seeds: [
+      `${product.name} - Premium cleaned seeds`,
+      'Natural omega-rich seed oils',
+      'Rock salt (lightly salted variants)',
+      'Natural spice blend (where applicable)',
+      'Food-grade freshness lock pack',
+      'No synthetic flavours',
+    ],
+    gifting: [
+      'Assorted premium nuts and dry fruits',
+      'Selected savory snack components',
+      'Chocolate-coated assortment (selected packs)',
+      'Natural seasoning components',
+      'Food-grade freshness pouches',
+      'Gift-grade packaging materials',
+    ],
+    services: [
+      'Curated product assortment as per requirement',
+      'Premium nuts and dry fruits',
+      'Savory and festive snack options',
+      'Custom packaging components',
+      'Food-grade protective inner packs',
+      'Branding and gifting accessories',
+    ],
+  };
+
+  return categoryDefaults[product.category] || [
+    `${product.name} - Premium quality base ingredient`,
+    'Natural flavour components',
+    'Food-grade seasoning blend',
+    'Cold-pressed edible oil (if applicable)',
+    'Rock salt',
+    'Freshness-lock packaging',
+  ];
+};
+
+products.forEach((product) => {
+  const hasIngredients = Array.isArray(product.ingredients) && product.ingredients.length > 0;
+  if (!hasIngredients) {
+    product.ingredients = inferIngredientsForProduct(product);
+  }
+});
 
 // Helper functions
 export const getProductsByCategory = (categoryId) => {

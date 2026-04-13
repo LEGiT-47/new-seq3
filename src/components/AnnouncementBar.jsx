@@ -1,6 +1,7 @@
 import React from 'react';
 
 const messages = [
+  '🥗 Healthy snacks, no oil and all',
   '🚚 Delivering across Mumbai & Goa',
   '🎁 Custom Corporate Gifting Available',
   '📦 Free Shipping above ₹499',

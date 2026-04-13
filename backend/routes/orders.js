@@ -43,6 +43,11 @@ router.post(
           throw new Error(`Product ${product.name} is not available for online purchase`);
         }
 
+        const availableStock = product.stockQuantity ?? 0;
+        if (item.quantity > availableStock) {
+          throw new Error(`Only ${availableStock} units of ${product.name} are currently in stock`);
+        }
+
         return {
           productId: product.productId,
           productName: product.name,
@@ -111,6 +116,19 @@ router.post(
     // Calculate total to verify
     const totalAmount = calculateOrderTotal(items);
 
+    // Re-validate stock right before order creation to prevent overselling
+    for (const item of items) {
+      const product = await Product.findOne({ productId: item.productId });
+      if (!product) {
+        return sendErrorResponse(res, 404, `Product ${item.productId} not found`);
+      }
+
+      const availableStock = product.stockQuantity ?? 0;
+      if (item.quantity > availableStock) {
+        return sendErrorResponse(res, 400, `${product.name} is low in stock. Only ${availableStock} left.`);
+      }
+    }
+
     // Create order
     const orderNumber = generateOrderNumber();
     const order = new Order({
@@ -130,6 +148,21 @@ router.post(
     });
 
     await order.save();
+
+    // Deduct stock for all purchased items
+    await Promise.all(
+      items.map((item) =>
+        Product.updateOne(
+          {
+            productId: item.productId,
+            stockQuantity: { $gte: item.quantity },
+          },
+          {
+            $inc: { stockQuantity: -item.quantity },
+          }
+        )
+      )
+    );
 
     // Update payment transaction with order reference
     paymentTx.orderId = order._id;
@@ -206,6 +239,11 @@ router.post(
 
         if (product.price !== item.price) {
           throw new Error(`Price mismatch for ${product.name}. Please refresh and try again.`);
+        }
+
+        const availableStock = product.stockQuantity ?? 0;
+        if (item.quantity > availableStock) {
+          throw new Error(`Only ${availableStock} units of ${product.name} are currently in stock`);
         }
 
         return item;

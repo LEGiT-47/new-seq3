@@ -87,6 +87,8 @@ const Cart = () => {
         {items.map((item) => {
           const hasCoatings = item.coatings && item.coatings.length > 0;
           const hasFlavors = item.flavors && item.flavors.length > 0;
+          const maxStock = Number(item.stockQuantity ?? 0);
+          const isMaxReached = item.quantity >= maxStock;
 
           return (
             <div key={item.cartItemId} className="flex flex-col space-y-2 p-4 rounded-lg border border-border">
@@ -101,6 +103,9 @@ const Cart = () => {
                   <h4 className="font-medium text-sm truncate">{item.name}</h4>
                   <p className="text-xs text-muted-foreground">{item.category}</p>
                   <p className="text-sm font-bold mt-1">₹{item.price}</p>
+                  <p className="text-[11px] text-muted-foreground mt-1">
+                    In stock: {maxStock}
+                  </p>
 
                   {/* Quantity Controls */}
                   <div className="flex items-center gap-2 mt-2">
@@ -123,6 +128,7 @@ const Cart = () => {
                       variant="outline"
                       size="sm"
                       className="h-6 w-6 p-0"
+                      disabled={isMaxReached}
                       onClick={() => updateQuantity(item.cartItemId, item.quantity + 1)}
                     >
                       <Plus className="h-3 w-3" />

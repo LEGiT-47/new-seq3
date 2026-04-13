@@ -71,6 +71,8 @@ export const normalizeProduct = (rawProduct) => {
     images: Array.isArray(rawProduct.images) && rawProduct.images.length > 0 ? rawProduct.images : rawProduct.image ? [rawProduct.image] : [],
     coatings: Array.isArray(rawProduct.coatings) ? rawProduct.coatings : [],
     flavors: Array.isArray(rawProduct.flavors) ? rawProduct.flavors : [],
+    stockQuantity: Number.isFinite(Number(rawProduct.stockQuantity)) ? Math.max(0, Math.floor(Number(rawProduct.stockQuantity))) : 40,
+    lowStockThreshold: Number.isFinite(Number(rawProduct.lowStockThreshold)) ? Math.max(0, Math.floor(Number(rawProduct.lowStockThreshold))) : 10,
     whatsappEnquiryText,
   };
 };
@@ -79,11 +81,11 @@ export const normalizeProducts = (products = []) => products.map(normalizeProduc
 
 export const getDisplayProductName = (product) => {
   if (!product) return '';
-  if (product.flavour && product.parentProduct === 'crunchy-chana') {
-    return `Crunchy Chana - ${product.flavour}`;
-  }
-  if (product.flavour && product.parentProduct === 'gud-chana' && product.flavour !== 'Classic') {
-    return `Gud Chana - ${product.flavour}`;
+  if (product.flavour && product.parentProduct) {
+    if (product.parentProduct === 'gud-chana' && product.flavour === 'Classic') {
+      return product.name || '';
+    }
+    return `${product.name || ''} - ${product.flavour}`.trim();
   }
   return product.name || '';
 };

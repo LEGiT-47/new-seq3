@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useAuth } from './AuthContext';
 import { cartAPI } from '../lib/api';
+import { toast } from 'sonner';
 
 const CartContext = createContext();
 
@@ -63,6 +64,8 @@ export const CartProvider = ({ children }) => {
   }, [cartItems, isAuthenticated, user]);
 
   const addToCart = async (product, quantity = 1, options = {}) => {
+    const stockQuantity = Number(product.stockQuantity ?? 0);
+
     setCartItems(prev => {
       const productId = product.id || product._id;
       const cartItemId = `${productId}-${options.coating || ''}-${options.flavor || ''}`;
@@ -73,16 +76,29 @@ export const CartProvider = ({ children }) => {
           item.selectedFlavor === (options.flavor || null);
       });
       if (existingItem) {
+        const nextQuantity = existingItem.quantity + quantity;
+        if (nextQuantity > stockQuantity) {
+          toast.error(`Only ${stockQuantity} in stock for ${product.name}`);
+          return prev;
+        }
+
         return prev.map(item =>
           item === existingItem
-            ? { ...item, quantity: item.quantity + quantity }
+            ? { ...item, quantity: nextQuantity, stockQuantity }
             : item
         );
       }
+
+      if (quantity > stockQuantity) {
+        toast.error(`Only ${stockQuantity} in stock for ${product.name}`);
+        return prev;
+      }
+
       return [...prev, {
         ...product,
         cartItemId,
         quantity,
+        stockQuantity,
         selectedCoating: options.coating || null,
         selectedFlavor: options.flavor || null
       }];
@@ -98,6 +114,7 @@ export const CartProvider = ({ children }) => {
           selectedFlavor: options.flavor || null
         });
       } catch (error) {
+        toast.error(error.response?.data?.error || 'Unable to add item to cart');
         console.error('Error syncing cart with backend:', error);
       }
     }
@@ -128,6 +145,12 @@ export const CartProvider = ({ children }) => {
     }
 
     const item = cartItems.find(i => i.cartItemId === cartItemId);
+
+    if (item && quantity > Number(item.stockQuantity ?? 0)) {
+      toast.error(`Only ${item.stockQuantity ?? 0} in stock for ${item.name}`);
+      return;
+    }
+
     setCartItems(prev =>
       prev.map(item =>
         item.cartItemId === cartItemId
@@ -145,6 +168,7 @@ export const CartProvider = ({ children }) => {
           selectedFlavor: item.selectedFlavor
         });
       } catch (error) {
+        toast.error(error.response?.data?.error || 'Unable to update cart quantity');
         console.error('Error updating cart quantity on backend:', error);
       }
     }

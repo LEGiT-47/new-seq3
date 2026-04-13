@@ -110,10 +110,12 @@ const createLocalProductMap = async () => {
 };
 
 // Helper function to merge local images with backend products
-const enrichProductsWithImages = async (products) => {
+const enrichProductsWithImages = async (products, options = {}) => {
+  const { includeLocalOnly = false } = options;
   const productMap = await createLocalProductMap();
+  const { products: localProducts } = await import('../data/products.jsx');
 
-  return products.map(product => {
+  const enrichedProducts = products.map(product => {
     const lookupKeys = [];
 
     if (product.productId !== undefined && product.productId !== null) {
@@ -167,6 +169,15 @@ const enrichProductsWithImages = async (products) => {
 
     return normalizeProduct(product);
   });
+
+  if (!includeLocalOnly) {
+    return enrichedProducts;
+  }
+
+  const backendIds = new Set(enrichedProducts.map((product) => product.productId ?? product.id).filter((id) => id !== undefined && id !== null));
+  const localOnlyProducts = localProducts.filter((product) => !backendIds.has(product.id)).map((product) => normalizeProduct(product));
+
+  return [...enrichedProducts, ...localOnlyProducts];
 };
 
 // Product API calls with fallback to local data
@@ -176,7 +187,7 @@ export const productAPI = {
       const response = await apiClient.get('/products');
       // Enrich with local images
       const data = response.data.data || response.data;
-      const enriched = await enrichProductsWithImages(Array.isArray(data) ? data : [data]);
+      const enriched = await enrichProductsWithImages(Array.isArray(data) ? data : [data], { includeLocalOnly: true });
       return { data: { data: enriched } };
     } catch (error) {
       console.warn('Backend API unavailable, using local data', error.message);
@@ -329,6 +340,11 @@ export const adminOrderAPI = {
   getDashboardAnalytics: (params = {}) => adminApiClient.get('/admin/orders/analytics/dashboard', { params }),
   getPaymentAnalytics: (params = {}) => adminApiClient.get('/admin/orders/analytics/payments', { params }),
   getDeliveryOverview: () => adminApiClient.get('/admin/orders/delivery/overview'),
+};
+
+export const adminProductAPI = {
+  getAll: () => adminApiClient.get('/admin/products'),
+  updateInventory: (productId, data) => adminApiClient.patch(`/admin/products/${productId}`, data),
 };
 
 export default apiClient;

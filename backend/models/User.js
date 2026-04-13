@@ -48,6 +48,10 @@ const userSchema = new mongoose.Schema(
         image: String,
         category: String,
         isDeliverable: Boolean,
+        stockQuantity: {
+          type: Number,
+          default: 0,
+        },
       },
     ],
     isEmailVerified: {
