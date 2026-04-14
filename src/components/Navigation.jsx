@@ -90,7 +90,7 @@ const Navigation = () => {
           }}
           formatOptionLabel={(option) => (
             <div className="flex items-center justify-between gap-2">
-              <span className="text-sm font-semibold text-[#0B1D35]">{option.label}</span>
+              <span className="text-sm font-semibold text-[#C9A84C]">{option.label}</span>
               <span className="rounded-full bg-gray-100 px-2 py-0.5 text-[10px] font-semibold text-gray-600">
                 {option.type}
               </span>
@@ -106,9 +106,9 @@ const Navigation = () => {
               boxShadow: state.isFocused ? '0 0 0 1px #C9A84C' : 'none',
               '&:hover': { borderColor: '#C9A84C' },
             }),
-            singleValue: (base) => ({ ...base, color: '#F8F4EC' }),
-            input: (base) => ({ ...base, color: '#F8F4EC' }),
-            placeholder: (base) => ({ ...base, color: '#B8C8D8' }),
+            singleValue: (base) => ({ ...base, color: '#C9A84C' }),
+            input: (base) => ({ ...base, color: '#C9A84C' }),
+            placeholder: (base) => ({ ...base, color: '#D7BD68' }),
             menu: (base) => ({ ...base, borderRadius: 12, overflow: 'hidden', zIndex: 60 }),
             indicatorSeparator: () => ({ display: 'none' }),
           }}

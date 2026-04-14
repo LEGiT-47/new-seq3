@@ -310,7 +310,7 @@ const Home = () => {
       )}
 
       <section ref={heroRef} className="reveal bg-white px-4 pb-10 pt-6 sm:px-6 lg:px-8">
-        <div className="mx-auto max-w-7xl">
+        <div className="mx-auto max-w-[100rem]">
           <div className="mb-5 text-center">
             <h2 className="font-display text-4xl uppercase tracking-wide text-[#0B1D35] sm:text-5xl">Order Online - Delivered Fresh</h2>
             <div className="mx-auto mt-2 h-0.5 w-14 rounded-full bg-[#E8762A]" />
@@ -320,7 +320,7 @@ const Home = () => {
           {loading ? (
             <p className="py-10 text-center text-gray-500">Loading hero products...</p>
           ) : (
-            <div className="mx-auto grid max-w-5xl grid-flow-col auto-cols-[82%] gap-4 overflow-x-auto pb-2 sm:grid-flow-row sm:auto-cols-auto sm:grid-cols-2 lg:grid-cols-2">
+            <div className="mx-auto grid max-w-[100rem] grid-flow-col auto-cols-[84%] gap-4 overflow-x-auto pb-2 sm:grid-flow-row sm:auto-cols-auto sm:grid-cols-2 lg:gap-5 lg:grid-cols-3">
               {homeCards.map(({ key, products: groupedProducts, active }) => {
                 const displayName = getDisplayProductName(active);
                 const hasGroup = groupedProducts.length > 1;
@@ -331,7 +331,7 @@ const Home = () => {
                     key={key}
                       className="group overflow-hidden rounded-3xl border-0 bg-[#FFFBF5] shadow-card transition-all duration-300 hover:-translate-y-2 hover:shadow-strong"
                   >
-                      <div className="h-1 w-full bg-gradient-to-r from-[#E8762A] to-[#DAC06E]" />
+                      <div className="h-1 w-full bg-gradient-to-r from-[#0B1D35] to-[#26486E]" />
                     <Link to={`/product/${active._id || active.id}`}>
                       <div className="relative overflow-hidden rounded-t-3xl bg-[#FDF6EC]">
                         <img
@@ -349,23 +349,33 @@ const Home = () => {
                         <p className="font-sans text-xl font-bold text-[#0B1D35]">Rs. {active.price}</p>
                       </div>
 
-                      {hasGroup && (
-                        <div className="flex flex-wrap gap-1.5">
-                          {groupedProducts.map((fp) => (
-                            <button
-                              key={fp._id || fp.id}
-                              className={`rounded-full border px-2.5 py-1 text-xs font-medium transition ${
-                                (selectedHomeFlavourByGroup[key] || groupedProducts[0].flavour) === fp.flavour
-                                  ? 'border-[#C9A84C] bg-[#C9A84C] text-[#0B1D35]'
-                                  : 'border-[#26486E] text-[#0B1D35]/60 hover:border-[#C9A84C]'
-                              }`}
-                              onClick={() => setSelectedHomeFlavourByGroup((prev) => ({ ...prev, [key]: fp.flavour }))}
-                            >
-                              {fp.flavour}
-                            </button>
-                          ))}
-                        </div>
-                      )}
+                      {hasGroup && (() => {
+                        const visibleFlavours = groupedProducts.slice(0, 3);
+                        const extraCount = groupedProducts.length - 3;
+
+                        return (
+                          <div className="flex flex-wrap gap-1.5">
+                            {visibleFlavours.map((fp) => (
+                              <button
+                                key={fp._id || fp.id}
+                                className={`rounded-full border px-2.5 py-1 text-xs font-medium transition ${
+                                  (selectedHomeFlavourByGroup[key] || groupedProducts[0].flavour) === fp.flavour
+                                    ? 'border-[#0B1D35] bg-[#0B1D35] text-white ring-2 ring-[#0B1D35]/25 ring-offset-2'
+                                    : 'border-gray-200 bg-white text-gray-500 hover:border-[#0B1D35] hover:text-[#0B1D35]'
+                                }`}
+                                onClick={() => setSelectedHomeFlavourByGroup((prev) => ({ ...prev, [key]: fp.flavour }))}
+                              >
+                                {fp.flavour}
+                              </button>
+                            ))}
+                            {extraCount > 0 && (
+                              <span className="rounded-full border border-gray-200 bg-gray-50 px-2.5 py-1 text-xs font-medium text-gray-400">
+                                +{extraCount} more
+                              </span>
+                            )}
+                          </div>
+                        );
+                      })()}
 
                       {activeWeightOptions.length > 0 && (
                         <div className="flex flex-wrap gap-2">
@@ -382,11 +392,18 @@ const Home = () => {
                           <ShoppingCart className="mr-1.5 h-3.5 w-3.5" />
                           Add to Cart
                         </Button>
-                        <Button variant="outline" className="rounded-full px-3 text-xs" asChild>
+                        <Button
+                          variant="outline"
+                          className="rounded-full border-gray-200 px-3 text-sm text-gray-500 hover:border-[#0B1D35] hover:text-[#0B1D35]"
+                          asChild
+                        >
                           <Link to={`/product/${active._id || active.id}`}>View</Link>
                         </Button>
                       </div>
-                      <Link to={`/product/${active._id || active.id}`} className="inline-flex items-center gap-1 font-sans text-xs font-semibold text-[#0B1D35] transition-colors hover:text-[#E8762A]">
+                      <Link
+                        to={`/product/${active._id || active.id}`}
+                        className="mt-1 inline-flex items-center gap-1 text-xs font-medium text-gray-400 transition-colors hover:text-[#E8762A]"
+                      >
                         View Details <ArrowRight className="h-3.5 w-3.5" />
                       </Link>
                     </CardContent>
@@ -404,7 +421,7 @@ const Home = () => {
         </div>
       </section>
 
-      <section ref={trustRef} className="reveal my-0 bg-[#C9A84C] px-4 py-4 sm:px-6 lg:px-8">
+      <section ref={trustRef} className="reveal bg-[#C9A84C] py-6 px-4 sm:px-6 lg:px-8">
         <div className="mx-auto grid max-w-7xl grid-cols-2 gap-3 sm:grid-cols-4">
           {[
             { icon: <Leaf className="h-5 w-5" />, label: '100% Natural' },
@@ -412,25 +429,25 @@ const Home = () => {
             { icon: <Gift className="h-5 w-5" />, label: 'Custom Gifting' },
             { icon: <Truck className="h-5 w-5" />, label: 'Pan-India Delivery' },
           ].map((item) => (
-            <div key={item.label} className="flex items-center justify-center gap-3 rounded-xl bg-[#0B1D35]/15 px-4 py-5 text-center font-semibold text-[#0B1D35]">
-              <span className="text-lg">{item.icon}</span>
-              <span className="text-sm tracking-wide">{item.label}</span>
+            <div key={item.label} className="flex items-center justify-center gap-3 rounded-xl bg-[#0B1D35]/12 px-4 py-5 text-center font-bold text-[#0B1D35]">
+              <span className="text-xl">{item.icon}</span>
+              <span className="text-sm">{item.label}</span>
             </div>
           ))}
         </div>
       </section>
 
-      <section ref={enquiryRef} className="reveal bg-white px-4 py-6 sm:px-6 lg:px-8">
+      <section ref={enquiryRef} className="reveal bg-white px-4 py-10 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-7xl">
-          <div className="rounded-3xl border-l-4 border-[#E8762A] bg-[#FFF8F0] px-8 py-10 shadow-soft">
+          <div className="rounded-3xl border-l-4 border-[#E8762A] bg-[#FFF8F0] px-8 py-10 shadow-soft sm:px-10">
             <div className="flex items-start gap-4">
               <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[#E8762A]">
                 <MessageCircle className="h-6 w-6 text-white" />
               </div>
               <div>
                 <p className="text-xs font-bold uppercase tracking-widest text-[#E8762A]">Premium Enquiry Collection</p>
-                <h3 className="mt-1 font-display text-2xl tracking-wide text-[#0B1D35] sm:text-3xl">
-                  Looking for premium dry fruits, cashews, or custom bulk orders?
+                <h3 className="mt-2 font-display text-3xl tracking-wide leading-tight text-[#0B1D35] sm:text-4xl">
+                  Looking for Premium Dry Fruits or Bulk Orders?
                 </h3>
                 <p className="mt-2 max-w-2xl text-gray-500">
                   Our premium range is available on enquiry so we can share fresh pricing, stock, and packaging options.
