@@ -14,6 +14,132 @@ const isValidFlavour = (value) => {
   return normalized.length > 0 && /[A-Za-z0-9]/.test(normalized);
 };
 
+const fallbackNutritionByParent = {
+  'gud-chana': {
+    serving: 'Per 100g',
+    calories: '380 kcal',
+    protein: '17 g',
+    carbs: '62 g',
+    sugar: '23 g',
+    fiber: '13 g',
+    fat: '6 g',
+    sodium: '210 mg',
+  },
+  'crunchy-chana': {
+    serving: 'Per 100g',
+    calories: '365 kcal',
+    protein: '20 g',
+    carbs: '58 g',
+    sugar: '5 g',
+    fiber: '16 g',
+    fat: '7 g',
+    sodium: '340 mg',
+  },
+  'savoury-almond': {
+    serving: 'Per 100g',
+    calories: '579 kcal',
+    protein: '21 g',
+    carbs: '22 g',
+    sugar: '4 g',
+    fiber: '12 g',
+    fat: '50 g',
+    sodium: '280 mg',
+  },
+  'savoury-cashew': {
+    serving: 'Per 100g',
+    calories: '553 kcal',
+    protein: '18 g',
+    carbs: '30 g',
+    sugar: '6 g',
+    fiber: '3 g',
+    fat: '44 g',
+    sodium: '290 mg',
+  },
+  'savoury-peanut': {
+    serving: 'Per 100g',
+    calories: '567 kcal',
+    protein: '26 g',
+    carbs: '16 g',
+    sugar: '5 g',
+    fiber: '9 g',
+    fat: '49 g',
+    sodium: '310 mg',
+  },
+  'savoury-makhana': {
+    serving: 'Per 100g',
+    calories: '347 kcal',
+    protein: '10 g',
+    carbs: '77 g',
+    sugar: '1 g',
+    fiber: '14 g',
+    fat: '1 g',
+    sodium: '220 mg',
+  },
+  'savoury-chana': {
+    serving: 'Per 100g',
+    calories: '362 kcal',
+    protein: '19 g',
+    carbs: '60 g',
+    sugar: '4 g',
+    fiber: '15 g',
+    fat: '6 g',
+    sodium: '300 mg',
+  },
+};
+
+const fallbackNutritionByCategory = {
+  nuts: {
+    serving: 'Per 100g',
+    calories: '575 kcal',
+    protein: '21 g',
+    carbs: '21 g',
+    sugar: '5 g',
+    fiber: '9 g',
+    fat: '49 g',
+    sodium: '220 mg',
+  },
+  seeds: {
+    serving: 'Per 100g',
+    calories: '520 kcal',
+    protein: '20 g',
+    carbs: '18 g',
+    sugar: '2 g',
+    fiber: '11 g',
+    fat: '42 g',
+    sodium: '140 mg',
+  },
+  dryfruits: {
+    serving: 'Per 100g',
+    calories: '355 kcal',
+    protein: '6 g',
+    carbs: '78 g',
+    sugar: '55 g',
+    fiber: '7 g',
+    fat: '1 g',
+    sodium: '15 mg',
+  },
+  chocolates: {
+    serving: 'Per 100g',
+    calories: '540 kcal',
+    protein: '7 g',
+    carbs: '56 g',
+    sugar: '47 g',
+    fiber: '6 g',
+    fat: '33 g',
+    sodium: '95 mg',
+  },
+  jaggery: {
+    serving: 'Per 100g',
+    calories: '380 kcal',
+    protein: '6 g',
+    carbs: '84 g',
+    sugar: '56 g',
+    fiber: '6 g',
+    fat: '3 g',
+    sodium: '120 mg',
+  },
+};
+
 const ProductDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -50,34 +176,90 @@ const ProductDetail = () => {
 
   const relatedProducts = useMemo(() => {
     if (!product) return [];
+    const productId = product._id || product.id;
+    const currentParent = product.parentProduct || null;
+
+    const crossSellMap = {
+      'gud-chana': ['crunchy-chana', 'savoury-almond', 'savoury-cashew', 'savoury-peanut', 'savoury-makhana'],
+      'crunchy-chana': ['gud-chana', 'savoury-almond', 'savoury-cashew', 'savoury-peanut', 'savoury-makhana'],
+      'savoury-almond': ['crunchy-chana', 'savoury-cashew', 'savoury-peanut', 'gud-chana', 'savoury-makhana'],
+      'savoury-cashew': ['crunchy-chana', 'savoury-almond', 'savoury-peanut', 'gud-chana', 'savoury-makhana'],
+      'savoury-peanut': ['crunchy-chana', 'savoury-cashew', 'savoury-almond', 'gud-chana', 'savoury-makhana'],
+      'savoury-makhana': ['crunchy-chana', 'savoury-almond', 'savoury-cashew', 'savoury-peanut', 'gud-chana'],
+      'savoury-chana': ['crunchy-chana', 'gud-chana', 'savoury-almond', 'savoury-cashew', 'savoury-peanut'],
+    };
+
+    const defaultCrossSellOrder = ['crunchy-chana', 'gud-chana', 'savoury-almond', 'savoury-cashew', 'savoury-peanut', 'savoury-makhana', 'savoury-chana'];
+    const preferredParents = (crossSellMap[currentParent] || defaultCrossSellOrder).filter((parent) => parent !== currentParent);
+
+    const allCandidates = allProducts.filter(
+      (p) => p.productType === 'deliverable' && (p._id || p.id) !== productId
+    );
+
+    const pickOnePerParent = (parents, source, usedIds) => {
+      const picked = [];
+      parents.forEach((parent) => {
+        const match = source.find((p) => p.parentProduct === parent && !usedIds.has(p._id || p.id));
+        if (match) {
+          picked.push(match);
+          usedIds.add(match._id || match.id);
+        }
+      });
+      return picked;
+    };
+
+    const usedIds = new Set();
+    const preferred = pickOnePerParent(preferredParents, allCandidates, usedIds);
+
+    const otherParents = [...new Set(allCandidates.map((p) => p.parentProduct).filter(Boolean))]
+      .filter((parent) => parent !== currentParent && !preferredParents.includes(parent));
+    const diversified = pickOnePerParent(otherParents, allCandidates, usedIds);
+
+    const spillover = allCandidates.filter(
+      (p) =>
+        !usedIds.has(p._id || p.id) &&
+        p.parentProduct !== currentParent
+    );
+
+    const sameParentFallback = allCandidates.filter(
+      (p) => !usedIds.has(p._id || p.id) && p.parentProduct === currentParent
+    );
+
+    return [...preferred, ...diversified, ...spillover, ...sameParentFallback].slice(0, 4);
+  }, [allProducts, product]);
+
+  const flavourVariants = useMemo(() => {
+    if (!product?.parentProduct) return [];
+
     return allProducts
-      .filter(
-        (p) =>
-          p.productType === 'deliverable' &&
-          p.parentProduct &&
-          (p._id || p.id) !== (product._id || product.id)
-      )
-      .slice(0, 4);
+      .filter((p) => p.parentProduct === product.parentProduct && isValidFlavour(p.flavour))
+      .sort((a, b) => (a.flavour || '').localeCompare(b.flavour || ''));
   }, [allProducts, product]);
 
   const flavourStoryItems = useMemo(() => {
-    return allProducts
-      .filter((p) => p.parentProduct === 'crunchy-chana')
-      .slice(0, 5)
-      .map((p) => ({
+    const crunchyCopy = {
+      BBQ: 'Smoky and bold with grill-style notes.',
+      Cheese: 'Creamy cheesy crunch for comfort snacking.',
+      'Cream & Onion': 'Tangy and savoury with a smooth finish.',
+      'Peri Peri': 'Spicy kick that builds with every bite.',
+      default: 'Cool minty profile with masala depth.',
+    };
+
+    return flavourVariants.map((p) => {
+      if (p.parentProduct === 'crunchy-chana') {
+        return {
+          ...p,
+          story: crunchyCopy[p.flavour] || crunchyCopy.default,
+        };
+      }
+
+      const flavourText = p.flavour ? `${p.flavour} flavour crafted for everyday snacking.` : 'Balanced flavour crafted for everyday snacking.';
+      return {
         ...p,
-        story:
-          p.flavour === 'BBQ'
-            ? 'Smoky and bold with grill-style notes.'
-            : p.flavour === 'Cheese'
-              ? 'Creamy cheesy crunch for comfort snacking.'
-              : p.flavour === 'Cream & Onion'
-                ? 'Tangy and savoury with a smooth finish.'
-                : p.flavour === 'Peri Peri'
-                  ? 'Spicy kick that builds with every bite.'
-                  : 'Cool minty profile with masala depth.',
-      }));
-  }, [allProducts]);
+        story: p.shortDescription || p.tagline || flavourText,
+      };
+    });
+  }, [flavourVariants]);
 
   const safeImageGallery = useMemo(() => {
     if (!product) return [];
@@ -152,6 +334,46 @@ const ProductDetail = () => {
     return points.slice(0, 3);
   }, [product]);
 
+  const nutritionData = useMemo(() => {
+    const normalize = (input) => {
+      if (!input) return null;
+      if (typeof input === 'string') {
+        return {
+          serving: 'Per 100g',
+          notes: input,
+        };
+      }
+      if (typeof input === 'object') return input;
+      return null;
+    };
+
+    const fromProduct = normalize(product?.nutritionInfo);
+    const fallbackByFamily = product?.parentProduct ? fallbackNutritionByParent[product.parentProduct] : null;
+    const fallbackByCategory = product?.category ? fallbackNutritionByCategory[product.category] : null;
+
+    const resolved = fromProduct || fallbackByFamily || fallbackByCategory || {
+      serving: 'Per 100g',
+      calories: '360 kcal',
+      protein: '14 g',
+      carbs: '52 g',
+      sugar: '8 g',
+      fiber: '8 g',
+      fat: '10 g',
+      sodium: '220 mg',
+    };
+
+    return [
+      { label: 'Serving Size', value: resolved.serving || 'Per 100g' },
+      { label: 'Energy', value: resolved.calories || resolved.energy || 'NA' },
+      { label: 'Protein', value: resolved.protein || 'NA' },
+      { label: 'Carbohydrates', value: resolved.carbs || resolved.carbohydrates || 'NA' },
+      { label: 'Total Sugar', value: resolved.sugar || resolved.totalSugar || 'NA' },
+      { label: 'Dietary Fiber', value: resolved.fiber || resolved.dietaryFiber || 'NA' },
+      { label: 'Total Fat', value: resolved.fat || resolved.totalFat || 'NA' },
+      { label: 'Sodium', value: resolved.sodium || 'NA' },
+    ];
+  }, [product]);
+
   if (loading) {
     return <div className="py-20 text-center text-gray-500">Loading product details...</div>;
   }
@@ -210,7 +432,7 @@ const ProductDetail = () => {
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
           <div className="rounded-3xl border border-[#26486E] bg-[#FFFBF5] p-5 sm:p-6">
             <div className="relative overflow-hidden rounded-3xl bg-[#FDF6EC] shadow-strong">
-              <div className="relative h-[480px] w-full">
+              <div className="relative h-[320px] w-full sm:h-[420px] lg:h-[480px]">
                 {safeImageGallery.map((image, index) => (
                   <img
                     key={`${image}-${index}`}
@@ -314,19 +536,13 @@ const ProductDetail = () => {
             )}
 
             {product.parentProduct && (() => {
-              const siblings = allProducts.filter(
-                (p) => p.parentProduct === product.parentProduct && (p._id || p.id) !== (product._id || product.id)
-              );
-              const allFlavours = [product, ...siblings]
-                .filter((p) => isValidFlavour(p.flavour))
-                .sort((a, b) => (a.flavour || '').localeCompare(b.flavour || ''));
-              if (allFlavours.length <= 1) return null;
+              if (flavourVariants.length <= 1) return null;
 
               return (
                 <div className="mt-5">
                   <p className="mb-2 text-sm font-semibold text-[#0B1D35]">Flavour</p>
                   <div className="flex flex-wrap gap-2">
-                    {allFlavours.map((fp) => {
+                    {flavourVariants.map((fp) => {
                       const isActive = (fp._id || fp.id) === (product._id || product.id);
                       const colorClass = getFlavourColorClass(fp.flavour);
 
@@ -536,6 +752,24 @@ const ProductDetail = () => {
             </ul>
           </div>
         )}
+        {activeTab === 'nutrition' && (
+          <div className="mt-4 rounded-2xl border border-gray-100 bg-gray-50 p-6">
+            <h3 className="text-2xl font-bold text-[#0B1D35]">Nutrition Information</h3>
+            <p className="mt-2 text-sm text-gray-500">Approximate values based on product family and publicly available nutrition references.</p>
+            <div className="mt-5 overflow-hidden rounded-xl border border-gray-100 bg-white">
+              {nutritionData.map((item, idx) => (
+                <div
+                  key={item.label}
+                  className={`grid grid-cols-2 gap-3 px-4 py-3 text-sm ${idx !== nutritionData.length - 1 ? 'border-b border-gray-100' : ''}`}
+                >
+                  <span className="font-semibold text-[#0B1D35]">{item.label}</span>
+                  <span className="text-right text-gray-500">{item.value}</span>
+                </div>
+              ))}
+            </div>
+            <p className="mt-3 text-xs text-gray-400">Values may vary slightly by flavour and batch.</p>
+          </div>
+        )}
         {activeTab === 'storage' && (
           <div className="mt-4 rounded-2xl border border-gray-100 bg-gray-50 p-6">
             <h3 className="mb-4 text-2xl font-bold text-[#0B1D35]">How to Store</h3>
@@ -622,17 +856,19 @@ const ProductDetail = () => {
           </div>
         </section>
 
-        {product.parentProduct === 'crunchy-chana' && flavourStoryItems.length > 0 && (
+        {flavourStoryItems.length > 1 && (
           <section className="mt-8 pb-16">
-            <h2 className="font-serif text-2xl font-bold text-[#0B1D35] sm:text-3xl">Choose Your Crunch</h2>
+            <h2 className="font-serif text-2xl font-bold text-[#0B1D35] sm:text-3xl">
+              {product.parentProduct === 'crunchy-chana' ? 'Choose Your Crunch' : 'Choose Your Flavour'}
+            </h2>
             <div className="mb-2 mt-1 h-0.5 w-12 rounded-full bg-[#E8762A]" />
-            <p className="mb-4 text-sm text-gray-500">Tap a flavour to explore its product page.</p>
-            <div className="grid grid-flow-col auto-cols-[78%] gap-4 overflow-x-auto pb-2 sm:grid-flow-row sm:auto-cols-auto sm:grid-cols-3 lg:grid-cols-5">
+            <p className="mb-4 text-sm text-gray-500">Tap a flavour to explore its product page. Swipe horizontally to see all flavours.</p>
+            <div className="flex gap-4 overflow-x-auto pb-2">
               {flavourStoryItems.map((item) => (
                 <Link
                   key={item._id || item.id}
                   to={`/product/${item._id || item.id}`}
-                  className={`group overflow-hidden rounded-3xl border-0 shadow-card transition-all duration-300 hover:-translate-y-2 hover:shadow-strong ${
+                  className={`group min-w-[240px] max-w-[240px] shrink-0 overflow-hidden rounded-3xl border-0 shadow-card transition-all duration-300 hover:-translate-y-2 hover:shadow-strong ${
                     (item._id || item.id) === (product._id || product.id)
                       ? 'bg-white ring-2 ring-[#E8762A]'
                       : 'bg-white'
@@ -645,7 +881,7 @@ const ProductDetail = () => {
                     className="h-32 w-full object-cover transition-transform duration-500 group-hover:scale-108"
                   />
                   <div className="p-3">
-                    <span className={`inline-flex rounded-full border px-3 py-1 text-xs font-semibold ${flavorColorMap[item.flavour] || 'border-gray-200 bg-gray-50 text-[#0B1D35]'}`}>
+                    <span className={`inline-flex rounded-full border px-3 py-1 text-xs font-semibold ${getFlavourColorClass(item.flavour)}`}>
                       {item.flavour}
                     </span>
                     <p className="mt-2 font-sans text-lg font-bold text-[#0B1D35]">{getDisplayProductName(item)}</p>

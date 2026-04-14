@@ -23,6 +23,14 @@ const isValidFlavour = (value) => {
   return normalized.length > 0 && /[A-Za-z0-9]/.test(normalized);
 };
 
+const formatParentProductLabel = (parentKey) => {
+  if (!parentKey) return 'Other';
+  return parentKey
+    .split('-')
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(' ');
+};
+
 const Products = () => {
   const { category: urlCategory } = useParams();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -30,7 +38,7 @@ const Products = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [activeMainTab, setActiveMainTab] = useState(searchParams.get('tab') === 'enquire' ? 'enquire' : 'order');
-  const [orderFilter, setOrderFilter] = useState('all');
+  const [orderFilter, setOrderFilter] = useState(searchParams.get('orderFilter') || 'all');
   const [enquiryFilter, setEnquiryFilter] = useState('all');
   const [selectedFlavorByParent, setSelectedFlavorByParent] = useState({});
   const { addToCart } = useCart();
@@ -61,8 +69,15 @@ const Products = () => {
   useEffect(() => {
     const next = new URLSearchParams(searchParams);
     next.set('tab', activeMainTab);
+
+    if (orderFilter && orderFilter !== 'all') {
+      next.set('orderFilter', orderFilter);
+    } else {
+      next.delete('orderFilter');
+    }
+
     setSearchParams(next, { replace: true });
-  }, [activeMainTab, searchParams, setSearchParams]);
+  }, [activeMainTab, orderFilter, searchParams, setSearchParams]);
 
   const orderProducts = useMemo(() => products.filter((p) => p.productType === 'deliverable'), [products]);
   const enquiryProducts = useMemo(() => products.filter((p) => p.productType === 'enquiry'), [products]);
@@ -97,10 +112,17 @@ const Products = () => {
       })
       .filter((product) => {
         if (orderFilter === 'all') return true;
-        if (orderFilter === 'gud') return product.parentProduct === 'gud-chana';
-        return product.parentProduct === 'crunchy-chana';
+        return product.parentProduct === orderFilter;
       });
   }, [orderGroups, orderFilter, selectedFlavorByParent]);
+
+  const orderFilterOptions = useMemo(() => {
+    const keys = Array.from(new Set(orderGroups.map((group) => group.key).filter(Boolean)));
+    return [
+      { id: 'all', label: 'All' },
+      ...keys.map((key) => ({ id: key, label: formatParentProductLabel(key) })),
+    ];
+  }, [orderGroups]);
 
   const enquiryCategories = useMemo(() => {
     const categorySet = new Set(enquiryProducts.map((p) => p.category));
@@ -357,11 +379,7 @@ const Products = () => {
                   <span className="flex items-center gap-1 text-sm text-gray-500">
                     <Filter className="h-4 w-4" /> Filter:
                   </span>
-                  {[
-                    { id: 'all', label: 'All' },
-                    { id: 'gud', label: 'Gud Chana' },
-                    { id: 'crunchy', label: 'Crunchy Chana' },
-                  ].map((item) => (
+                  {orderFilterOptions.map((item) => (
                     <button
                       key={item.id}
                       className={`rounded-full border px-3 py-1 text-sm font-medium transition ${

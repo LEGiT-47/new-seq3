@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
+import Select from 'react-select';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 import { Sheet, SheetContent, SheetTrigger } from './ui/sheet';
@@ -12,7 +13,9 @@ import {
 } from './ui/dropdown-menu';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
-import { Menu, X, ShoppingCart, Phone, User, LogOut } from 'lucide-react';
+import { productAPI } from '../lib/api';
+import { getDisplayProductName } from '../lib/productUtils';
+import { Menu, ShoppingCart, Phone, User, LogOut } from 'lucide-react';
 import logo from '../assets/logo-br.jpg';
 
 const Navigation = () => {
@@ -21,6 +24,34 @@ const Navigation = () => {
   const { isAuthenticated, user, logout } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
+  const [searchOptions, setSearchOptions] = useState([]);
+
+  useEffect(() => {
+    const loadSearchProducts = async () => {
+      try {
+        const response = await productAPI.getAll();
+        const list = response?.data?.data || [];
+        const options = list
+          .filter((p) => !p.isHidden)
+          .map((p) => {
+            const name = getDisplayProductName(p);
+            const flavour = p.flavour ? ` | ${p.flavour}` : '';
+            const type = p.productType === 'deliverable' ? 'Deliverable' : 'Enquiry';
+            return {
+              value: p._id || p.id,
+              label: `${name}${flavour}`,
+              type,
+              product: p,
+            };
+          });
+        setSearchOptions(options);
+      } catch (error) {
+        setSearchOptions([]);
+      }
+    };
+
+    loadSearchProducts();
+  }, []);
 
   const handleLogout = () => {
     logout();
@@ -31,8 +62,8 @@ const Navigation = () => {
     { name: 'Home', path: '/' },
     { name: 'Products', path: '/products' },
     { name: 'Gifting', path: '/gifting' },
-    { name: 'Contract Manufacturing', path: '/contract-manufacturing' },
-    { name: 'About Us', path: '/about' },
+    { name: 'Manufacturing', path: '/contract-manufacturing' },
+    { name: 'About', path: '/about' },
     { name: 'Contact', path: '/contact' },
   ];
 
@@ -40,6 +71,52 @@ const Navigation = () => {
     if (path === '/') return location.pathname === '/';
     return location.pathname.startsWith(path);
   };
+
+  const searchBar = useMemo(
+    () => (
+      <div className="hidden xl:block w-[260px] 2xl:w-[320px]">
+        <Select
+          isClearable
+          options={searchOptions}
+          placeholder="Search products..."
+          onChange={(selected) => {
+            if (selected?.value) {
+              navigate(`/product/${selected.value}`);
+            }
+          }}
+          filterOption={(candidate, input) => {
+            const text = `${candidate.label} ${candidate.data?.product?.category || ''} ${candidate.data?.product?.productType || ''}`.toLowerCase();
+            return text.includes(input.toLowerCase());
+          }}
+          formatOptionLabel={(option) => (
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-sm font-semibold text-[#0B1D35]">{option.label}</span>
+              <span className="rounded-full bg-gray-100 px-2 py-0.5 text-[10px] font-semibold text-gray-600">
+                {option.type}
+              </span>
+            </div>
+          )}
+          styles={{
+            control: (base, state) => ({
+              ...base,
+              minHeight: 38,
+              borderRadius: 999,
+              borderColor: state.isFocused ? '#C9A84C' : '#ffffff22',
+              backgroundColor: '#ffffff10',
+              boxShadow: state.isFocused ? '0 0 0 1px #C9A84C' : 'none',
+              '&:hover': { borderColor: '#C9A84C' },
+            }),
+            singleValue: (base) => ({ ...base, color: '#F8F4EC' }),
+            input: (base) => ({ ...base, color: '#F8F4EC' }),
+            placeholder: (base) => ({ ...base, color: '#B8C8D8' }),
+            menu: (base) => ({ ...base, borderRadius: 12, overflow: 'hidden', zIndex: 60 }),
+            indicatorSeparator: () => ({ display: 'none' }),
+          }}
+        />
+      </div>
+    ),
+    [navigate, searchOptions]
+  );
 
   return (
     <nav className="sticky top-9 z-40 border-b border-[#26486E] bg-[#0B1D35]/95 backdrop-blur-sm shadow-soft">
@@ -66,16 +143,16 @@ const Navigation = () => {
                 S
               </span>
             </div>
-            <span className="font-display text-xl font-normal tracking-wide text-[#F8F4EC]">SEQUEIRA FOODS</span>
+              <span className="hidden whitespace-nowrap font-display text-lg font-normal tracking-wide text-[#F8F4EC] lg:block">SEQUEIRA FOODS</span>
           </Link>
 
           {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center space-x-8">
+            <div className="hidden lg:ml-6 lg:flex items-center space-x-5 xl:space-x-6 xl:ml-8">
             {navigation.map((item) => (
               <Link
                 key={item.name}
                 to={item.path}
-                className={`text-sm transition-colors ${
+                  className={`whitespace-nowrap text-sm transition-colors ${
                   isActive(item.path)
                     ? 'font-semibold text-[#C9A84C]'
                     : 'text-[#B8C8D8] hover:text-[#F8F4EC]'
@@ -87,15 +164,17 @@ const Navigation = () => {
           </div>
 
           {/* Actions */}
-          <div className="flex items-center space-x-4">
-            {/* Phone */}
-            <a
-              href="tel:+919930709557"
-              className="hidden items-center space-x-2 text-[#B8C8D8] transition-colors hover:text-[#C9A84C] sm:flex"
+          <div className="flex items-center space-x-3 lg:ml-6 xl:ml-8">
+            {searchBar}
+
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-[#F8F4EC] hover:bg-white/10 hover:text-white xl:hidden"
+              onClick={() => navigate('/search')}
             >
-              <Phone className="h-4 w-4" />
-              <span className="text-sm font-medium">+91 99307 09557</span>
-            </a>
+              Search
+            </Button>
 
             {/* Cart */}
             <Button
@@ -119,7 +198,7 @@ const Navigation = () => {
             {isAuthenticated && user ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="sm" className="hidden gap-2 border-white/20 bg-white/10 text-[#F8F4EC] hover:bg-white/20 hover:text-white sm:flex">
+                  <Button variant="outline" size="sm" className="hidden gap-2 border-white/20 bg-white/10 text-[#F8F4EC] hover:bg-white/20 hover:text-white xl:flex">
                     <User className="h-4 w-4 text-[#F8F4EC]" />
                     <span className="text-xs md:text-sm">{user.name?.split(' ')[0]}</span>
                   </Button>
@@ -144,7 +223,7 @@ const Navigation = () => {
                 </DropdownMenuContent>
               </DropdownMenu>
             ) : (
-              <div className="hidden sm:flex items-center gap-2">
+              <div className="hidden xl:flex items-center gap-2">
                 <Button
                   variant="ghost"
                   size="sm"
@@ -166,7 +245,7 @@ const Navigation = () => {
             {/* Mobile Menu */}
             <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
               <SheetTrigger asChild>
-                <Button variant="ghost" size="sm" className="text-[#F8F4EC] hover:bg-white/10 hover:text-white md:hidden">
+                <Button variant="ghost" size="sm" className="text-[#F8F4EC] hover:bg-white/10 hover:text-white lg:hidden">
                   <Menu className="h-5 w-5 text-[#F8F4EC]" />
                 </Button>
               </SheetTrigger>
@@ -174,6 +253,13 @@ const Navigation = () => {
                 <div className="flex flex-col space-y-6 mt-8">
                   {/* Mobile Navigation */}
                   <div className="flex flex-col space-y-4">
+                    <Link
+                      to="/search"
+                      className="text-lg font-medium transition-colors hover:text-primary text-muted-foreground"
+                      onClick={() => setIsMobileMenuOpen(false)}
+                    >
+                      Search
+                    </Link>
                     {navigation.map((item) => (
                       <Link
                         key={item.name}

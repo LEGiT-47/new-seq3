@@ -27,13 +27,43 @@ const deliverableCategoryTiles = [
     id: 'gud-chana',
     name: 'Gud Chana',
     image: '/images/categories/Gemini_Generated_Image_1.png',
-    to: '/products?tab=order',
+    to: '/products?tab=order&orderFilter=gud-chana',
   },
   {
     id: 'crunchy-chana',
     name: 'Crunchy Chana',
     image: '/images/categories/Gemini_Generated_Image_2.png',
-    to: '/products?tab=order',
+    to: '/products?tab=order&orderFilter=crunchy-chana',
+  },
+  {
+    id: 'savory-makhana',
+    name: 'Savory Makhana',
+    image: '/images/categories/Gemini_Generated_Image_4.png',
+    to: '/products?tab=order&orderFilter=savory-makhana',
+  },
+  {
+    id: 'savory-cashew',
+    name: 'Savory Cashew',
+    image: '/images/categories/Gemini_Generated_Image_5.png',
+    to: '/products?tab=order&orderFilter=savory-cashew',
+  },
+  {
+    id: 'savory-almond',
+    name: 'Savory Almond',
+    image: '/images/categories/Gemini_Generated_Image_3.png',
+    to: '/products?tab=order&orderFilter=savory-almond',
+  },
+  {
+    id: 'savory-peanut',
+    name: 'Savory Peanut',
+    image: '/images/categories/Gemini_Generated_Image_6.png',
+    to: '/products?tab=order&orderFilter=savory-peanut',
+  },
+  {
+    id: 'savory-chana',
+    name: 'Savory Chana',
+    image: '/images/categories/Gemini_Generated_Image_7.png',
+    to: '/products?tab=order&orderFilter=savory-chana',
   },
 ];
 

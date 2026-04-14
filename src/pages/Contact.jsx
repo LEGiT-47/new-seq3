@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
 import { Input } from '../components/ui/input';
 import { Textarea } from '../components/ui/textarea';
 import { Label } from '../components/ui/label';
-import { Phone, Mail, MapPin, Clock, MessageCircle, Send } from 'lucide-react';
+import { Phone, Mail, MapPin, Clock, MessageCircle, Send, Facebook, Instagram } from 'lucide-react';
 import { toast } from 'sonner';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -44,10 +44,10 @@ const LocationWithMap = () => {
 
     const customIcon = L.icon({
       iconUrl:
-        'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIzMiIgaGVpZ2h0PSIzMiIgdmlld0JveD0iMCAwIDMyIDMyIj48Y2lyY2xlIGN4PSIxNiIgY3k9IjE2IiByPSIxMiIgZmlsbD0iI2NmMzMzMiIvPjwvc3ZnPg==',
-      iconSize: [32, 32],
-      iconAnchor: [16, 32],
-      popupAnchor: [0, -32],
+        'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIzNCIgaGVpZ2h0PSI0NCIgdmlld0JveD0iMCAwIDM0IDQ0Ij48cGF0aCBkPSJNMTcgMkM5LjgyNyAyIDQgNy44MjcgNCAxNWMwIDkuMzYxIDEzIDI3IDEzIDI3czEzLTE3LjYzOSAxMy0yN0MzMCA3LjgyNyAyNC4xNzMgMiAxNyAyem0wIDE4LjVjLTIuNDg1IDAtNC41LTIuMDE1LTQuNS00LjVzMi4wMTUtNC41IDQuNS00LjUgNC41IDIuMDE1IDQuNSA0LjUtMi4wMTUgNC41LTQuNSA0LjV6IiBmaWxsPSIjRTg3NjJBIi8+PC9zdmc+',
+      iconSize: [34, 44],
+      iconAnchor: [17, 42],
+      popupAnchor: [0, -36],
     });
 
     const marker = L.marker([lat, lng], { icon: customIcon }).addTo(map);
@@ -166,12 +166,14 @@ Please get back to me. Thank you!`;
       handle: '@Sequeirafoods',
       href: 'https://www.facebook.com/people/Sequeirafoods/61576995125995/',
       bg: '#1877F2',
+      icon: Facebook,
     },
     {
       name: 'Instagram',
       handle: '@sequeirafoods',
       href: 'https://instagram.com/sequeirafoods',
       bg: 'linear-gradient(45deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888)',
+      icon: Instagram,
     },
   ];
 
@@ -227,12 +229,17 @@ Please get back to me. Thank you!`;
                       rel="noreferrer"
                       className="flex items-center gap-3 rounded-xl border border-gray-100 bg-white p-4 shadow-soft transition hover:-translate-y-0.5 hover:shadow-md"
                     >
+                      {(() => {
+                        const Icon = social.icon;
+                        return (
                       <div
                         className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-sm font-bold text-white"
                         style={{ background: social.bg }}
                       >
-                        {social.name.charAt(0)}
+                        <Icon className="h-5 w-5" />
                       </div>
+                        );
+                      })()}
                       <div>
                         <p className="text-sm font-bold text-[#0B1D35]">{social.name}</p>
                         <p className="text-xs text-gray-500">{social.handle}</p>

@@ -20,6 +20,7 @@ import Gifting from './pages/Gifting';
 import About from './pages/About';
 import Contact from './pages/Contact';
 import ContractManufacturing from './pages/ContractManufacturing';
+import SearchPage from './pages/Search';
 import Cart from './components/Cart';
 import WhatsAppFloat from './components/WhatsAppFloat';
 import FestivePopup from './components/FestivePopup';
@@ -65,6 +66,7 @@ function AppLayout() {
           <Route path="/gifting" element={<Gifting />} />
           <Route path="/about" element={<About />} />
           <Route path="/contact" element={<Contact />} />
+          <Route path="/search" element={<SearchPage />} />
           <Route path="/contract-manufacturing" element={<ContractManufacturing />} />
           <Route path="/admin/login" element={<AdminLogin />} />
           <Route path="/admin/dashboard" element={<AdminDashboard />} />
