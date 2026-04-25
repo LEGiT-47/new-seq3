@@ -5,7 +5,6 @@ import { Card, CardContent } from '../components/ui/card';
 import { useCart } from '../context/CartContext';
 import { productAPI, getImageUrl } from '../lib/api';
 import { buildWhatsAppEnquiryLink, getDisplayProductName } from '../lib/productUtils';
-import { getFlavourColorClass } from '../lib/flavourStyles';
 import { toast } from 'sonner';
 import { ShoppingCart, Truck, ShieldCheck, PackageCheck, Plus, Minus, Star, MessageCircle, ChevronLeft, ChevronRight } from 'lucide-react';
 
@@ -177,55 +176,43 @@ const ProductDetail = () => {
   const relatedProducts = useMemo(() => {
     if (!product) return [];
     const productId = product._id || product.id;
-    const currentParent = product.parentProduct || null;
-
-    const crossSellMap = {
-      'gud-chana': ['crunchy-chana', 'savoury-almond', 'savoury-cashew', 'savoury-peanut', 'savoury-makhana'],
-      'crunchy-chana': ['gud-chana', 'savoury-almond', 'savoury-cashew', 'savoury-peanut', 'savoury-makhana'],
-      'savoury-almond': ['crunchy-chana', 'savoury-cashew', 'savoury-peanut', 'gud-chana', 'savoury-makhana'],
-      'savoury-cashew': ['crunchy-chana', 'savoury-almond', 'savoury-peanut', 'gud-chana', 'savoury-makhana'],
-      'savoury-peanut': ['crunchy-chana', 'savoury-cashew', 'savoury-almond', 'gud-chana', 'savoury-makhana'],
-      'savoury-makhana': ['crunchy-chana', 'savoury-almond', 'savoury-cashew', 'savoury-peanut', 'gud-chana'],
-      'savoury-chana': ['crunchy-chana', 'gud-chana', 'savoury-almond', 'savoury-cashew', 'savoury-peanut'],
-    };
-
-    const defaultCrossSellOrder = ['crunchy-chana', 'gud-chana', 'savoury-almond', 'savoury-cashew', 'savoury-peanut', 'savoury-makhana', 'savoury-chana'];
-    const preferredParents = (crossSellMap[currentParent] || defaultCrossSellOrder).filter((parent) => parent !== currentParent);
-
-    const allCandidates = allProducts.filter(
-      (p) => p.productType === 'deliverable' && (p._id || p.id) !== productId
+    const currentCategory = product.category;
+    const candidates = allProducts.filter(
+      (p) => (p._id || p.id) !== productId && p.productType === 'deliverable'
     );
-
-    const pickOnePerParent = (parents, source, usedIds) => {
-      const picked = [];
-      parents.forEach((parent) => {
-        const match = source.find((p) => p.parentProduct === parent && !usedIds.has(p._id || p.id));
-        if (match) {
-          picked.push(match);
-          usedIds.add(match._id || match.id);
-        }
-      });
-      return picked;
-    };
 
     const usedIds = new Set();
-    const preferred = pickOnePerParent(preferredParents, allCandidates, usedIds);
+    const usedCategories = new Set();
+    const result = [];
 
-    const otherParents = [...new Set(allCandidates.map((p) => p.parentProduct).filter(Boolean))]
-      .filter((parent) => parent !== currentParent && !preferredParents.includes(parent));
-    const diversified = pickOnePerParent(otherParents, allCandidates, usedIds);
+    const pickUniqueCategory = (pool) => {
+      for (const item of pool) {
+        const itemId = item._id || item.id;
+        const itemCategory = item.category || 'other';
+        if (usedIds.has(itemId)) continue;
+        if (usedCategories.has(itemCategory)) continue;
 
-    const spillover = allCandidates.filter(
-      (p) =>
-        !usedIds.has(p._id || p.id) &&
-        p.parentProduct !== currentParent
-    );
+        usedIds.add(itemId);
+        usedCategories.add(itemCategory);
+        result.push(item);
+        if (result.length >= 4) break;
+      }
+    };
 
-    const sameParentFallback = allCandidates.filter(
-      (p) => !usedIds.has(p._id || p.id) && p.parentProduct === currentParent
-    );
+    const differentCategory = candidates.filter((p) => p.category && p.category !== currentCategory);
+    const sameCategory = candidates.filter((p) => p.category === currentCategory);
+    const noCategory = candidates.filter((p) => !p.category);
 
-    return [...preferred, ...diversified, ...spillover, ...sameParentFallback].slice(0, 4);
+    pickUniqueCategory(differentCategory);
+    if (result.length < 4) pickUniqueCategory(sameCategory);
+    if (result.length < 4) pickUniqueCategory(noCategory);
+
+    if (result.length < 4) {
+      const remaining = candidates.filter((p) => !usedIds.has(p._id || p.id));
+      result.push(...remaining.slice(0, 4 - result.length));
+    }
+
+    return result.slice(0, 4);
   }, [allProducts, product]);
 
   const flavourVariants = useMemo(() => {
@@ -235,31 +222,6 @@ const ProductDetail = () => {
       .filter((p) => p.parentProduct === product.parentProduct && isValidFlavour(p.flavour))
       .sort((a, b) => (a.flavour || '').localeCompare(b.flavour || ''));
   }, [allProducts, product]);
-
-  const flavourStoryItems = useMemo(() => {
-    const crunchyCopy = {
-      BBQ: 'Smoky and bold with grill-style notes.',
-      Cheese: 'Creamy cheesy crunch for comfort snacking.',
-      'Cream & Onion': 'Tangy and savoury with a smooth finish.',
-      'Peri Peri': 'Spicy kick that builds with every bite.',
-      default: 'Cool minty profile with masala depth.',
-    };
-
-    return flavourVariants.map((p) => {
-      if (p.parentProduct === 'crunchy-chana') {
-        return {
-          ...p,
-          story: crunchyCopy[p.flavour] || crunchyCopy.default,
-        };
-      }
-
-      const flavourText = p.flavour ? `${p.flavour} flavour crafted for everyday snacking.` : 'Balanced flavour crafted for everyday snacking.';
-      return {
-        ...p,
-        story: p.shortDescription || p.tagline || flavourText,
-      };
-    });
-  }, [flavourVariants]);
 
   const safeImageGallery = useMemo(() => {
     if (!product) return [];
@@ -540,23 +502,30 @@ const ProductDetail = () => {
 
               return (
                 <div className="mt-5">
-                  <p className="mb-2 text-sm font-semibold text-[#0B1D35]">Flavour</p>
-                  <div className="flex flex-wrap gap-2">
+                  <p className="mb-2 text-sm font-semibold text-[#0B1D35]">Choose Variant</p>
+                  <div className="flex gap-3 overflow-x-auto pb-2">
                     {flavourVariants.map((fp) => {
                       const isActive = (fp._id || fp.id) === (product._id || product.id);
-                      const colorClass = getFlavourColorClass(fp.flavour);
+                      const variantLabel = fp.flavour || getDisplayProductName(fp);
 
                       return (
                         <button
                           key={fp._id || fp.id}
                           onClick={() => navigate(`/product/${fp._id || fp.id}`)}
-                          className={`rounded-full border px-3 py-1 text-sm font-semibold transition ${
+                          className={`min-w-[150px] shrink-0 overflow-hidden rounded-2xl border bg-white text-left transition ${
                             isActive
-                              ? `${colorClass} ring-2 ring-[#C9A84C] ring-offset-2`
-                              : 'border-gray-200 bg-gray-50 text-gray-600 hover:border-[#E8762A] hover:text-[#0B1D35]'
+                              ? 'border-[#0B1D35] ring-2 ring-[#0B1D35]/25 ring-offset-2'
+                              : 'border-gray-200 hover:border-[#E8762A]'
                           }`}
                         >
-                          {fp.flavour}
+                          <div className="h-20 w-full overflow-hidden bg-gray-50">
+                            <img src={getImageUrl(fp.image)} alt={variantLabel} className="h-full w-full object-cover" />
+                          </div>
+                          <div className="p-2.5">
+                            <p className="line-clamp-1 text-xs font-semibold text-[#0B1D35]">{variantLabel}</p>
+                            <p className="mt-1 text-sm font-bold text-[#0B1D35]">Rs. {formatPrice(fp.price)}</p>
+                            {fp.weight && <p className="mt-0.5 text-[11px] text-gray-500">{fp.weight}</p>}
+                          </div>
                         </button>
                       );
                     })}
@@ -817,9 +786,9 @@ const ProductDetail = () => {
         <section className="mt-8">
           <h2 className="font-serif text-2xl font-bold text-[#0B1D35] sm:text-3xl">You May Also Like</h2>
           <div className="mb-5 mt-1 h-0.5 w-12 rounded-full bg-[#E8762A]" />
-          <div className="grid grid-flow-col auto-cols-[82%] gap-4 overflow-x-auto pb-2 sm:grid-flow-row sm:auto-cols-auto sm:grid-cols-2 lg:grid-cols-4">
+          <div className="flex gap-4 overflow-x-auto pb-2">
             {relatedProducts.map((item) => (
-              <Link key={item._id || item.id} to={`/product/${item._id || item.id}`}>
+              <Link key={item._id || item.id} to={`/product/${item._id || item.id}`} className="min-w-full shrink-0 sm:min-w-[48%] lg:min-w-[25%]">
                 <Card className="group overflow-hidden rounded-3xl border-0 bg-white shadow-card transition-all duration-300 hover:-translate-y-2 hover:shadow-strong">
                   <div className="h-1 w-full bg-gradient-to-r from-[#E8762A] to-[#f0943a]" />
                   <div className="overflow-hidden">
@@ -855,43 +824,6 @@ const ProductDetail = () => {
             ))}
           </div>
         </section>
-
-        {flavourStoryItems.length > 1 && (
-          <section className="mt-8 pb-16">
-            <h2 className="font-serif text-2xl font-bold text-[#0B1D35] sm:text-3xl">
-              {product.parentProduct === 'crunchy-chana' ? 'Choose Your Crunch' : 'Choose Your Flavour'}
-            </h2>
-            <div className="mb-2 mt-1 h-0.5 w-12 rounded-full bg-[#E8762A]" />
-            <p className="mb-4 text-sm text-gray-500">Tap a flavour to explore its product page. Swipe horizontally to see all flavours.</p>
-            <div className="flex gap-4 overflow-x-auto pb-2">
-              {flavourStoryItems.map((item) => (
-                <Link
-                  key={item._id || item.id}
-                  to={`/product/${item._id || item.id}`}
-                  className={`group min-w-[240px] max-w-[240px] shrink-0 overflow-hidden rounded-3xl border-0 shadow-card transition-all duration-300 hover:-translate-y-2 hover:shadow-strong ${
-                    (item._id || item.id) === (product._id || product.id)
-                      ? 'bg-white ring-2 ring-[#E8762A]'
-                      : 'bg-white'
-                  }`}
-                >
-                  <div className="h-1 w-full bg-gradient-to-r from-[#2D5016] to-[#4a7a24]" />
-                  <img
-                    src={getImageUrl(item.image)}
-                    alt={getDisplayProductName(item)}
-                    className="h-32 w-full object-cover transition-transform duration-500 group-hover:scale-108"
-                  />
-                  <div className="p-3">
-                    <span className={`inline-flex rounded-full border px-3 py-1 text-xs font-semibold ${getFlavourColorClass(item.flavour)}`}>
-                      {item.flavour}
-                    </span>
-                    <p className="mt-2 font-sans text-lg font-bold text-[#0B1D35]">{getDisplayProductName(item)}</p>
-                    <p className="mt-1 text-xs text-gray-500">{item.story}</p>
-                  </div>
-                </Link>
-              ))}
-            </div>
-          </section>
-        )}
       </div>
 
       {product.productType === 'deliverable' ? (

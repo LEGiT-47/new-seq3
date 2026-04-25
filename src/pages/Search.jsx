@@ -14,6 +14,11 @@ const SearchPage = () => {
   const [typeFilter, setTypeFilter] = useState('all');
 
   const query = searchParams.get('q') || '';
+  const [searchInput, setSearchInput] = useState(query);
+
+  useEffect(() => {
+    setSearchInput(query);
+  }, [query]);
 
   useEffect(() => {
     const loadProducts = async () => {
@@ -46,7 +51,7 @@ const SearchPage = () => {
   }, [products]);
 
   const filteredProducts = useMemo(() => {
-    const q = query.trim().toLowerCase();
+    const q = searchInput.trim().toLowerCase();
 
     return products
       .filter((item) => {
@@ -75,7 +80,7 @@ const SearchPage = () => {
         if (a.productType === b.productType) return getDisplayProductName(a).localeCompare(getDisplayProductName(b));
         return a.productType === 'deliverable' ? -1 : 1;
       });
-  }, [products, query, typeFilter]);
+  }, [products, searchInput, typeFilter]);
 
   return (
     <div className="min-h-screen bg-white py-10">
@@ -95,14 +100,29 @@ const SearchPage = () => {
                 isClearable
                 options={options}
                 placeholder="Search by product name or flavour"
+                inputValue={searchInput}
+                onInputChange={(value, meta) => {
+                  if (meta.action === 'input-change') {
+                    setSearchInput(value);
+                  }
+                  return value;
+                }}
                 onChange={(selected) => {
                   if (selected?.label) {
+                    setSearchInput(selected.label);
                     setSearchParams((prev) => {
                       const next = new URLSearchParams(prev);
                       next.set('q', selected.label);
                       return next;
                     });
+                    return;
                   }
+                  setSearchInput('');
+                  setSearchParams((prev) => {
+                    const next = new URLSearchParams(prev);
+                    next.delete('q');
+                    return next;
+                  });
                 }}
                 filterOption={(candidate, input) => {
                   const text = `${candidate.label} ${candidate.data?.product?.category || ''} ${candidate.data?.product?.productType || ''}`.toLowerCase();

@@ -23,6 +23,8 @@ const isValidFlavour = (value) => {
   return normalized.length > 0 && /[A-Za-z0-9]/.test(normalized);
 };
 
+const chanaParentKeys = ['gud-chana', 'crunchy-chana', 'savory-chana', 'savoury-chana'];
+
 const formatParentProductLabel = (parentKey) => {
   if (!parentKey) return 'Other';
   return parentKey
@@ -112,15 +114,23 @@ const Products = () => {
       })
       .filter((product) => {
         if (orderFilter === 'all') return true;
+        if (orderFilter === 'chana') return chanaParentKeys.includes(product.parentProduct);
         return product.parentProduct === orderFilter;
       });
   }, [orderGroups, orderFilter, selectedFlavorByParent]);
 
   const orderFilterOptions = useMemo(() => {
     const keys = Array.from(new Set(orderGroups.map((group) => group.key).filter(Boolean)));
+
+    const hasChanaProducts = keys.some((key) => chanaParentKeys.includes(key));
+    const chanaSubcategories = keys.filter((key) => chanaParentKeys.includes(key));
+    const otherKeys = keys.filter((key) => !chanaParentKeys.includes(key));
+
     return [
       { id: 'all', label: 'All' },
-      ...keys.map((key) => ({ id: key, label: formatParentProductLabel(key) })),
+      ...(hasChanaProducts ? [{ id: 'chana', label: 'Chana' }] : []),
+      ...chanaSubcategories.map((key) => ({ id: key, label: formatParentProductLabel(key) })),
+      ...otherKeys.map((key) => ({ id: key, label: formatParentProductLabel(key) })),
     ];
   }, [orderGroups]);
 
@@ -176,9 +186,13 @@ const Products = () => {
             <p className="line-clamp-2 text-sm text-gray-500">{product.description}</p>
           </div>
 
-          {hasFlavorGroup && (
-            <div className="flex flex-wrap gap-2">
-              {group.products.map((flavorProduct) => (
+          {hasFlavorGroup && (() => {
+            const visible = group.products.slice(0, 3);
+            const extra = group.products.length - 3;
+
+            return (
+            <div className="flex flex-wrap gap-1.5">
+              {visible.map((flavorProduct) => (
                 (() => {
                   const colorClass = getFlavourColorClass(flavorProduct.flavour);
                   const isActive = (selectedFlavorByParent[groupKey] || group.products[0].flavour) === flavorProduct.flavour;
@@ -202,8 +216,14 @@ const Products = () => {
                   );
                 })()
               ))}
+              {extra > 0 && (
+                <span className="rounded-full border border-gray-200 bg-gray-50 px-3 py-1 text-xs font-medium text-gray-400">
+                  +{extra} more
+                </span>
+              )}
             </div>
-          )}
+            );
+          })()}
 
           {!hasFlavorGroup && Array.isArray(product.flavors) && product.flavors.length > 0 && (
             <div className="flex flex-wrap gap-2">

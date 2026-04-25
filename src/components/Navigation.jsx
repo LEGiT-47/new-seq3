@@ -25,6 +25,7 @@ const Navigation = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const [searchOptions, setSearchOptions] = useState([]);
+  const [searchInput, setSearchInput] = useState('');
 
   useEffect(() => {
     const loadSearchProducts = async () => {
@@ -79,10 +80,23 @@ const Navigation = () => {
           isClearable
           options={searchOptions}
           placeholder="Search products..."
+          inputValue={searchInput}
+          onInputChange={(value, meta) => {
+            if (meta.action === 'input-change') {
+              setSearchInput(value);
+            }
+            if (meta.action === 'set-value') {
+              setSearchInput('');
+            }
+            return value;
+          }}
           onChange={(selected) => {
             if (selected?.value) {
+              setSearchInput(selected.label || '');
               navigate(`/product/${selected.value}`);
+              return;
             }
+            setSearchInput('');
           }}
           filterOption={(candidate, input) => {
             const text = `${candidate.label} ${candidate.data?.product?.category || ''} ${candidate.data?.product?.productType || ''}`.toLowerCase();
@@ -115,7 +129,7 @@ const Navigation = () => {
         />
       </div>
     ),
-    [navigate, searchOptions]
+    [navigate, searchInput, searchOptions]
   );
 
   return (

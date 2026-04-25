@@ -24,16 +24,10 @@ const categoryTabs = [
 
 const deliverableCategoryTiles = [
   {
-    id: 'gud-chana',
-    name: 'Gud Chana',
+    id: 'chana',
+    name: 'Chana',
     image: '/images/categories/Gemini_Generated_Image_1.png',
-    to: '/products?tab=order&orderFilter=gud-chana',
-  },
-  {
-    id: 'crunchy-chana',
-    name: 'Crunchy Chana',
-    image: '/images/categories/Gemini_Generated_Image_2.png',
-    to: '/products?tab=order&orderFilter=crunchy-chana',
+    to: '/products?tab=order&orderFilter=chana',
   },
   {
     id: 'savory-makhana',
@@ -58,12 +52,6 @@ const deliverableCategoryTiles = [
     name: 'Savory Peanut',
     image: '/images/categories/Gemini_Generated_Image_6.png',
     to: '/products?tab=order&orderFilter=savory-peanut',
-  },
-  {
-    id: 'savory-chana',
-    name: 'Savory Chana',
-    image: '/images/categories/Gemini_Generated_Image_7.png',
-    to: '/products?tab=order&orderFilter=savory-chana',
   },
 ];
 
