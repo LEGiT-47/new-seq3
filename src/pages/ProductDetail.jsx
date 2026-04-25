@@ -13,6 +13,28 @@ const isValidFlavour = (value) => {
   return normalized.length > 0 && /[A-Za-z0-9]/.test(normalized);
 };
 
+const preferredDeliverableTypes = [
+  'crunchy-chana',
+  'gud-chana',
+  'savory-chana',
+  'savory-makhana',
+  'savory-cashew',
+  'savory-almond',
+  'savory-peanut',
+];
+
+const normalizeTypeKey = (value) => String(value || '').trim().toLowerCase().replace(/^savoury-/, 'savory-');
+
+const getRecommendationTypeKey = (item) => {
+  const normalizedParent = normalizeTypeKey(item?.parentProduct);
+  if (normalizedParent) return normalizedParent;
+
+  const normalizedCategory = normalizeTypeKey(item?.category);
+  if (normalizedCategory) return `category:${normalizedCategory}`;
+
+  return `id:${item?._id || item?.id || ''}`;
+};
+
 const fallbackNutritionByParent = {
   'gud-chana': {
     serving: 'Per 100g',
@@ -176,43 +198,26 @@ const ProductDetail = () => {
   const relatedProducts = useMemo(() => {
     if (!product) return [];
     const productId = product._id || product.id;
-    const currentCategory = product.category;
+    const currentTypeKey = getRecommendationTypeKey(product);
     const candidates = allProducts.filter(
       (p) => (p._id || p.id) !== productId && p.productType === 'deliverable'
     );
 
-    const usedIds = new Set();
-    const usedCategories = new Set();
-    const result = [];
-
-    const pickUniqueCategory = (pool) => {
-      for (const item of pool) {
-        const itemId = item._id || item.id;
-        const itemCategory = item.category || 'other';
-        if (usedIds.has(itemId)) continue;
-        if (usedCategories.has(itemCategory)) continue;
-
-        usedIds.add(itemId);
-        usedCategories.add(itemCategory);
-        result.push(item);
-        if (result.length >= 4) break;
+    const byType = new Map();
+    for (const item of candidates) {
+      const typeKey = getRecommendationTypeKey(item);
+      if (typeKey === currentTypeKey) continue;
+      if (!byType.has(typeKey)) {
+        byType.set(typeKey, item);
       }
-    };
-
-    const differentCategory = candidates.filter((p) => p.category && p.category !== currentCategory);
-    const sameCategory = candidates.filter((p) => p.category === currentCategory);
-    const noCategory = candidates.filter((p) => !p.category);
-
-    pickUniqueCategory(differentCategory);
-    if (result.length < 4) pickUniqueCategory(sameCategory);
-    if (result.length < 4) pickUniqueCategory(noCategory);
-
-    if (result.length < 4) {
-      const remaining = candidates.filter((p) => !usedIds.has(p._id || p.id));
-      result.push(...remaining.slice(0, 4 - result.length));
     }
 
-    return result.slice(0, 4);
+    const orderedTypeKeys = [
+      ...preferredDeliverableTypes.filter((key) => byType.has(key)),
+      ...Array.from(byType.keys()).filter((key) => !preferredDeliverableTypes.includes(key)),
+    ];
+
+    return orderedTypeKeys.slice(0, 6).map((key) => byType.get(key)).filter(Boolean);
   }, [allProducts, product]);
 
   const flavourVariants = useMemo(() => {
