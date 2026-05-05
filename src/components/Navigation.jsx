@@ -217,20 +217,20 @@ const Navigation = () => {
                     <span className="text-xs md:text-sm">{user.name?.split(' ')[0]}</span>
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-48">
+                <DropdownMenuContent align="end" className="w-56 border-white/10 bg-[#0B1F3B] p-2 text-[#F8F4EC] shadow-2xl">
                   <div className="px-2 py-1.5 text-sm">
-                    <p className="font-medium">{user.name}</p>
-                    <p className="text-xs text-muted-foreground">{user.email}</p>
+                    <p className="font-medium text-[#F8F4EC]">{user.name}</p>
+                    <p className="text-xs text-[#C9A84C]">{user.email}</p>
                   </div>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem asChild>
+                  <DropdownMenuSeparator className="bg-white/10" />
+                  <DropdownMenuItem asChild className="cursor-pointer text-[#F8F4EC] hover:bg-white/10 hover:text-white">
                     <Link to="/profile">View Profile</Link>
                   </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
+                  <DropdownMenuItem asChild className="cursor-pointer text-[#F8F4EC] hover:bg-white/10 hover:text-white">
                     <Link to="/orders">Order History</Link>
                   </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={handleLogout} className="text-destructive cursor-pointer">
+                  <DropdownMenuSeparator className="bg-white/10" />
+                  <DropdownMenuItem onClick={handleLogout} className="cursor-pointer text-[#E8762A] hover:bg-white/10 hover:text-[#F8F4EC]">
                     <LogOut className="h-4 w-4 mr-2" />
                     Logout
                   </DropdownMenuItem>
