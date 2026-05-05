@@ -21,6 +21,7 @@ const Checkout = () => {
 
   const [order, setOrder] = useState(null);
   const [razorpayKey, setRazorpayKey] = useState(null);
+  const [paymentCooldownMessage, setPaymentCooldownMessage] = useState('');
 
   // Get only delivery items
   const deliveryItems = getDeliveryItems();
@@ -104,6 +105,7 @@ const Checkout = () => {
     }
 
     setLoading(true);
+    setPaymentCooldownMessage('');
     try {
       const orderData = {
         items: deliveryItems.map((item) => ({
@@ -175,6 +177,13 @@ const Checkout = () => {
           contact: selectedAddress?.phone || user?.phone || '',
           email: user?.email || '',
         },
+        modal: {
+          ondismiss: () => {
+            setLoading(false);
+            setPaymentCooldownMessage('Payment was cancelled. Please wait about 2 minutes before trying again, or the backend may reject the retry.');
+            toast.info('Payment cancelled. Please wait about 2 minutes before retrying.');
+          },
+        },
         theme: {
           color: '#0066cc',
         },
@@ -183,7 +192,14 @@ const Checkout = () => {
       const rzp = new window.Razorpay(options);
       rzp.open();
     } catch (error) {
-      toast.error(error.response?.data?.error || 'Failed to initiate payment');
+      if (error.response?.status === 429) {
+        const message = error.response?.data || error.response?.data?.error || 'Please wait about 2 minutes before trying again.';
+        const cooldownMessage = typeof message === 'string' ? message : 'Please wait about 2 minutes before trying again.';
+        setPaymentCooldownMessage(cooldownMessage);
+        toast.error(cooldownMessage);
+      } else {
+        toast.error(error.response?.data?.error || 'Failed to initiate payment');
+      }
       console.error('Payment initiation error:', error);
     } finally {
       setLoading(false);
@@ -247,6 +263,12 @@ const Checkout = () => {
                         Your order will be delivered in 7-8 business days. You will receive updates via WhatsApp.
                       </p>
                     </div>
+
+                    {paymentCooldownMessage ? (
+                      <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
+                        {paymentCooldownMessage}
+                      </div>
+                    ) : null}
 
                     <Button
                       className="w-full"
