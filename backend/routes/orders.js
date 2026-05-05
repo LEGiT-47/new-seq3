@@ -11,12 +11,38 @@ import {
   asyncHandler,
   sendErrorResponse,
   sendSuccessResponse,
-  areAllItemsDeliverable,
   verifyRazorpaySignature,
 } from '../utils/helpers.js';
 import axios from 'axios';
 
 const router = express.Router();
+
+const validateDeliverableItems = async (items) => {
+  const productIds = items.map((item) => Number(item.productId));
+  const products = await Product.find({ productId: { $in: productIds } })
+    .select('productId name isDeliverable productType')
+    .lean();
+
+  const productMap = new Map(products.map((product) => [product.productId, product]));
+
+  for (const item of items) {
+    const productId = Number(item.productId);
+    const product = productMap.get(productId);
+
+    if (!product) {
+      return { success: false, message: `Product ${productId} not found` };
+    }
+
+    if (!product.isDeliverable && product.productType !== 'deliverable') {
+      return {
+        success: false,
+        message: `Product ${product.name} is not available for online purchase`,
+      };
+    }
+  }
+
+  return { success: true };
+};
 
 // Prepare Order (Validate and calculate total without creating order)
 router.post(
@@ -27,7 +53,8 @@ router.post(
     const { items, deliveryAddress } = req.validatedBody;
 
     // Verify all items are deliverable
-    if (!areAllItemsDeliverable(items)) {
+    const deliverableCheck = await validateDeliverableItems(items);
+    if (!deliverableCheck.success) {
       return sendErrorResponse(res, 400, 'Not all items in this order are deliverable. Please contact us via WhatsApp for non-deliverable items.');
     }
 
@@ -225,7 +252,8 @@ router.post(
     }
 
     // Verify all items are deliverable
-    if (!areAllItemsDeliverable(items)) {
+    const deliverableCheck = await validateDeliverableItems(items);
+    if (!deliverableCheck.success) {
       return sendErrorResponse(res, 400, 'Not all items in this order are deliverable.');
     }
 
