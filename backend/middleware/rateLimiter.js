@@ -35,7 +35,7 @@ export const paymentInitiateLimiter = rateLimit({
   max: 1, // Only 1 payment initiation per 2 minutes per order
   message: 'Please wait before initiating another payment attempt.',
   keyGenerator: (req, res) => {
-    // Key by orderId to enforce per-order limits
-    return req.body?.orderId || req.ip;
+    // Key by authenticated user when available; fall back to IP for unauthenticated access.
+    return req.userId || req.body?.orderId || req.ip;
   },
 });
